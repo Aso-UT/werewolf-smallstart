@@ -5,8 +5,8 @@ class HumanPlayer(override val role: Role, override val name: String, private va
         io.sendMessage(name, "役職通知", "あなたの役職は「${role.displayName}」です。")
     }
 
-    override fun nightAction(players: List<Player>, nightNumber: Int): NightAction =
-        role.nightAction(this, players, io, nightNumber)
+    override fun nightAction(players: List<Player>, isFirstNight: Boolean): NightAction =
+        role.nightAction(this, players, io, isFirstNight)
 
     override fun vote(players: List<Player>): Player {
         val candidates = players.filterNot { it === this }
