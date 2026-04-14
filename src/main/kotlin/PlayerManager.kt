@@ -30,6 +30,7 @@ class PlayerManager(allPlayers: List<Player>) {
                 is NightAction.MediumReveal -> _executedPlayers.lastOrNull()?.let { target ->
                     player.onMediumReveal(target, target.role.mediumResult)
                 }
+                is NightAction.Guard -> Unit
             }
         }
     }

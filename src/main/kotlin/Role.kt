@@ -26,6 +26,14 @@ enum class Role(val displayName: String, val side: Side, val divineResult: Divin
     VILLAGER("村人", Side.CITIZEN, DivineResult.NOT_WEREWOLF, MediumResult.NOT_WEREWOLF) {
         override fun nightAction(self: Player, players: List<Player>, io: PlayerIO, nightNumber: Int): NightAction =
             NightAction.None
+    },
+    HUNTER("狩人", Side.CITIZEN, DivineResult.NOT_WEREWOLF, MediumResult.NOT_WEREWOLF) {
+        override fun nightAction(self: Player, players: List<Player>, io: PlayerIO, nightNumber: Int): NightAction {
+            if (nightNumber == 1) return NightAction.None
+            val candidates = players.filterNot { it === self }
+            val target = io.prompt(self.name, "夜の行動", "護衛する対象を選んでください", candidates)
+            return NightAction.Guard(target)
+        }
     };
 
     abstract fun nightAction(self: Player, players: List<Player>, io: PlayerIO, nightNumber: Int): NightAction
