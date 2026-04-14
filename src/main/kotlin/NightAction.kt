@@ -5,4 +5,5 @@ sealed interface NightAction {
     data class Attack(val target: Player) : NightAction
     data class Divine(val target: Player) : NightAction
     data object MediumReveal : NightAction
+    data class Guard(val target: Player) : NightAction
 }

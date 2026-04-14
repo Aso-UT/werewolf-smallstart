@@ -22,16 +22,31 @@ class PlayerManager(allPlayers: List<Player>) {
 
     fun runNightActions(nightNumber: Int) {
         val decisions = _alivePlayers.map { it to it.nightAction(_alivePlayers, nightNumber) }
+
+        val attacks = decisions.map { it.second }.filterIsInstance<NightAction.Attack>()
+        val guards = decisions.map { it.second }.filterIsInstance<NightAction.Guard>()
+        attackIfNotGuarded(attacks, guards)
+
+        revealNightSecrets(decisions)
+    }
+
+    private fun revealNightSecrets(decisions: List<Pair<Player, NightAction>>) {
         decisions.forEach { (player, decision) ->
             when (decision) {
                 is NightAction.None -> Unit
-                is NightAction.Attack -> attack(decision.target)
+                is NightAction.Attack -> Unit
+                is NightAction.Guard -> Unit
                 is NightAction.Divine -> player.onDivineResult(decision.target, decision.target.role.divineResult)
                 is NightAction.MediumReveal -> _executedPlayers.lastOrNull()?.let { target ->
                     player.onMediumReveal(target, target.role.mediumResult)
                 }
             }
         }
+    }
+
+    private fun attackIfNotGuarded(attacks: List<NightAction.Attack>, guards: List<NightAction.Guard>) {
+        val target = attacks.firstOrNull()?.target ?: return
+        if (guards.none { it.target === target }) attack(target)
     }
 
     fun runVoting() {
