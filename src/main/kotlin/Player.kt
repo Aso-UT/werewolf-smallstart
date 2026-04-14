@@ -4,7 +4,7 @@ interface Player {
     val name: String
     val role: Role
     fun notifyRole()
-    fun nightAction(players: List<Player>, nightNumber: Int): NightAction
+    fun nightAction(players: List<Player>, isFirstNight: Boolean): NightAction
     fun vote(players: List<Player>): Player
     fun onPlayerExecuted(player: Player)
     fun onPlayerAttacked(player: Player)

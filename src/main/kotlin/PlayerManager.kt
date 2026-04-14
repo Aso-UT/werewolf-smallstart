@@ -21,7 +21,7 @@ class PlayerManager(allPlayers: List<Player>) {
     }
 
     fun runNightActions(nightNumber: Int) {
-        val decisions = _alivePlayers.map { it to it.nightAction(_alivePlayers, nightNumber) }
+        val decisions = _alivePlayers.map { it to it.nightAction(_alivePlayers, nightNumber == 1) }
 
         val attacks = decisions.map { it.second }.filterIsInstance<NightAction.Attack>()
         val guards = decisions.map { it.second }.filterIsInstance<NightAction.Guard>()
