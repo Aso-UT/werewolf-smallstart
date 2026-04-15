@@ -1,6 +1,10 @@
 package org.example
 
 class PlayerManager(allPlayers: List<Player>) {
+    companion object {
+        private const val DISCUSSION_ROUNDS = 3
+    }
+
     private val _allPlayers: List<Player> = allPlayers
     private val _alivePlayers: MutableList<Player> = _allPlayers.toMutableList()
     private val _executedPlayers: MutableList<Player> = mutableListOf()
@@ -20,7 +24,7 @@ class PlayerManager(allPlayers: List<Player>) {
         _allPlayers.forEach { it.notifyRole() }
     }
 
-    fun runNightActions(nightNumber: Int) {
+    private fun runNightActions(nightNumber: Int) {
         val decisions = _alivePlayers.map { it to it.nightAction(_alivePlayers, nightNumber == 1) }
 
         val attacks = decisions.map { it.second }.filterIsInstance<NightAction.Attack>()
@@ -49,14 +53,20 @@ class PlayerManager(allPlayers: List<Player>) {
         if (guards.none { it.target === target }) attack(target)
     }
 
-    fun runDiscussion() {
-        repeat(3) { index ->
+    fun runTurn(nightNumber: Int) {
+        runNightActions(nightNumber)
+        runDiscussion()
+        runVoting()
+    }
+
+    private fun runDiscussion() {
+        repeat(DISCUSSION_ROUNDS) { index ->
             val statements = _alivePlayers.map { it.name to it.discuss(_alivePlayers) }
             _alivePlayers.forEach { it.onDiscussionRound(index + 1, statements) }
         }
     }
 
-    fun runVoting() {
+    private fun runVoting() {
         val votes = _alivePlayers.map { it.vote(_alivePlayers) }
         val mostVoted = votes.groupBy { it }.maxBy { it.value.size }.key
         execute(mostVoted)

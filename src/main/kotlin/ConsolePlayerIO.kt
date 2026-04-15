@@ -16,7 +16,7 @@ class ConsolePlayerIO : PlayerIO {
         }
     }
 
-    override fun promptText(playerName: String, title: String, content: String): String {
+    override fun promptFreeText(playerName: String, title: String, content: String): String {
         sendMessage(playerName, title, content)
         return readLine() ?: ""
     }

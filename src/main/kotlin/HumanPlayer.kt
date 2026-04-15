@@ -35,7 +35,7 @@ class HumanPlayer(override val role: Role, override val name: String, private va
     }
 
     override fun discuss(players: List<Player>): String =
-        io.promptText(name, "議論", "発言してください")
+        io.promptFreeText(name, "議論", "発言してください")
 
     override fun onDiscussionRound(round: Int, statements: List<Pair<String, String>>) {
         val content = statements.joinToString("\n") { (speaker, statement) -> "$speaker: $statement" }
