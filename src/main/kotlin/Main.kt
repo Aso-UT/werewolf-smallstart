@@ -8,8 +8,7 @@ fun main() {
     var nightNumber = 1
     try {
         while (true) {
-            manager.runNightActions(nightNumber)
-            manager.runVoting()
+            manager.runTurn(nightNumber)
             nightNumber++
         }
     } catch (signal: GameOverSignal) {

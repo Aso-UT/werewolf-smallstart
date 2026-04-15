@@ -10,5 +10,7 @@ interface Player {
     fun onPlayerAttacked(player: Player)
     fun onDivineResult(target: Player, result: DivineResult)
     fun onMediumReveal(target: Player, result: MediumResult)
+    fun discuss(players: List<Player>): String
+    fun onDiscussionRound(round: Int, statements: List<Pair<String, String>>)
     fun onGameOver(winnerSide: Side)
 }

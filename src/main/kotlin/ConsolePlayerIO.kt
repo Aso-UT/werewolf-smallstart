@@ -15,4 +15,9 @@ class ConsolePlayerIO : PlayerIO {
             println("「$input」は候補にいません。もう一度入力してください。")
         }
     }
+
+    override fun promptFreeText(playerName: String, title: String, content: String): String {
+        sendMessage(playerName, title, content)
+        return readLine() ?: ""
+    }
 }
