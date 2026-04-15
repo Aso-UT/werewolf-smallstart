@@ -34,6 +34,14 @@ class HumanPlayer(override val role: Role, override val name: String, private va
         io.sendMessage(name, "霊視結果", "${target.name} は「${result.displayName}」です。")
     }
 
+    override fun discuss(players: List<Player>): String =
+        io.promptText(name, "議論", "発言してください")
+
+    override fun onDiscussionRound(round: Int, statements: List<Pair<String, String>>) {
+        val content = statements.joinToString("\n") { (speaker, statement) -> "$speaker: $statement" }
+        io.sendMessage(name, "議論（${round}ラウンド目）結果", content)
+    }
+
     override fun onPlayerAttacked(player: Player) {
         if (player === this) {
             io.sendMessage(name, "襲撃通知", "あなたは襲撃されました。")

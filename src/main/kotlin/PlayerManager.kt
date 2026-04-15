@@ -49,6 +49,13 @@ class PlayerManager(allPlayers: List<Player>) {
         if (guards.none { it.target === target }) attack(target)
     }
 
+    fun runDiscussion() {
+        repeat(3) { index ->
+            val statements = _alivePlayers.map { it.name to it.discuss(_alivePlayers) }
+            _alivePlayers.forEach { it.onDiscussionRound(index + 1, statements) }
+        }
+    }
+
     fun runVoting() {
         val votes = _alivePlayers.map { it.vote(_alivePlayers) }
         val mostVoted = votes.groupBy { it }.maxBy { it.value.size }.key

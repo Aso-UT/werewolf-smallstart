@@ -9,6 +9,7 @@ fun main() {
     try {
         while (true) {
             manager.runNightActions(nightNumber)
+            manager.runDiscussion()
             manager.runVoting()
             nightNumber++
         }
