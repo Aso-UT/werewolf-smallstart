@@ -5,8 +5,8 @@ class HumanPlayer(override val role: Role, override val name: String, private va
         io.sendMessage(name, "役職通知", "あなたの役職は「${role.displayName}」です。")
     }
 
-    override fun selectTarget(players: List<Player>, context: SelectionContext): Player =
-        io.prompt(name, context.title, context.description, context.candidates(this, players))
+    override fun selectTarget(context: SelectionContext): Player =
+        io.prompt(name, context.title, context.description, context.candidates())
 
     override fun onGameOver(winnerSide: Side) {
         val result = if (role.side == winnerSide) "勝利" else "敗北"

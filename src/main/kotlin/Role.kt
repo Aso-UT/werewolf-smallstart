@@ -4,13 +4,13 @@ enum class Role(val displayName: String, val side: Side, val divineResult: Divin
     WEREWOLF("人狼", Side.WEREWOLF, DivineResult.WEREWOLF, MediumResult.WEREWOLF) {
         override fun firstNightAction(self: Player, players: List<Player>): NightAction = NightAction.None
         override fun normalNightAction(self: Player, players: List<Player>): NightAction =
-            NightAction.Attack(self.selectTarget(players, SelectionContext.ATTACK))
+            NightAction.Attack(self.selectTarget(SelectionContext.Attack(self, players)))
     },
     SEER("占い師", Side.CITIZEN, DivineResult.NOT_WEREWOLF, MediumResult.NOT_WEREWOLF) {
         override fun firstNightAction(self: Player, players: List<Player>): NightAction =
             NightAction.Divine(FirstDivineFilter.candidates(self, players).random())
         override fun normalNightAction(self: Player, players: List<Player>): NightAction =
-            NightAction.Divine(self.selectTarget(players, SelectionContext.DIVINE))
+            NightAction.Divine(self.selectTarget(SelectionContext.Divine(self, players)))
     },
     MEDIUM("霊能者", Side.CITIZEN, DivineResult.NOT_WEREWOLF, MediumResult.NOT_WEREWOLF) {
         override fun firstNightAction(self: Player, players: List<Player>): NightAction = NightAction.MediumReveal
@@ -23,7 +23,7 @@ enum class Role(val displayName: String, val side: Side, val divineResult: Divin
     HUNTER("狩人", Side.CITIZEN, DivineResult.NOT_WEREWOLF, MediumResult.NOT_WEREWOLF) {
         override fun firstNightAction(self: Player, players: List<Player>): NightAction = NightAction.None
         override fun normalNightAction(self: Player, players: List<Player>): NightAction =
-            NightAction.Guard(self.selectTarget(players, SelectionContext.GUARD))
+            NightAction.Guard(self.selectTarget(SelectionContext.Guard(self, players)))
     };
 
     abstract fun firstNightAction(self: Player, players: List<Player>): NightAction

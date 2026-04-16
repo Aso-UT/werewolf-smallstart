@@ -67,7 +67,7 @@ class PlayerManager(allPlayers: List<Player>) {
     }
 
     private fun runVoting() {
-        val votes = _alivePlayers.map { it.selectTarget(_alivePlayers, SelectionContext.VOTE) }
+        val votes = _alivePlayers.map { it.selectTarget(SelectionContext.Vote(it, _alivePlayers)) }
         val mostVoted = votes.groupBy { it }.maxBy { it.value.size }.key
         execute(mostVoted)
     }
