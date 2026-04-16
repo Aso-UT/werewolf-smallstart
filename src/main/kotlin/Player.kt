@@ -4,7 +4,7 @@ interface Player {
     val name: String
     val role: Role
     fun notifyRole()
-    fun selectTarget(players: List<Player>, context: SelectionContext): Player
+    fun selectTarget(context: SelectionContext): Player
     fun onPlayerExecuted(player: Player)
     fun onPlayerAttacked(player: Player)
     fun onDivineResult(target: Player, result: DivineResult)
