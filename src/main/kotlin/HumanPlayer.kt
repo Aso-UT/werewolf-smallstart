@@ -5,13 +5,8 @@ class HumanPlayer(override val role: Role, override val name: String, private va
         io.sendMessage(name, "役職通知", "あなたの役職は「${role.displayName}」です。")
     }
 
-    override fun nightAction(players: List<Player>, isFirstNight: Boolean): NightAction =
-        role.nightAction(this, players, io, isFirstNight)
-
-    override fun vote(players: List<Player>): Player {
-        val candidates = players.filterNot { it === this }
-        return io.prompt(name, "投票", "投票先を選んでください", candidates)
-    }
+    override fun selectTarget(players: List<Player>, context: SelectionContext): Player =
+        io.prompt(name, context.title, context.description, context.candidates(this, players))
 
     override fun onGameOver(winnerSide: Side) {
         val result = if (role.side == winnerSide) "勝利" else "敗北"
