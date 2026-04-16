@@ -25,7 +25,7 @@ class PlayerManager(allPlayers: List<Player>) {
     }
 
     private fun runNightActions(nightNumber: Int) {
-        val decisions = _alivePlayers.map { it to it.nightAction(_alivePlayers, nightNumber == 1) }
+        val decisions = _alivePlayers.map { it to it.role.buildNightAction(it, _alivePlayers, nightNumber == 1) }
 
         val attacks = decisions.map { it.second }.filterIsInstance<NightAction.Attack>()
         val guards = decisions.map { it.second }.filterIsInstance<NightAction.Guard>()
@@ -67,7 +67,7 @@ class PlayerManager(allPlayers: List<Player>) {
     }
 
     private fun runVoting() {
-        val votes = _alivePlayers.map { it.vote(_alivePlayers) }
+        val votes = _alivePlayers.map { it.selectTarget(_alivePlayers, SelectionContext.VOTE) }
         val mostVoted = votes.groupBy { it }.maxBy { it.value.size }.key
         execute(mostVoted)
     }
