@@ -8,5 +8,6 @@ object SmallLodge : Lodge {
         HumanPlayer(Role.WEREWOLF, "4", ConsolePlayerIO()),
         HumanPlayer(Role.SEER, "5", ConsolePlayerIO()),
         HumanPlayer(Role.MEDIUM, "6", ConsolePlayerIO()),
+        HumanPlayer(Role.WEREWOLF, "7", ConsolePlayerIO()),
     )
 }
