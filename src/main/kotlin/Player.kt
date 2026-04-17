@@ -5,11 +5,6 @@ interface Player {
     val role: Role
     fun notifyRole()
     fun selectTarget(context: SelectionContext): Player
-    fun onPlayerExecuted(player: Player)
-    fun onPlayerAttacked(player: Player)
-    fun onDivineResult(target: Player, result: DivineResult)
-    fun onMediumReveal(target: Player, result: MediumResult)
+    fun receive(event: GameEvent)
     fun discuss(players: List<Player>): String
-    fun onDiscussionRound(round: Int, statements: List<Pair<String, String>>)
-    fun onGameOver(winnerSide: Side)
 }
