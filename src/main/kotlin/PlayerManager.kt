@@ -1,9 +1,6 @@
 package org.example
 
 class PlayerManager(allPlayers: List<Player>) {
-    companion object {
-        private const val DISCUSSION_ROUNDS = 3
-    }
 
     private val _allPlayers: List<Player> = allPlayers
     private val _alivePlayers: MutableList<Player> = _allPlayers.toMutableList()
@@ -60,10 +57,7 @@ class PlayerManager(allPlayers: List<Player>) {
     }
 
     private fun runDiscussion() {
-        repeat(DISCUSSION_ROUNDS) { index ->
-            val statements = _alivePlayers.map { it.name to it.discuss(_alivePlayers) }
-            _alivePlayers.forEach { it.receive(GameEvent.DiscussionRound(index + 1, statements)) }
-        }
+        RandomOrderDiscussion(_alivePlayers).conduct()
     }
 
     private fun runVoting() {

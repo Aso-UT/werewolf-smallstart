@@ -31,10 +31,9 @@ sealed class GameEvent {
         override fun body(self: Player) = "${target.name} は「${result.displayName}」です。"
     }
 
-    data class DiscussionRound(val round: Int, val statements: List<Pair<String, String>>) : GameEvent() {
-        override val title = "議論（${round}ラウンド目）結果"
-        override fun body(self: Player) =
-            statements.joinToString("\n") { (speaker, statement) -> "$speaker: $statement" }
+    data class StatementMade(val round: Int, val speakerName: String, val statement: String) : GameEvent() {
+        override val title = "発言（${round}ラウンド目）"
+        override fun body(self: Player) = "$speakerName: $statement"
     }
 
     data class GameOver(val winnerSide: Side) : GameEvent() {
