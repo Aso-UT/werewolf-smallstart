@@ -3,7 +3,7 @@ package org.example
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class ParlorTest {
+class DiscussionTest {
 
     private class TestPlayer(
         override val name: String,
@@ -30,7 +30,7 @@ class ParlorTest {
         override fun selectTarget(context: SelectionContext): Player = error("not expected in discussion test")
     }
 
-    private fun fixedOrderParlor(players: List<Player>) = object : Parlor(players) {
+    private fun fixedOrderDiscussion(players: List<Player>) = object : Discussion(players) {
         override fun speakingOrder(players: List<Player>) = players
     }
 
@@ -48,7 +48,7 @@ class ParlorTest {
         ))
         val players = listOf(alice, bob)
 
-        fixedOrderParlor(players).conduct()
+        fixedOrderDiscussion(players).conduct()
 
         assertEquals(listOf(
             "Alice:said:私はBobが怪しいと思う",

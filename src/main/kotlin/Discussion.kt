@@ -1,6 +1,6 @@
 package org.example
 
-abstract class Parlor(private val players: List<Player>) {
+abstract class Discussion(private val players: List<Player>) {
     companion object {
         private const val ROUNDS = 3
     }
@@ -18,6 +18,6 @@ abstract class Parlor(private val players: List<Player>) {
     }
 }
 
-class RandomParlor(players: List<Player>) : Parlor(players) {
+class RandomOrderDiscussion(players: List<Player>) : Discussion(players) {
     override fun speakingOrder(players: List<Player>) = players.shuffled()
 }
