@@ -5,7 +5,7 @@ sealed class SelectionContext(val title: String, val description: String) {
 
     class Attack(private val self: Player, private val players: List<Player>)
         : SelectionContext("夜の行動", "襲撃先を選んでください") {
-        override fun candidates() = players.filterNot { it === self }
+        override fun candidates() = players.filterNot { it === self || it.role == Role.WEREWOLF }
     }
 
     class Divine(private val self: Player, private val players: List<Player>)
