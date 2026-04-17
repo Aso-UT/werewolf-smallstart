@@ -68,7 +68,7 @@ class PlayerManager(allPlayers: List<Player>) {
 
     private fun runVoting() {
         val votes = _alivePlayers.map { it.selectTarget(SelectionContext.Vote(it, _alivePlayers)) }
-        val mostVoted = MajorityVoteResolver.resolve(votes) ?: return
+        val mostVoted = MajorityVoteResolver.resolveNonEmpty(votes)
         execute(mostVoted)
     }
 
