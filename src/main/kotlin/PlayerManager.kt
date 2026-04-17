@@ -40,9 +40,9 @@ class PlayerManager(allPlayers: List<Player>) {
                 is NightAction.None -> Unit
                 is NightAction.Attack -> Unit
                 is NightAction.Guard -> Unit
-                is NightAction.Divine -> player.onDivineResult(decision.target, decision.target.role.divineResult)
+                is NightAction.Divine -> player.receive(GameEvent.Divined(decision.target, decision.target.role.divineResult))
                 is NightAction.MediumReveal -> _executedPlayers.lastOrNull()?.let { target ->
-                    player.onMediumReveal(target, target.role.mediumResult)
+                    player.receive(GameEvent.MediumRevealed(target, target.role.mediumResult))
                 }
             }
         }
@@ -62,7 +62,7 @@ class PlayerManager(allPlayers: List<Player>) {
     private fun runDiscussion() {
         repeat(DISCUSSION_ROUNDS) { index ->
             val statements = _alivePlayers.map { it.name to it.discuss(_alivePlayers) }
-            _alivePlayers.forEach { it.onDiscussionRound(index + 1, statements) }
+            _alivePlayers.forEach { it.receive(GameEvent.DiscussionRound(index + 1, statements)) }
         }
     }
 
@@ -73,17 +73,17 @@ class PlayerManager(allPlayers: List<Player>) {
     }
 
     fun endGame(signal: GameOverSignal) {
-        _allPlayers.forEach { it.onGameOver(signal.winningSide) }
+        _allPlayers.forEach { it.receive(GameEvent.GameOver(signal.winningSide)) }
     }
 
     private fun execute(mostVoted: Player) {
-        _allPlayers.forEach { it.onPlayerExecuted(mostVoted) }
+        _allPlayers.forEach { it.receive(GameEvent.PlayerExecuted(executed = mostVoted)) }
         _executedPlayers.add(mostVoted)
         die(mostVoted)
     }
 
     private fun attack(target: Player) {
-        _allPlayers.forEach { it.onPlayerAttacked(target) }
+        _allPlayers.forEach { it.receive(GameEvent.PlayerAttacked(attacked = target)) }
         _attackedPlayers.add(target)
         die(target)
     }
