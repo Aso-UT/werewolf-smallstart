@@ -21,7 +21,7 @@ class PlayerManager(allPlayers: List<Player>) {
     }
 
     fun startGame() {
-        _allPlayers.forEach { it.notifyRole() }
+        _allPlayers.forEach { it.receive(GameEvent.RoleAssigned(it.role)) }
     }
 
     private fun runNightActions(nightNumber: Int) {

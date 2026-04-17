@@ -4,6 +4,11 @@ sealed class GameEvent {
     abstract val title: String
     abstract fun body(self: Player): String
 
+    data class RoleAssigned(val role: Role) : GameEvent() {
+        override val title = "役職通知"
+        override fun body(self: Player) = "あなたの役職は「${role.displayName}」です。"
+    }
+
     data class PlayerExecuted(val executed: Player) : GameEvent() {
         override val title = "処刑通知"
         override fun body(self: Player) =
