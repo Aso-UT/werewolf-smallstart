@@ -49,7 +49,7 @@ class PlayerManager(allPlayers: List<Player>) {
     }
 
     private fun attackIfNotGuarded(attacks: List<NightAction.Attack>, guards: List<NightAction.Guard>) {
-        val target = attacks.firstOrNull()?.target ?: return
+        val target = MajorityVoteResolver.resolve(attacks.map { it.target }) ?: return
         if (guards.none { it.target === target }) attack(target)
     }
 
@@ -68,7 +68,7 @@ class PlayerManager(allPlayers: List<Player>) {
 
     private fun runVoting() {
         val votes = _alivePlayers.map { it.selectTarget(SelectionContext.Vote(it, _alivePlayers)) }
-        val mostVoted = votes.groupBy { it }.maxBy { it.value.size }.key
+        val mostVoted = MajorityVoteResolver.resolveNonEmpty(votes)
         execute(mostVoted)
     }
 
