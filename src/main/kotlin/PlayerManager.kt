@@ -57,7 +57,7 @@ class PlayerManager(allPlayers: List<Player>) {
     }
 
     private fun runDiscussion() {
-        Parlor(_alivePlayers).conduct()
+        RandomParlor(_alivePlayers).conduct()
     }
 
     private fun runVoting() {

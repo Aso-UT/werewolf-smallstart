@@ -1,17 +1,23 @@
 package org.example
 
-class Parlor(private val players: List<Player>) {
+abstract class Parlor(private val players: List<Player>) {
     companion object {
         private const val ROUNDS = 3
     }
 
+    protected abstract fun speakingOrder(players: List<Player>): List<Player>
+
     fun conduct() {
-        val speakingOrder = players.shuffled()
+        val order = speakingOrder(players)
         repeat(ROUNDS) { index ->
-            speakingOrder.forEach { speaker ->
+            order.forEach { speaker ->
                 val statement = speaker.discuss(players)
                 players.forEach { it.receive(GameEvent.StatementMade(index + 1, speaker.name, statement)) }
             }
         }
     }
+}
+
+class RandomParlor(players: List<Player>) : Parlor(players) {
+    override fun speakingOrder(players: List<Player>) = players.shuffled()
 }
