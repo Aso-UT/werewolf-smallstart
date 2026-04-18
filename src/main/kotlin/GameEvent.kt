@@ -36,6 +36,12 @@ sealed class GameEvent {
         override fun body(self: Player) = "$speakerName: $statement"
     }
 
+    data class MorningReport(val victim: Player?) : GameEvent() {
+        override val title = "朝の報告"
+        override fun body(self: Player) =
+            if (victim != null) "昨夜は ${victim.name} が襲撃されました。" else "昨夜は犠牲者がいませんでした。"
+    }
+
     data class GameOver(val winnerSide: Side) : GameEvent() {
         override val title = "ゲーム終了"
         override fun body(self: Player): String {

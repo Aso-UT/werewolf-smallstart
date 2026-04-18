@@ -21,14 +21,15 @@ class PlayerManager(allPlayers: List<Player>) {
         _allPlayers.forEach { it.receive(GameEvent.RoleAssigned(it.role)) }
     }
 
-    private fun runNightActions(nightNumber: Int) {
+    private fun runNightActions(nightNumber: Int): Player? {
         val decisions = _alivePlayers.map { it to it.role.buildNightAction(it, _alivePlayers, nightNumber == 1) }
 
         val attacks = decisions.map { it.second }.filterIsInstance<NightAction.Attack>()
         val guards = decisions.map { it.second }.filterIsInstance<NightAction.Guard>()
-        attackIfNotGuarded(attacks, guards)
+        val killed = attackIfNotGuarded(attacks, guards)
 
         revealNightSecrets(decisions)
+        return killed
     }
 
     private fun revealNightSecrets(decisions: List<Pair<Player, NightAction>>) {
@@ -45,13 +46,14 @@ class PlayerManager(allPlayers: List<Player>) {
         }
     }
 
-    private fun attackIfNotGuarded(attacks: List<NightAction.Attack>, guards: List<NightAction.Guard>) {
-        val target = MajorityVoteResolver.resolve(attacks.map { it.target }) ?: return
-        if (guards.none { it.target === target }) attack(target)
+    private fun attackIfNotGuarded(attacks: List<NightAction.Attack>, guards: List<NightAction.Guard>): Player? {
+        val target = MajorityVoteResolver.resolve(attacks.map { it.target }) ?: return null
+        return if (guards.none { it.target === target }) attack(target) else null
     }
 
     fun runTurn(nightNumber: Int) {
-        runNightActions(nightNumber)
+        val killed = runNightActions(nightNumber)
+        _allPlayers.forEach { it.receive(GameEvent.MorningReport(killed)) }
         runDiscussion()
         runVoting()
     }
@@ -76,9 +78,10 @@ class PlayerManager(allPlayers: List<Player>) {
         die(mostVoted)
     }
 
-    private fun attack(target: Player) {
+    private fun attack(target: Player): Player {
         _allPlayers.forEach { it.receive(GameEvent.PlayerAttacked(attacked = target)) }
         _attackedPlayers.add(target)
         die(target)
+        return target
     }
 }
