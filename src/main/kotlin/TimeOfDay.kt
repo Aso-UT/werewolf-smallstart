@@ -16,6 +16,6 @@ sealed class TimeOfDay {
 
     data class Midnight(val nightNumber: Int) : TimeOfDay() {
         override val name = "深夜"
-        override val displayName = "${nightNumber}日目の深夜"
+        override val displayName = "深夜"
     }
 }
