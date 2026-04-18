@@ -36,6 +36,11 @@ sealed class GameEvent {
         override fun body(self: Player) = "$speakerName: $statement"
     }
 
+    data class TimeChanged(val timeOfDay: TimeOfDay) : GameEvent() {
+        override val title = "${timeOfDay.name}の訪れ"
+        override fun body(self: Player) = "${timeOfDay.displayName}になりました。"
+    }
+
     data class MorningReport(val victim: Player?) : GameEvent() {
         override val title = "朝の報告"
         override fun body(self: Player) =

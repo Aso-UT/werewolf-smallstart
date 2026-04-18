@@ -52,7 +52,9 @@ class PlayerManager(allPlayers: List<Player>) {
     }
 
     fun runTurn(nightNumber: Int) {
+        _allPlayers.forEach { it.receive(GameEvent.TimeChanged(TimeOfDay.Night(nightNumber))) }
         val killed = runNightActions(nightNumber)
+        _allPlayers.forEach { it.receive(GameEvent.TimeChanged(TimeOfDay.Morning)) }
         _allPlayers.forEach { it.receive(GameEvent.MorningReport(killed)) }
         runDiscussion()
         runVoting()
