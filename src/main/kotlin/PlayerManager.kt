@@ -8,6 +8,8 @@ class PlayerManager(allPlayers: List<Player>) {
     private val _attackedPlayers: MutableList<Player> = mutableListOf()
     val players: List<Player> get() = _alivePlayers
 
+    private val allPlayers get() = AllPlayers(_allPlayers)
+
     private fun checkWinner() {
         GameOverSignal.throwIfGameOver(AliveCounts(_alivePlayers))
     }
@@ -18,7 +20,7 @@ class PlayerManager(allPlayers: List<Player>) {
     }
 
     fun startGame() {
-        _allPlayers.forEach { it.receive(GameEvent.RoleAssigned(it.role)) }
+        _allPlayers.forEach { GameEvent.RoleAssigned.send(it.role, it) }
     }
 
     private fun runNightActions(nightNumber: Int): Player? {
@@ -38,9 +40,9 @@ class PlayerManager(allPlayers: List<Player>) {
                 is NightAction.None -> Unit
                 is NightAction.Attack -> Unit
                 is NightAction.Guard -> Unit
-                is NightAction.Divine -> player.receive(GameEvent.Divined(decision.target, decision.target.role.divineResult))
+                is NightAction.Divine -> GameEvent.Divined.send(decision.target, decision.target.role.divineResult, player)
                 is NightAction.MediumReveal -> _executedPlayers.lastOrNull()?.let { target ->
-                    player.receive(GameEvent.MediumRevealed(target, target.role.mediumResult))
+                    GameEvent.MediumRevealed.send(target, target.role.mediumResult, player)
                 }
             }
         }
@@ -52,10 +54,10 @@ class PlayerManager(allPlayers: List<Player>) {
     }
 
     fun runTurn(nightNumber: Int) {
-        _allPlayers.forEach { it.receive(GameEvent.TimeChanged(TimeOfDay.Night(nightNumber))) }
+        GameEvent.TimeChanged.send(TimeOfDay.Night(nightNumber), allPlayers)
         val killed = runNightActions(nightNumber)
-        _allPlayers.forEach { it.receive(GameEvent.TimeChanged(TimeOfDay.Morning)) }
-        _allPlayers.forEach { it.receive(GameEvent.MorningReport(killed)) }
+        GameEvent.TimeChanged.send(TimeOfDay.Morning, allPlayers)
+        GameEvent.MorningReport.send(killed, allPlayers)
         runDiscussion()
         runVoting()
     }
@@ -71,17 +73,17 @@ class PlayerManager(allPlayers: List<Player>) {
     }
 
     fun endGame(signal: GameOverSignal) {
-        _allPlayers.forEach { it.receive(GameEvent.GameOver(signal.winningSide)) }
+        GameEvent.GameOver.send(signal.winningSide, allPlayers)
     }
 
     private fun execute(mostVoted: Player) {
-        _allPlayers.forEach { it.receive(GameEvent.PlayerExecuted(executed = mostVoted)) }
+        GameEvent.PlayerExecuted.send(mostVoted, allPlayers)
         _executedPlayers.add(mostVoted)
         die(mostVoted)
     }
 
     private fun attack(target: Player): Player {
-        _allPlayers.forEach { it.receive(GameEvent.PlayerAttacked(attacked = target)) }
+        GameEvent.PlayerAttacked.send(target, allPlayers)
         _attackedPlayers.add(target)
         die(target)
         return target

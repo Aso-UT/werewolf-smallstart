@@ -1,9 +1,9 @@
 package org.example
 
-interface Player {
+interface Player : Notifiable {
     val name: String
     val role: Role
     fun selectTarget(context: SelectionContext): Player
-    fun receive(event: GameEvent)
+    override fun receive(event: GameEvent)
     fun discuss(players: List<Player>): String
 }
