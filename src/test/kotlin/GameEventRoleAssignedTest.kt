@@ -15,14 +15,14 @@ class GameEventRoleAssignedTest {
 
     @Test
     fun `title is 役職通知`() {
-        assertEquals("役職通知", GameEvent.RoleAssigned(Role.WEREWOLF).title)
+        assertEquals("役職通知", GameEvent.RoleAssigned(Role.WEREWOLF, anyPlayer).title)
     }
 
     @Test
     fun `body shows role display name`() {
         assertEquals(
             "あなたの役職は「人狼」です。",
-            GameEvent.RoleAssigned(Role.WEREWOLF).body(anyPlayer)
+            GameEvent.RoleAssigned(Role.WEREWOLF, anyPlayer).body(anyPlayer)
         )
     }
 }

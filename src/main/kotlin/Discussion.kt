@@ -9,10 +9,11 @@ abstract class Discussion(private val alivePlayers: List<Player>, private val al
 
     fun conduct() {
         val order = speakingOrder(alivePlayers)
+        val recipients = AllPlayers(allPlayers)
         repeat(ROUNDS) { index ->
             order.forEach { speaker ->
                 val statement = speaker.discuss(alivePlayers)
-                allPlayers.forEach { it.receive(GameEvent.StatementMade(index + 1, speaker.name, statement)) }
+                GameEvent.StatementMade(index + 1, speaker.name, statement, recipients).dispatch()
             }
         }
     }
