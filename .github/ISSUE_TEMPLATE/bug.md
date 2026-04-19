@@ -2,6 +2,7 @@
 name: バグ報告
 about: 動作がおかしい箇所の報告
 labels: bug
+title: 'Describe in English'
 ---
 
 ## 現象

@@ -2,6 +2,7 @@
 name: 設計・方針決定
 about: 適切な設計や方針を検討し、決定する
 labels: design
+title: 'Describe in English'
 ---
 
 ## 検討したいこと
