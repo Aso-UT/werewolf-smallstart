@@ -1,6 +1,6 @@
 package org.example
 
-abstract class Discussion(private val players: List<Player>) {
+abstract class Discussion(private val alivePlayers: List<Player>, private val allPlayers: List<Player>) {
     companion object {
         private const val ROUNDS = 3
     }
@@ -8,16 +8,16 @@ abstract class Discussion(private val players: List<Player>) {
     protected abstract fun speakingOrder(players: List<Player>): List<Player>
 
     fun conduct() {
-        val order = speakingOrder(players)
+        val order = speakingOrder(alivePlayers)
         repeat(ROUNDS) { index ->
             order.forEach { speaker ->
-                val statement = speaker.discuss(players)
-                players.forEach { it.receive(GameEvent.StatementMade(index + 1, speaker.name, statement)) }
+                val statement = speaker.discuss(alivePlayers)
+                allPlayers.forEach { it.receive(GameEvent.StatementMade(index + 1, speaker.name, statement)) }
             }
         }
     }
 }
 
-class RandomOrderDiscussion(players: List<Player>) : Discussion(players) {
+class RandomOrderDiscussion(alivePlayers: List<Player>, allPlayers: List<Player>) : Discussion(alivePlayers, allPlayers) {
     override fun speakingOrder(players: List<Player>) = players.shuffled()
 }

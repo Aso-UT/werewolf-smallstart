@@ -61,7 +61,7 @@ class PlayerManager(allPlayers: List<Player>) {
     }
 
     private fun runDiscussion() {
-        RandomOrderDiscussion(_alivePlayers).conduct()
+        RandomOrderDiscussion(_alivePlayers, _allPlayers).conduct()
     }
 
     private fun runVoting() {
