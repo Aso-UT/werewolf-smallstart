@@ -30,9 +30,10 @@ class DiscussionTest {
         override fun selectTarget(context: SelectionContext): Player = error("not expected in discussion test")
     }
 
-    private fun fixedOrderDiscussion(players: List<Player>) = object : Discussion(players) {
-        override fun speakingOrder(players: List<Player>) = players
-    }
+    private fun fixedOrderDiscussion(alivePlayers: List<Player>, allPlayers: List<Player>) =
+        object : Discussion(alivePlayers, allPlayers) {
+            override fun speakingOrder(players: List<Player>) = players
+        }
 
     @Test
     fun `statements are delivered immediately in order`() {
@@ -48,7 +49,7 @@ class DiscussionTest {
         ))
         val players = listOf(alice, bob)
 
-        fixedOrderDiscussion(players).conduct()
+        fixedOrderDiscussion(players, players).conduct()
 
         assertEquals(listOf(
             "Alice:said:私はBobが怪しいと思う",
@@ -73,5 +74,25 @@ class DiscussionTest {
             "Bob:said:Aliceに投票します",
             "Bob:heard:Bob:Aliceに投票します",
         ), bob.log)
+    }
+
+    @Test
+    fun `dead players receive all statements without speaking`() {
+        val alice = TestPlayer("Alice", Role.VILLAGER, listOf("村人として発言します", "続けて発言します", "最終発言です"))
+        val bob = TestPlayer("Bob", Role.WEREWOLF, listOf("人狼として発言します", "続けて発言します", "最終発言です"))
+        val charlie = TestPlayer("Charlie", Role.VILLAGER, emptyList())
+        val alivePlayers = listOf(alice, bob)
+        val allPlayers = listOf(alice, bob, charlie)
+
+        fixedOrderDiscussion(alivePlayers, allPlayers).conduct()
+
+        assertEquals(listOf(
+            "Charlie:heard:Alice:村人として発言します",
+            "Charlie:heard:Bob:人狼として発言します",
+            "Charlie:heard:Alice:続けて発言します",
+            "Charlie:heard:Bob:続けて発言します",
+            "Charlie:heard:Alice:最終発言です",
+            "Charlie:heard:Bob:最終発言です",
+        ), charlie.log)
     }
 }
