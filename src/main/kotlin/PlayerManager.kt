@@ -20,7 +20,7 @@ class PlayerManager(allPlayers: List<Player>) {
     }
 
     fun startGame() {
-        _allPlayers.forEach { GameEvent.RoleAssigned(it.role, it).dispatch() }
+        _allPlayers.forEach { GameEvent.RoleAssigned.send(it.role, it) }
     }
 
     private fun runNightActions(nightNumber: Int): Player? {
@@ -40,9 +40,9 @@ class PlayerManager(allPlayers: List<Player>) {
                 is NightAction.None -> Unit
                 is NightAction.Attack -> Unit
                 is NightAction.Guard -> Unit
-                is NightAction.Divine -> GameEvent.Divined(decision.target, decision.target.role.divineResult, player).dispatch()
+                is NightAction.Divine -> GameEvent.Divined.send(decision.target, decision.target.role.divineResult, player)
                 is NightAction.MediumReveal -> _executedPlayers.lastOrNull()?.let { target ->
-                    GameEvent.MediumRevealed(target, target.role.mediumResult, player).dispatch()
+                    GameEvent.MediumRevealed.send(target, target.role.mediumResult, player)
                 }
             }
         }
@@ -54,10 +54,10 @@ class PlayerManager(allPlayers: List<Player>) {
     }
 
     fun runTurn(nightNumber: Int) {
-        GameEvent.TimeChanged(TimeOfDay.Night(nightNumber), allPlayers).dispatch()
+        GameEvent.TimeChanged.send(TimeOfDay.Night(nightNumber), allPlayers)
         val killed = runNightActions(nightNumber)
-        GameEvent.TimeChanged(TimeOfDay.Morning, allPlayers).dispatch()
-        GameEvent.MorningReport(killed, allPlayers).dispatch()
+        GameEvent.TimeChanged.send(TimeOfDay.Morning, allPlayers)
+        GameEvent.MorningReport.send(killed, allPlayers)
         runDiscussion()
         runVoting()
     }
@@ -73,17 +73,17 @@ class PlayerManager(allPlayers: List<Player>) {
     }
 
     fun endGame(signal: GameOverSignal) {
-        GameEvent.GameOver(signal.winningSide, allPlayers).dispatch()
+        GameEvent.GameOver.send(signal.winningSide, allPlayers)
     }
 
     private fun execute(mostVoted: Player) {
-        GameEvent.PlayerExecuted(mostVoted, allPlayers).dispatch()
+        GameEvent.PlayerExecuted.send(mostVoted, allPlayers)
         _executedPlayers.add(mostVoted)
         die(mostVoted)
     }
 
     private fun attack(target: Player): Player {
-        GameEvent.PlayerAttacked(target, allPlayers).dispatch()
+        GameEvent.PlayerAttacked.send(target, allPlayers)
         _attackedPlayers.add(target)
         die(target)
         return target

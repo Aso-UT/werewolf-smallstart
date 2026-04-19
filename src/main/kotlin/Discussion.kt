@@ -13,7 +13,7 @@ abstract class Discussion(private val alivePlayers: List<Player>, private val al
         repeat(ROUNDS) { index ->
             order.forEach { speaker ->
                 val statement = speaker.discuss(alivePlayers)
-                GameEvent.StatementMade(index + 1, speaker.name, statement, recipients).dispatch()
+                GameEvent.StatementMade.send(index + 1, speaker.name, statement, recipients)
             }
         }
     }

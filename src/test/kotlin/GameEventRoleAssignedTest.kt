@@ -5,24 +5,25 @@ import kotlin.test.assertEquals
 
 class GameEventRoleAssignedTest {
 
-    private val anyPlayer = object : Player {
-        override val name = "test"
-        override val role = Role.VILLAGER
+    private class RecordingPlayer(override val role: Role, override val name: String) : Player {
+        val received = mutableListOf<GameEvent>()
         override fun selectTarget(context: SelectionContext) = this
-        override fun receive(event: GameEvent) {}
+        override fun receive(event: GameEvent) { received.add(event) }
         override fun discuss(players: List<Player>) = ""
     }
 
     @Test
-    fun `title is 役職通知`() {
-        assertEquals("役職通知", GameEvent.RoleAssigned(Role.WEREWOLF, anyPlayer).title)
-    }
+    fun `startGame notifies each player of their assigned role`() {
+        val villager = RecordingPlayer(Role.VILLAGER, "Alice")
+        val werewolf = RecordingPlayer(Role.WEREWOLF, "Bob")
+        PlayerManager(listOf(villager, werewolf)).startGame()
 
-    @Test
-    fun `body shows role display name`() {
-        assertEquals(
-            "あなたの役職は「人狼」です。",
-            GameEvent.RoleAssigned(Role.WEREWOLF, anyPlayer).body(anyPlayer)
-        )
+        val villagerEvent = villager.received.single() as GameEvent.RoleAssigned
+        assertEquals(Role.VILLAGER, villagerEvent.role)
+        assertEquals("あなたの役職は「村人」です。", villagerEvent.body(villager))
+
+        val werewolfEvent = werewolf.received.single() as GameEvent.RoleAssigned
+        assertEquals(Role.WEREWOLF, werewolfEvent.role)
+        assertEquals("あなたの役職は「人狼」です。", werewolfEvent.body(werewolf))
     }
 }
