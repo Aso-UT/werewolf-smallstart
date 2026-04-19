@@ -2,6 +2,7 @@
 name: リファクタリング
 about: 動作を変えずにコードを整理する
 labels: refactor
+title: 'Describe in English'
 ---
 
 ## 対象

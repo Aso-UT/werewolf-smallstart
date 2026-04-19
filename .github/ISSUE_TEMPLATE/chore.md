@@ -2,6 +2,7 @@
 name: 雑務・環境整備
 about: 設定ファイル追加・ツール導入など開発環境や運用に関する作業
 labels: chore
+title: 'Describe in English'
 ---
 
 ## やること
