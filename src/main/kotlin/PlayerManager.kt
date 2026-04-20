@@ -40,9 +40,9 @@ class PlayerManager(allPlayers: List<Player>) {
                 is NightAction.None -> Unit
                 is NightAction.Attack -> Unit
                 is NightAction.Guard -> Unit
-                is NightAction.Divine -> GameEvent.Divined.send(decision.target, decision.target.role.divineResult, player)
+                is NightAction.Divine -> GameEvent.Divined.send(decision.target, player)
                 is NightAction.MediumReveal -> _executedPlayers.lastOrNull()?.let { target ->
-                    GameEvent.MediumRevealed.send(target, target.role.mediumResult, player)
+                    GameEvent.MediumRevealed.send(target, player)
                 }
             }
         }
