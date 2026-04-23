@@ -96,13 +96,20 @@ sealed class GameEvent {
     @ConsistentCopyVisibility
     data class GameOver private constructor(val winnerSide: Side, private val allPlayers: AllPlayers) : GameEvent() {
         override val title = "ゲーム終了"
-        override fun body(self: Player): String {
-            val result = if (self.role.side == winnerSide) "勝利" else "敗北"
-            return "${winnerSide.displayName}陣営の勝利です！あなたは${result}しました。"
-        }
+        override fun body(self: Player) = "${winnerSide.displayName}陣営の勝利です！"
         override val recipients: Notifiable = allPlayers
         companion object {
             fun send(winnerSide: Side, allPlayers: AllPlayers) = GameOver(winnerSide, allPlayers).dispatch()
+        }
+    }
+
+    @ConsistentCopyVisibility
+    data class GameResult private constructor(val isWinner: Boolean, private val recipient: Player) : GameEvent() {
+        override val title = "勝敗結果"
+        override fun body(self: Player) = if (isWinner) "あなたは勝利しました。" else "あなたは敗北しました。"
+        override val recipients: Notifiable = recipient
+        companion object {
+            fun send(isWinner: Boolean, recipient: Player) = GameResult(isWinner, recipient).dispatch()
         }
     }
 }
