@@ -74,6 +74,7 @@ class PlayerManager(allPlayers: List<Player>) {
 
     fun endGame(signal: GameOverSignal) {
         GameEvent.GameOver.send(signal.winningSide, allPlayers)
+        _allPlayers.forEach { GameEvent.GameResult.send(it.role.side == signal.winningSide, it) }
     }
 
     private fun execute(mostVoted: Player) {
