@@ -6,11 +6,6 @@ class Oracle(private val roles: Map<Player, Role>) {
 
     fun initiatePlayers() = roles.forEach { (player, role) -> GameEvent.RoleAssigned.send(role, player) }
 
-    // Temporary: delegating to Role is Player's responsibility. Will be removed in #60
-    // when Player becomes an abstract class with buildNightAction as a final method.
-    fun buildNightAction(player: Player, alivePlayers: List<Player>, isFirstNight: Boolean): NightAction =
-        roleOf(player).buildNightAction(player, alivePlayers, isFirstNight)
-
     fun divine(seer: Player, target: Player) =
         GameEvent.Divined.send(target, roleOf(target).divineResult, seer)
 

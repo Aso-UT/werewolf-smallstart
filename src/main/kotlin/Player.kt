@@ -1,9 +1,11 @@
 package org.example
 
-interface Player : Notifiable {
-    val name: String
-    val role: Role
-    fun selectTarget(context: SelectionContext): Player
-    override fun receive(event: GameEvent)
-    fun discuss(players: List<Player>): String
+abstract class Player(private val role: Role) : Notifiable {
+    abstract val name: String
+    abstract fun selectTarget(context: SelectionContext): Player
+    abstract override fun receive(event: GameEvent)
+    abstract fun discuss(players: List<Player>): String
+
+    fun buildNightAction(players: List<Player>, isFirstNight: Boolean): NightAction =
+        role.buildNightAction(this, players, isFirstNight)
 }

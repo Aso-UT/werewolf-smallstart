@@ -7,9 +7,9 @@ class DiscussionTest {
 
     private class TestPlayer(
         override val name: String,
-        override val role: Role,
+        role: Role,
         private val statements: List<String>
-    ) : Player {
+    ) : Player(role) {
         private val _log = mutableListOf<String>()
         val log: List<String> get() = _log
         private var statementIndex = 0
