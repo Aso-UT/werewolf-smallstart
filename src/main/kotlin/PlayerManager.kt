@@ -42,9 +42,9 @@ class PlayerManager(setup: GameSetup) {
                 is NightAction.Attack -> Unit
                 is NightAction.Guard -> Unit
                 is NightAction.FirstNightDivine -> oracle.firstNightDivine(player, _alivePlayers)
-                is NightAction.Divine -> GameEvent.Divined.send(decision.target, player)
+                is NightAction.Divine -> oracle.divine(player, decision.target)
                 is NightAction.MediumReveal -> _executedPlayers.lastOrNull()?.let { target ->
-                    GameEvent.MediumRevealed.send(target, player)
+                    oracle.mediumReveal(player, target)
                 }
             }
         }

@@ -11,11 +11,17 @@ class Oracle(private val roles: Map<Player, Role>) {
     fun buildNightAction(player: Player, alivePlayers: List<Player>, isFirstNight: Boolean): NightAction =
         roleOf(player).buildNightAction(player, alivePlayers, isFirstNight)
 
+    fun divine(seer: Player, target: Player) =
+        GameEvent.Divined.send(target, roleOf(target).divineResult, seer)
+
+    fun mediumReveal(medium: Player, target: Player) =
+        GameEvent.MediumRevealed.send(target, roleOf(target).mediumResult, medium)
+
     fun firstNightDivine(seer: Player, alivePlayers: List<Player>) {
         val target = alivePlayers.filterNot { it === seer }
             .filter { roleOf(it).divineResult == DivineResult.NOT_WEREWOLF }
             .random()
-        GameEvent.Divined.send(target, seer)
+        divine(seer, target)
     }
 
     fun aliveCounts(alivePlayers: List<Player>): AliveCounts =
