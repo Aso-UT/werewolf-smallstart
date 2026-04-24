@@ -23,8 +23,3 @@ sealed class SelectionContext(val title: String, val description: String) {
         override fun candidates() = players.filterNot { it === self }
     }
 }
-
-object FirstDivineFilter {
-    fun candidates(self: Player, players: List<Player>): List<Player> =
-        players.filterNot { it === self }.filter { it.role.divineResult == DivineResult.NOT_WEREWOLF }
-}
