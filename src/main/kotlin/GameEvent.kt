@@ -47,7 +47,7 @@ sealed class GameEvent {
         override fun body(self: Player) = "${target.name} は「${result.displayName}」です。"
         override val recipients: Notifiable = recipient
         companion object {
-            fun send(target: Player, recipient: Player) = Divined(target, target.role.divineResult, recipient).dispatch()
+            fun send(target: Player, result: DivineResult, recipient: Player) = Divined(target, result, recipient).dispatch()
         }
     }
 
@@ -57,7 +57,7 @@ sealed class GameEvent {
         override fun body(self: Player) = "${target.name} は「${result.displayName}」です。"
         override val recipients: Notifiable = recipient
         companion object {
-            fun send(target: Player, recipient: Player) = MediumRevealed(target, target.role.mediumResult, recipient).dispatch()
+            fun send(target: Player, result: MediumResult, recipient: Player) = MediumRevealed(target, result, recipient).dispatch()
         }
     }
 
