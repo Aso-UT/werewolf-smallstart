@@ -8,7 +8,7 @@ enum class Role(val displayName: String, val side: Side, val divineResult: Divin
     },
     SEER("占い師", Side.CITIZEN, DivineResult.NOT_WEREWOLF, MediumResult.NOT_WEREWOLF) {
         override fun firstNightAction(self: Player, players: List<Player>): NightAction =
-            NightAction.Divine(FirstDivineFilter.candidates(self, players).random())
+            NightAction.FirstNightDivine
         override fun normalNightAction(self: Player, players: List<Player>): NightAction =
             NightAction.Divine(self.selectTarget(SelectionContext.Divine(self, players)))
     },
