@@ -1,8 +1,9 @@
 package org.example
 
-class PlayerManager(allPlayers: List<Player>) {
+class PlayerManager(setup: GameSetup) {
 
-    private val _allPlayers: List<Player> = allPlayers
+    private val oracle = setup.oracle
+    private val _allPlayers: List<Player> = setup.players
     private val _alivePlayers: MutableList<Player> = _allPlayers.toMutableList()
     private val _executedPlayers: MutableList<Player> = mutableListOf()
     private val _attackedPlayers: MutableList<Player> = mutableListOf()
@@ -11,7 +12,7 @@ class PlayerManager(allPlayers: List<Player>) {
     private val allPlayers get() = AllPlayers(_allPlayers)
 
     private fun checkWinner() {
-        GameOverSignal.throwIfGameOver(AliveCounts(_alivePlayers))
+        GameOverSignal.throwIfGameOver(oracle.aliveCounts(_alivePlayers))
     }
 
     private fun die(player: Player) {
@@ -20,11 +21,11 @@ class PlayerManager(allPlayers: List<Player>) {
     }
 
     fun startGame() {
-        _allPlayers.forEach { GameEvent.RoleAssigned.send(it.role, it) }
+        oracle.initiatePlayers()
     }
 
     private fun runNightActions(nightNumber: Int): Player? {
-        val decisions = _alivePlayers.map { it to it.role.buildNightAction(it, _alivePlayers, nightNumber == 1) }
+        val decisions = _alivePlayers.map { it to oracle.buildNightAction(it, _alivePlayers, nightNumber == 1) }
 
         val attacks = decisions.map { it.second }.filterIsInstance<NightAction.Attack>()
         val guards = decisions.map { it.second }.filterIsInstance<NightAction.Guard>()
@@ -74,7 +75,7 @@ class PlayerManager(allPlayers: List<Player>) {
 
     fun endGame(signal: GameOverSignal) {
         GameEvent.GameOver.send(signal.winningSide, allPlayers)
-        _allPlayers.forEach { GameEvent.GameResult.send(it.role.side == signal.winningSide, it) }
+        _allPlayers.forEach { GameEvent.GameResult.send(oracle.isWinner(it, signal.winningSide), it) }
     }
 
     private fun execute(mostVoted: Player) {
