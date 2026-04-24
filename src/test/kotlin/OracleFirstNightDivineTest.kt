@@ -5,7 +5,7 @@ import kotlin.test.assertFalse
 
 class OracleFirstNightDivineTest {
 
-    private class RecordingPlayer(override val role: Role, override val name: String) : Player {
+    private class RecordingPlayer(role: Role, override val name: String) : Player(role) {
         val divinedTargets = mutableListOf<Player>()
         override fun selectTarget(context: SelectionContext) = this
         override fun receive(event: GameEvent) { divinedTargets.add((event as GameEvent.Divined).target) }

@@ -5,7 +5,7 @@ import kotlin.test.assertEquals
 
 class GameEventRoleAssignedTest {
 
-    private class RecordingPlayer(override val role: Role, override val name: String) : Player {
+    private class RecordingPlayer(role: Role, override val name: String) : Player(role) {
         val received = mutableListOf<GameEvent>()
         override fun selectTarget(context: SelectionContext) = this
         override fun receive(event: GameEvent) { received.add(event) }

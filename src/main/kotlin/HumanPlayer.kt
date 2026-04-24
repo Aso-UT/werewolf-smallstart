@@ -1,6 +1,6 @@
 package org.example
 
-class HumanPlayer(override val role: Role, override val name: String, private val io: PlayerIO) : Player {
+class HumanPlayer(role: Role, override val name: String, private val io: PlayerIO) : Player(role) {
     override fun selectTarget(context: SelectionContext): Player =
         io.prompt(name, context.title, context.description, context.candidates())
 

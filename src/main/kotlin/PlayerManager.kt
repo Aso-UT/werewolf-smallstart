@@ -25,7 +25,7 @@ class PlayerManager(setup: GameSetup) {
     }
 
     private fun runNightActions(nightNumber: Int): Player? {
-        val decisions = _alivePlayers.map { it to oracle.buildNightAction(it, _alivePlayers, nightNumber == 1) }
+        val decisions = _alivePlayers.map { it to it.buildNightAction(_alivePlayers, nightNumber == 1) }
 
         val attacks = decisions.map { it.second }.filterIsInstance<NightAction.Attack>()
         val guards = decisions.map { it.second }.filterIsInstance<NightAction.Guard>()
