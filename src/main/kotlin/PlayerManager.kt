@@ -5,7 +5,6 @@ class PlayerManager(setup: GameSetup) {
     private val oracle = setup.oracle
     private val _allPlayers: List<Player> = setup.players
     private val _alivePlayers: MutableList<Player> = _allPlayers.toMutableList()
-    private val _executedPlayers: MutableList<Player> = mutableListOf()
     private val _attackedPlayers: MutableList<Player> = mutableListOf()
     val players: List<Player> get() = _alivePlayers
 
@@ -43,9 +42,7 @@ class PlayerManager(setup: GameSetup) {
                 is NightAction.Guard -> Unit
                 is NightAction.FirstNightDivine -> oracle.firstNightDivine(player, _alivePlayers)
                 is NightAction.Divine -> oracle.divine(player, decision.target)
-                is NightAction.MediumReveal -> _executedPlayers.lastOrNull()?.let { target ->
-                    oracle.mediumReveal(player, target)
-                }
+                is NightAction.MediumReveal -> oracle.mediumReveal(player, decision.target)
             }
         }
     }
@@ -81,7 +78,6 @@ class PlayerManager(setup: GameSetup) {
 
     private fun execute(mostVoted: Player) {
         GameEvent.PlayerExecuted.send(mostVoted, allPlayers)
-        _executedPlayers.add(mostVoted)
         die(mostVoted)
     }
 
