@@ -8,7 +8,12 @@ class OracleFirstNightDivineTest {
     private class RecordingPlayer(role: Role, override val name: String) : Player(role) {
         val divinedTargets = mutableListOf<Player>()
         override fun selectTarget(context: SelectionContext) = this
-        override fun receive(event: GameEvent) { divinedTargets.add((event as GameEvent.Divined).target) }
+        override fun onReceive(event: GameEvent) {
+            when (event) {
+                is GameEvent.Divined -> divinedTargets.add(event.target)
+                else -> error("unexpected event in oracle first night divine test: $event")
+            }
+        }
         override fun discuss(players: List<Player>) = ""
     }
 

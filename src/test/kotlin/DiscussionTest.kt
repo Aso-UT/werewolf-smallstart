@@ -20,7 +20,7 @@ class DiscussionTest {
             return statement
         }
 
-        override fun receive(event: GameEvent) {
+        override fun onReceive(event: GameEvent) {
             when (event) {
                 is GameEvent.StatementMade -> _log.add("$name:heard:${event.speakerName}:${event.statement}")
                 else -> error("unexpected event in discussion test: $event")

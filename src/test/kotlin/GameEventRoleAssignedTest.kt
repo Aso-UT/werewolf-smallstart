@@ -8,7 +8,7 @@ class GameEventRoleAssignedTest {
     private class RecordingPlayer(role: Role, override val name: String) : Player(role) {
         val received = mutableListOf<GameEvent>()
         override fun selectTarget(context: SelectionContext) = this
-        override fun receive(event: GameEvent) { received.add(event) }
+        override fun onReceive(event: GameEvent) { received.add(event) }
         override fun discuss(players: List<Player>) = ""
     }
 
