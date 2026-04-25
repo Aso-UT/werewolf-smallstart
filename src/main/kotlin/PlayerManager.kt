@@ -23,10 +23,6 @@ class PlayerManager(setup: GameSetup) {
         _nightDeath = null
     }
 
-    fun startGame() {
-        oracle.initiatePlayers()
-    }
-
     private fun runNightActions(nightNumber: Int) {
         val decisions = _alivePlayers.map { it to it.buildNightAction(_alivePlayers, nightNumber == 1) }
 
