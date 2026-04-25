@@ -6,9 +6,9 @@ class PlayerManager(setup: GameSetup) {
     private val _allPlayers: List<Player> = setup.players
     private val _alivePlayers: MutableList<Player> = _allPlayers.toMutableList()
     private var _nightDeath: Player? = null
+    val nightDeath: Player? get() = _nightDeath
     val players: List<Player> get() = _alivePlayers
-
-    private val allPlayers get() = AllPlayers(_allPlayers)
+    val allPlayers get() = AllPlayers(_allPlayers)
 
     private fun checkWinner() {
         GameOverSignal.throwIfGameOver(oracle.aliveCounts(_alivePlayers))
@@ -26,9 +26,7 @@ class PlayerManager(setup: GameSetup) {
     fun runTurn(nightNumber: Int) {
         GameEvent.TimeChanged.send(TimeOfDay.Night(nightNumber), allPlayers)
         NightPhase(this, oracle, nightNumber).proceed()
-        GameEvent.TimeChanged.send(TimeOfDay.Morning, allPlayers)
-        GameEvent.MorningReport.send(_nightDeath, allPlayers)
-        bury()
+        MorningPhase(this).proceed()
         runDiscussion()
         runVoting()
     }
