@@ -20,7 +20,7 @@ class GameEventRoleAssignedTest {
             players = listOf(villager, werewolf),
             oracle = Oracle(mapOf(villager to Role.VILLAGER, werewolf to Role.WEREWOLF)),
         )
-        InitialPhase(setup.oracle).proceed()
+        InitialPhase(PlayerManager(setup), setup.oracle).proceed()
 
         val villagerEvent = villager.received.single() as GameEvent.RoleAssigned
         assertEquals(Role.VILLAGER, villagerEvent.role)

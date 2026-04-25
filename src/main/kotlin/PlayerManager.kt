@@ -23,18 +23,6 @@ class PlayerManager(setup: GameSetup) {
         _nightDeath = null
     }
 
-    fun runTurn(nightNumber: Int) {
-        GameEvent.TimeChanged.send(TimeOfDay.Night(nightNumber), allPlayers)
-        NightPhase(this, oracle, nightNumber).proceed()
-        MorningPhase(this).proceed()
-        DayPhase(this).proceed()
-    }
-
-    fun endGame(signal: GameOverSignal) {
-        GameEvent.GameOver.send(signal.winningSide, allPlayers)
-        _allPlayers.forEach { GameEvent.GameResult.send(oracle.isWinner(it, signal.winningSide), it) }
-    }
-
     fun execute(mostVoted: Player) {
         GameEvent.PlayerExecuted.send(mostVoted, allPlayers)
         die(mostVoted)
