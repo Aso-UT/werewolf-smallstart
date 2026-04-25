@@ -5,7 +5,7 @@ class PlayerManager(setup: GameSetup) {
     private val oracle = setup.oracle
     private val _allPlayers: List<Player> = setup.players
     private val _alivePlayers: MutableList<Player> = _allPlayers.toMutableList()
-    private val _attackedPlayers: MutableList<Player> = mutableListOf()
+    private var _nightDeath: Player? = null
     val players: List<Player> get() = _alivePlayers
 
     private val allPlayers get() = AllPlayers(_allPlayers)
@@ -19,19 +19,22 @@ class PlayerManager(setup: GameSetup) {
         checkWinner()
     }
 
+    fun bury() {
+        _nightDeath = null
+    }
+
     fun startGame() {
         oracle.initiatePlayers()
     }
 
-    private fun runNightActions(nightNumber: Int): Player? {
+    private fun runNightActions(nightNumber: Int) {
         val decisions = _alivePlayers.map { it to it.buildNightAction(_alivePlayers, nightNumber == 1) }
 
         val attacks = decisions.map { it.second }.filterIsInstance<NightAction.Attack>()
         val guards = decisions.map { it.second }.filterIsInstance<NightAction.Guard>()
-        val killed = attackIfNotGuarded(attacks, guards)
+        attackIfNotGuarded(attacks, guards)
 
         revealNightSecrets(decisions)
-        return killed
     }
 
     private fun revealNightSecrets(decisions: List<Pair<Player, NightAction>>) {
@@ -47,16 +50,17 @@ class PlayerManager(setup: GameSetup) {
         }
     }
 
-    private fun attackIfNotGuarded(attacks: List<NightAction.Attack>, guards: List<NightAction.Guard>): Player? {
-        val target = MajorityVoteResolver.resolve(attacks.map { it.target }) ?: return null
-        return if (guards.none { it.target === target }) attack(target) else null
+    private fun attackIfNotGuarded(attacks: List<NightAction.Attack>, guards: List<NightAction.Guard>) {
+        val target = MajorityVoteResolver.resolve(attacks.map { it.target }) ?: return
+        if (guards.none { it.target === target }) attack(target)
     }
 
     fun runTurn(nightNumber: Int) {
         GameEvent.TimeChanged.send(TimeOfDay.Night(nightNumber), allPlayers)
-        val killed = runNightActions(nightNumber)
+        runNightActions(nightNumber)
         GameEvent.TimeChanged.send(TimeOfDay.Morning, allPlayers)
-        GameEvent.MorningReport.send(killed, allPlayers)
+        GameEvent.MorningReport.send(_nightDeath, allPlayers)
+        bury()
         runDiscussion()
         runVoting()
     }
@@ -81,10 +85,9 @@ class PlayerManager(setup: GameSetup) {
         die(mostVoted)
     }
 
-    private fun attack(target: Player): Player {
+    private fun attack(target: Player) {
         GameEvent.PlayerAttacked.send(target, allPlayers)
-        _attackedPlayers.add(target)
+        _nightDeath = target
         die(target)
-        return target
     }
 }
