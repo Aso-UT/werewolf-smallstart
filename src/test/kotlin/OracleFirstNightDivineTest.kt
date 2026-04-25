@@ -6,13 +6,16 @@ import kotlin.test.assertFalse
 class OracleFirstNightDivineTest {
 
     private class RecordingPlayer(role: Role, override val name: String) : Player(role) {
+        val divinedTargets = mutableListOf<Player>()
         override fun selectTarget(context: SelectionContext) = this
-        override fun onReceive(event: GameEvent) = Unit
+        override fun onReceive(event: GameEvent) {
+            when (event) {
+                is GameEvent.Divined -> divinedTargets.add(event.target)
+                else -> error("unexpected event in oracle first night divine test: $event")
+            }
+        }
         override fun discuss(players: List<Player>) = ""
     }
-
-    private fun RecordingPlayer.divinedTargets() =
-        receivedEvents.filterIsInstance<GameEvent.Divined>().map { it.target }
 
     @Test
     fun `never selects seer as divine target`() {
@@ -23,7 +26,7 @@ class OracleFirstNightDivineTest {
 
         repeat(100) { oracle.firstNightDivine(seer, listOf(seer, villager1, villager2)) }
 
-        assertFalse(seer in seer.divinedTargets())
+        assertFalse(seer in seer.divinedTargets)
     }
 
     @Test
@@ -35,6 +38,6 @@ class OracleFirstNightDivineTest {
 
         repeat(100) { oracle.firstNightDivine(seer, listOf(seer, werewolf, villager)) }
 
-        assertFalse(werewolf in seer.divinedTargets())
+        assertFalse(werewolf in seer.divinedTargets)
     }
 }

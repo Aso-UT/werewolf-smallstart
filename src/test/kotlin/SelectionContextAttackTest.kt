@@ -19,7 +19,7 @@ class SelectionContextAttackTest {
         val villager = StubPlayer("Villager", Role.VILLAGER)
         val players = listOf(wolf, villager)
 
-        val candidates = SelectionContext.Attack(wolf, players).candidates()
+        val candidates = SelectionContext.Attack(wolf, players, emptyList()).candidates()
 
         assertFalse(wolf in candidates)
         assertTrue(villager in candidates)
@@ -44,7 +44,7 @@ class SelectionContextAttackTest {
         val villager2 = StubPlayer("V2", Role.VILLAGER)
         val players = listOf(wolf, villager1, villager2)
 
-        val candidates = SelectionContext.Attack(wolf, players).candidates()
+        val candidates = SelectionContext.Attack(wolf, players, emptyList()).candidates()
 
         assertEquals(listOf(villager1, villager2), candidates)
     }

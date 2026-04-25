@@ -3,7 +3,7 @@ package org.example
 sealed class SelectionContext(val title: String, val description: String) {
     abstract fun candidates(): List<Player>
 
-    class Attack(private val self: Player, private val players: List<Player>, private val allies: List<Player> = emptyList())
+    class Attack(private val self: Player, private val players: List<Player>, private val allies: List<Player>)
         : SelectionContext("夜の行動", "襲撃先を選んでください") {
         override fun candidates() = players.filterNot { it === self || it in allies }
     }

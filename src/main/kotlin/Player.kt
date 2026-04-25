@@ -2,11 +2,10 @@ package org.example
 
 abstract class Player(private val role: Role) : Notifiable {
     abstract val name: String
-    private val _receivedEvents: MutableList<GameEvent> = mutableListOf()
-    val receivedEvents: List<GameEvent> get() = _receivedEvents
+    private val _knowledge: MutableList<GameEvent> = mutableListOf()
 
     final override fun receive(event: GameEvent) {
-        _receivedEvents.add(event)
+        _knowledge.add(event)
         onReceive(event)
     }
 
@@ -15,5 +14,5 @@ abstract class Player(private val role: Role) : Notifiable {
     abstract fun discuss(players: List<Player>): String
 
     fun buildNightAction(players: List<Player>, isFirstNight: Boolean): NightAction =
-        role.buildNightAction(this, players, isFirstNight)
+        role.buildNightAction(this, players, isFirstNight, _knowledge.toList())
 }
