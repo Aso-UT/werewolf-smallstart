@@ -3,8 +3,12 @@ package org.example
 enum class Role(val displayName: String, val side: Side, val divineResult: DivineResult, val mediumResult: MediumResult) {
     WEREWOLF("人狼", Side.WEREWOLF, DivineResult.WEREWOLF, MediumResult.WEREWOLF) {
         override fun firstNightAction(self: Player, players: List<Player>): NightAction = NightAction.None
-        override fun normalNightAction(self: Player, players: List<Player>): NightAction =
-            NightAction.Attack(self.selectTarget(SelectionContext.Attack(self, players)))
+        override fun normalNightAction(self: Player, players: List<Player>): NightAction {
+            val allies = self.receivedEvents
+                .filterIsInstance<GameEvent.WerewolfAllyRevealed>()
+                .map { it.ally }
+            return NightAction.Attack(self.selectTarget(SelectionContext.Attack(self, players, allies)))
+        }
     },
     SEER("占い師", Side.CITIZEN, DivineResult.NOT_WEREWOLF, MediumResult.NOT_WEREWOLF) {
         override fun firstNightAction(self: Player, players: List<Player>): NightAction =

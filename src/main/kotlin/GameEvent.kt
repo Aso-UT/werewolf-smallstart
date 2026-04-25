@@ -112,4 +112,14 @@ sealed class GameEvent {
             fun send(isWinner: Boolean, recipient: Player) = GameResult(isWinner, recipient).dispatch()
         }
     }
+
+    @ConsistentCopyVisibility
+    data class WerewolfAllyRevealed private constructor(val ally: Player, private val recipient: Player) : GameEvent() {
+        override val title = "仲間通知"
+        override fun body(self: Player) = "${ally.name} は仲間の人狼です。"
+        override val recipients: Notifiable = recipient
+        companion object {
+            fun send(ally: Player, recipient: Player) = WerewolfAllyRevealed(ally, recipient).dispatch()
+        }
+    }
 }

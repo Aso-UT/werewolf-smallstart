@@ -4,7 +4,15 @@ class Oracle(private val roles: Map<Player, Role>) {
     private fun roleOf(player: Player): Role =
         requireNotNull(roles[player]) { "Player not in Oracle: ${player.name}" }
 
-    fun initiatePlayers() = roles.forEach { (player, role) -> GameEvent.RoleAssigned.send(role, player) }
+    fun initiatePlayers() {
+        roles.forEach { (player, role) -> GameEvent.RoleAssigned.send(role, player) }
+        val werewolves = roles.filter { it.value == Role.WEREWOLF }.keys.toList()
+        werewolves.forEach { wolf ->
+            werewolves.filterNot { it === wolf }.forEach { ally ->
+                GameEvent.WerewolfAllyRevealed.send(ally, wolf)
+            }
+        }
+    }
 
     fun divine(seer: Player, target: Player) =
         GameEvent.Divined.send(target, roleOf(target).divineResult, seer)

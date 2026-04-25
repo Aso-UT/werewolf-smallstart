@@ -4,7 +4,7 @@ class HumanPlayer(role: Role, override val name: String, private val io: PlayerI
     override fun selectTarget(context: SelectionContext): Player =
         io.prompt(name, context.title, context.description, context.candidates())
 
-    override fun receive(event: GameEvent) {
+    override fun onReceive(event: GameEvent) {
         io.sendMessage(name, event.title, event.body(this))
     }
 
