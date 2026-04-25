@@ -27,18 +27,7 @@ class PlayerManager(setup: GameSetup) {
         GameEvent.TimeChanged.send(TimeOfDay.Night(nightNumber), allPlayers)
         NightPhase(this, oracle, nightNumber).proceed()
         MorningPhase(this).proceed()
-        runDiscussion()
-        runVoting()
-    }
-
-    private fun runDiscussion() {
-        RandomOrderDiscussion(_alivePlayers, _allPlayers).conduct()
-    }
-
-    private fun runVoting() {
-        val votes = _alivePlayers.map { it.selectTarget(SelectionContext.Vote(it, _alivePlayers)) }
-        val mostVoted = MajorityVoteResolver.resolveNonEmpty(votes)
-        execute(mostVoted)
+        DayPhase(this).proceed()
     }
 
     fun endGame(signal: GameOverSignal) {
@@ -46,7 +35,7 @@ class PlayerManager(setup: GameSetup) {
         _allPlayers.forEach { GameEvent.GameResult.send(oracle.isWinner(it, signal.winningSide), it) }
     }
 
-    private fun execute(mostVoted: Player) {
+    fun execute(mostVoted: Player) {
         GameEvent.PlayerExecuted.send(mostVoted, allPlayers)
         die(mostVoted)
     }
