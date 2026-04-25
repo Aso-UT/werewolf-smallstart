@@ -30,7 +30,7 @@ class DiscussionTest {
         override fun selectTarget(context: SelectionContext): Player = error("not expected in discussion test")
     }
 
-    private fun fixedOrderDiscussion(alivePlayers: List<Player>, allPlayers: List<Player>) =
+    private fun fixedOrderDiscussion(alivePlayers: List<Player>, allPlayers: AllPlayers) =
         object : Discussion(alivePlayers, allPlayers) {
             override fun speakingOrder(players: List<Player>) = players
         }
@@ -49,7 +49,7 @@ class DiscussionTest {
         ))
         val players = listOf(alice, bob)
 
-        fixedOrderDiscussion(players, players).conduct()
+        fixedOrderDiscussion(players, AllPlayers(players)).conduct()
 
         assertEquals(listOf(
             "Alice:said:私はBobが怪しいと思う",
@@ -84,7 +84,7 @@ class DiscussionTest {
         val alivePlayers = listOf(alice, bob)
         val allPlayers = listOf(alice, bob, charlie)
 
-        fixedOrderDiscussion(alivePlayers, allPlayers).conduct()
+        fixedOrderDiscussion(alivePlayers, AllPlayers(allPlayers)).conduct()
 
         assertEquals(listOf(
             "Charlie:heard:Alice:村人として発言します",

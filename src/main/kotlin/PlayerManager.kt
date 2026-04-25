@@ -8,7 +8,6 @@ class PlayerManager(setup: GameSetup) {
     private var _nightDeath: Player? = null
     val nightDeath: Player? get() = _nightDeath
     val players: List<Player> get() = _alivePlayers
-    val everyPlayer: List<Player> get() = _allPlayers
     val allPlayers get() = AllPlayers(_allPlayers)
 
     private fun checkWinner() {
