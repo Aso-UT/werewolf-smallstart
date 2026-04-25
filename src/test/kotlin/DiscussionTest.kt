@@ -31,7 +31,7 @@ class DiscussionTest {
     }
 
     private fun fixedOrderDiscussion(alivePlayers: List<Player>, allPlayers: AllPlayers) =
-        object : Discussion(alivePlayers, allPlayers) {
+        object : OpenDiscussion(alivePlayers, allPlayers) {
             override fun speakingOrder(players: List<Player>) = players
         }
 
