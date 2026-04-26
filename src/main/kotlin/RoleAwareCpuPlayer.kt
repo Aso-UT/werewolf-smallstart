@@ -29,7 +29,7 @@ class RoleAwareCpuPlayer(private val myRole: Role, override val name: String) : 
 
     override fun selectTarget(context: SelectionContext): Player = when {
         myRole == Role.SEER && context is SelectionContext.Divine -> selectDivineTarget(context)
-        myRole == Role.SEER && context is SelectionContext.Vote   -> selectVoteTarget(context)
+        context is SelectionContext.Vote -> selectVoteTarget(context)
         else -> context.candidates().random()
     }
 
@@ -49,9 +49,11 @@ class RoleAwareCpuPlayer(private val myRole: Role, override val name: String) : 
             reportedDivinations[it] == DivineResult.WEREWOLF && myDivinedResults[it] != DivineResult.NOT_WEREWOLF
         }
         if (reportedWerewolves.isNotEmpty()) return reportedWerewolves.random()
-        // ③ 自分の占いで非人狼と確認した候補を除いてランダム
-        val myConfirmedVillagers = candidates.filter { myDivinedResults[it] == DivineResult.NOT_WEREWOLF }
-        val votable = candidates - myConfirmedVillagers.toSet()
+        // ③ 自分の占いまたは他者の報告で非人狼と確認した候補を除いてランダム
+        val confirmedNotWerewolf = candidates.filter {
+            myDivinedResults[it] == DivineResult.NOT_WEREWOLF || reportedDivinations[it] == DivineResult.NOT_WEREWOLF
+        }
+        val votable = candidates - confirmedNotWerewolf.toSet()
         return if (votable.isNotEmpty()) votable.random() else candidates.random()
     }
 }
