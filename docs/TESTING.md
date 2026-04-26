@@ -2,31 +2,49 @@
 
 ## 何をテストするか
 
-### テストを積極的に書く対象
+**ロジックの複雑さ・境界値・ミスが起きうる箇所**を優先してテストする。
 
-**純粋な計算ロジック**（外部依存がなく、入力と出力だけで検証できるもの）のうち、**ミスが起きうる・境界値がある・ロジックが複雑**なものを優先する。定数を返すだけのコードや自明な委譲はテスト不要。
+`ConsolePlayerIO` は stdin/stdout を直接扱うため検証が難しいが、
+設計上ここにロジックを置かないことでテストの必要性を最小化している。
+それ以外のコードは、テスト実装（後述）を使えば基本的にテスト可能。
+
+## テストのレイヤー
+
+### サブユニットテスト
+
+複雑なロジックや境界値を持つ単一クラスを直接テストする。
 
 | クラス / オブジェクト | テストの観点の例 |
 |----------------------|----------------|
 | `WinConditionChecker` | 人狼0→市民勝利、人狼≧市民→人狼勝利、ゲーム継続中はnull |
 | `Side.hasWon()` | 各陣営の勝利条件の境界値 |
 | `SelectionContext.*` | `candidates()` が自分自身・除外対象を正しく除くか |
-| `FirstDivineFilter` | 候補リストから人狼が除外されるか |
 | `AliveCounts` | 各陣営のカウントが正しく算出されるか |
+| `MajorityVoteResolver` | 最多票・同数・空リストの各ケース |
 
-### テストを後回しにする対象
+### フェーズテスト
 
-IO依存のコードはテスト難易度が高いため優先度を下げる。
+`RecordingPlayer` などのテスト実装を使い、フェーズ単体を `proceed()` して
+「何を誰に送り、どう状態を変えるか」を検証する。
 
-- `ConsolePlayerIO` — 標準入出力に依存
-- `HumanPlayer` — `PlayerIO` に依存
-- `PlayerManager` — ゲーム進行全体を束ねるオーケストレーター層
+フェーズをまたいだゲーム全体のテストは、セットアップコストが高い割に
+各フェーズテストで十分カバーできるため書かない。
+
+```kotlin
+// テスト実装の例
+private class RecordingPlayer(role: Role, override val name: String) : Player(role) {
+    val received = mutableListOf<GameEvent>()
+    override fun selectTarget(context: SelectionContext) = this
+    override fun onReceive(event: GameEvent) { received.add(event) }
+    override fun discuss(players: List<Player>) = ""
+}
+```
 
 ## いつ書くか
 
 機能追加・バグ修正のタイミングで、**変更対象のコードにテストを合わせて追加する**。
 
-- 新しい計算ロジックを追加したら、同じPRにテストを含める
+- 新しいロジックを追加したら、同じPRにテストを含める
 - 既存ロジックを変更したら、対応するテストも更新する
 - テストが書きにくいと感じたら、それは設計を見直すサインとして受け取る
 
