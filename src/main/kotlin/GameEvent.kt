@@ -8,6 +8,7 @@ sealed class GameEvent {
     abstract fun body(self: Player): String
     protected abstract val recipients: Notifiable
     protected fun dispatch() = recipients.receive(this)
+    fun isPublicKnowledge(): Boolean = recipients is AllPlayers
 
     @ConsistentCopyVisibility
     data class RoleAssigned private constructor(val role: Role, private val recipient: Player) : GameEvent() {
