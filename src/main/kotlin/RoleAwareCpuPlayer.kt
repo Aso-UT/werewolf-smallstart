@@ -1,19 +1,30 @@
 package org.example
 
 class RoleAwareCpuPlayer(private val myRole: Role, override val name: String) : Player(myRole) {
-    private val divinedResults = mutableMapOf<Player, DivineResult>()
+    private val myDivinedResults = mutableMapOf<Player, DivineResult>()
+    private val reportedDivinations = mutableMapOf<Player, DivineResult>()
     private val unspokenDivinations = mutableListOf<GameEvent.Divined>()
 
     override fun onReceive(event: GameEvent) {
-        if (event is GameEvent.Divined) {
-            divinedResults[event.target] = event.result
-            unspokenDivinations.add(event)
+        when (event) {
+            is GameEvent.Divined -> {
+                myDivinedResults[event.target] = event.result
+                unspokenDivinations.add(event)
+            }
+            is GameEvent.StatementMade -> {
+                val statement = event.statement
+                if (statement is Statement.DivinationReport && statement.claimant !== this) {
+                    reportedDivinations[statement.target] = statement.result
+                }
+            }
+            else -> {}
         }
     }
 
-    override fun discuss(players: List<Player>): String {
-        if (myRole != Role.SEER || unspokenDivinations.isEmpty()) return ""
-        return unspokenDivinations.removeFirst().body(this)
+    override fun discuss(players: List<Player>): Statement {
+        if (myRole != Role.SEER || unspokenDivinations.isEmpty()) return Statement.Plain("")
+        val event = unspokenDivinations.removeFirst()
+        return Statement.DivinationReport(claimant = this, target = event.target, result = event.result)
     }
 
     override fun selectTarget(context: SelectionContext): Player = when {
@@ -24,16 +35,23 @@ class RoleAwareCpuPlayer(private val myRole: Role, override val name: String) : 
 
     private fun selectDivineTarget(context: SelectionContext.Divine): Player {
         val candidates = context.candidates()
-        val undivined = candidates.filter { it !in divinedResults }
+        val undivined = candidates.filter { it !in myDivinedResults }
         return if (undivined.isNotEmpty()) undivined.random() else candidates.random()
     }
 
     private fun selectVoteTarget(context: SelectionContext.Vote): Player {
         val candidates = context.candidates()
-        val confirmedWerewolves = candidates.filter { divinedResults[it] == DivineResult.WEREWOLF }
-        if (confirmedWerewolves.isNotEmpty()) return confirmedWerewolves.random()
-        val confirmedVillagers = candidates.filter { divinedResults[it] == DivineResult.NOT_WEREWOLF }
-        val votable = candidates - confirmedVillagers.toSet()
+        // ① 自分の占いで人狼と確認した候補
+        val myConfirmedWerewolves = candidates.filter { myDivinedResults[it] == DivineResult.WEREWOLF }
+        if (myConfirmedWerewolves.isNotEmpty()) return myConfirmedWerewolves.random()
+        // ② 他者が人狼と報告した候補（自分の占いで非人狼と確認した者は除く）
+        val reportedWerewolves = candidates.filter {
+            reportedDivinations[it] == DivineResult.WEREWOLF && myDivinedResults[it] != DivineResult.NOT_WEREWOLF
+        }
+        if (reportedWerewolves.isNotEmpty()) return reportedWerewolves.random()
+        // ③ 自分の占いで非人狼と確認した候補を除いてランダム
+        val myConfirmedVillagers = candidates.filter { myDivinedResults[it] == DivineResult.NOT_WEREWOLF }
+        val votable = candidates - myConfirmedVillagers.toSet()
         return if (votable.isNotEmpty()) votable.random() else candidates.random()
     }
 }

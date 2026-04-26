@@ -9,7 +9,7 @@ class GameEventRoleAssignedTest {
         val received = mutableListOf<GameEvent>()
         override fun selectTarget(context: SelectionContext) = this
         override fun onReceive(event: GameEvent) { received.add(event) }
-        override fun discuss(players: List<Player>) = ""
+        override fun discuss(players: List<Player>): Statement = Statement.Plain("")
     }
 
     @Test

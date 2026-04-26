@@ -10,7 +10,7 @@ class SelectionContextAttackTest {
     private class StubPlayer(override val name: String, role: Role) : Player(role) {
         override fun selectTarget(context: SelectionContext) = this
         override fun onReceive(event: GameEvent) = Unit
-        override fun discuss(players: List<Player>) = ""
+        override fun discuss(players: List<Player>): Statement = Statement.Plain("")
     }
 
     @Test

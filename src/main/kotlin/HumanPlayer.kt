@@ -8,6 +8,6 @@ class HumanPlayer(role: Role, override val name: String, private val io: PlayerI
         io.sendMessage(name, event.title, event.body(this))
     }
 
-    override fun discuss(players: List<Player>): String =
-        io.promptFreeText(name, "議論", "発言してください")
+    override fun discuss(players: List<Player>): Statement =
+        Statement.Plain(io.promptFreeText(name, "議論", "発言してください"))
 }

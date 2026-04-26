@@ -11,7 +11,7 @@ abstract class Player(private val role: Role) : Notifiable {
 
     protected abstract fun onReceive(event: GameEvent)
     abstract fun selectTarget(context: SelectionContext): Player
-    abstract fun discuss(players: List<Player>): String
+    abstract fun discuss(players: List<Player>): Statement
 
     fun buildNightAction(players: List<Player>, isFirstNight: Boolean): NightAction =
         role.buildNightAction(this, players, isFirstNight, _knowledge.toList())

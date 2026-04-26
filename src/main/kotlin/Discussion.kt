@@ -6,7 +6,7 @@ abstract class Discussion(
 ) {
     protected abstract val rounds: Int
     protected abstract fun speakingOrder(speakers: List<Player>): List<Player>
-    protected abstract fun sendStatement(round: Int, speakerName: String, statement: String, recipients: AllPlayers)
+    protected abstract fun sendStatement(round: Int, speakerName: String, statement: Statement, recipients: AllPlayers)
 
     fun conduct() {
         val order = speakingOrder(speakers)
@@ -22,6 +22,6 @@ abstract class Discussion(
 open class OpenDiscussion(speakers: List<Player>, recipients: AllPlayers) : Discussion(speakers, recipients) {
     override val rounds = 3
     override fun speakingOrder(speakers: List<Player>) = speakers.shuffled()
-    override fun sendStatement(round: Int, speakerName: String, statement: String, recipients: AllPlayers) =
+    override fun sendStatement(round: Int, speakerName: String, statement: Statement, recipients: AllPlayers) =
         GameEvent.StatementMade.send(round, speakerName, statement, recipients)
 }
