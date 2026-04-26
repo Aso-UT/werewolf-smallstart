@@ -12,9 +12,10 @@ fun main() {
 }
 
 private fun getLodge(): Lodge {
-    println("Lodgeを選択してください: AllHuman / RollerCPU")
+    println("Lodgeを選択してください: AllHuman / RollerCPU / RandomCPU")
     return when (readLine()?.trim()) {
         "RollerCPU" -> RollerCpuLodge
+        "RandomCPU" -> RandomCpuLodge
         else -> SmallLodge
     }
 }
