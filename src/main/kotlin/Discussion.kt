@@ -1,23 +1,27 @@
 package org.example
 
-abstract class Discussion(private val alivePlayers: List<Player>, private val allPlayers: AllPlayers) {
-    companion object {
-        private const val ROUNDS = 3
-    }
-
-    protected abstract fun speakingOrder(players: List<Player>): List<Player>
+abstract class Discussion(
+    private val speakers: List<Player>,
+    private val recipients: AllPlayers
+) {
+    protected abstract val rounds: Int
+    protected abstract fun speakingOrder(speakers: List<Player>): List<Player>
+    protected abstract fun sendStatement(round: Int, speakerName: String, statement: String, recipients: AllPlayers)
 
     fun conduct() {
-        val order = speakingOrder(alivePlayers)
-        repeat(ROUNDS) { index ->
+        val order = speakingOrder(speakers)
+        repeat(rounds) { index ->
             order.forEach { speaker ->
-                val statement = speaker.discuss(alivePlayers)
-                GameEvent.StatementMade.send(index + 1, speaker.name, statement, allPlayers)
+                val statement = speaker.discuss(speakers)
+                sendStatement(index + 1, speaker.name, statement, recipients)
             }
         }
     }
 }
 
-class RandomOrderDiscussion(alivePlayers: List<Player>, allPlayers: AllPlayers) : Discussion(alivePlayers, allPlayers) {
-    override fun speakingOrder(players: List<Player>) = players.shuffled()
+open class OpenDiscussion(speakers: List<Player>, recipients: AllPlayers) : Discussion(speakers, recipients) {
+    override val rounds = 3
+    override fun speakingOrder(speakers: List<Player>) = speakers.shuffled()
+    override fun sendStatement(round: Int, speakerName: String, statement: String, recipients: AllPlayers) =
+        GameEvent.StatementMade.send(round, speakerName, statement, recipients)
 }

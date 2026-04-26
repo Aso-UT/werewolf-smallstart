@@ -122,4 +122,15 @@ sealed class GameEvent {
             fun send(ally: Player, recipient: Player) = WerewolfAllyRevealed(ally, recipient).dispatch()
         }
     }
+
+    @ConsistentCopyVisibility
+    data class WerewolfStatementMade private constructor(val round: Int, val speakerName: String, val statement: String, private val wolves: AllPlayers) : GameEvent() {
+        override val title = "密談（${round}ラウンド目）"
+        override fun body(self: Player) = "$speakerName: $statement"
+        override val recipients: Notifiable = wolves
+        companion object {
+            fun send(round: Int, speakerName: String, statement: String, wolves: AllPlayers) =
+                WerewolfStatementMade(round, speakerName, statement, wolves).dispatch()
+        }
+    }
 }
