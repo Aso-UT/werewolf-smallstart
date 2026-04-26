@@ -14,10 +14,10 @@ class ConclaveTest {
         val log: List<String> get() = _log
         private var statementIndex = 0
 
-        override fun discuss(players: List<Player>): String {
+        override fun discuss(players: List<Player>): Statement {
             val statement = statements[statementIndex++]
             _log.add("$name:said:$statement")
-            return statement
+            return Statement.Plain(statement)
         }
 
         override fun onReceive(event: GameEvent) {

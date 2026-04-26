@@ -14,7 +14,7 @@ class OracleFirstNightDivineTest {
                 else -> error("unexpected event in oracle first night divine test: $event")
             }
         }
-        override fun discuss(players: List<Player>) = ""
+        override fun discuss(players: List<Player>): Statement = Statement.Plain("")
     }
 
     @Test

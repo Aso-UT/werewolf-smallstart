@@ -8,9 +8,9 @@ class HonestCpuPlayer(role: Role, override val name: String) : Player(role) {
         if (!event.isPublicKnowledge()) unspoken.add(event)
     }
 
-    override fun discuss(players: List<Player>): String {
-        if (unspoken.isEmpty()) return ""
-        return unspoken.removeFirst().body(this)
+    override fun discuss(players: List<Player>): Statement {
+        if (unspoken.isEmpty()) return Statement.Plain("")
+        return Statement.Plain(unspoken.removeFirst().body(this))
     }
 
     override fun selectTarget(context: SelectionContext): Player {
