@@ -12,11 +12,12 @@ fun main() {
 }
 
 private fun getLodge(): Lodge {
-    println("Lodgeを選択してください: AllHuman / RollerCPU / RandomCPU / HonestCPU")
+    println("Lodgeを選択してください: AllHuman / RollerCPU / RandomCPU / HonestCPU / RoleAwareCPU")
     return when (readLine()?.trim()) {
-        "RollerCPU" -> RollerCpuLodge
-        "RandomCPU" -> RandomCpuLodge
-        "HonestCPU" -> HonestCpuLodge
+        "RollerCPU"   -> RollerCpuLodge
+        "RandomCPU"   -> RandomCpuLodge
+        "HonestCPU"   -> HonestCpuLodge
+        "RoleAwareCPU" -> RoleAwareCpuLodge
         else -> SmallLodge
     }
 }
