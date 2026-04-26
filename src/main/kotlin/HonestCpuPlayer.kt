@@ -4,7 +4,9 @@ class HonestCpuPlayer(role: Role, override val name: String) : Player(role) {
     private val unspoken = mutableListOf<GameEvent>()
     private var selectCount = 0
 
-    override fun onReceive(event: GameEvent) { unspoken.add(event) }
+    override fun onReceive(event: GameEvent) {
+        if (!event.isPublicKnowledge()) unspoken.add(event)
+    }
 
     override fun discuss(players: List<Player>): String {
         if (unspoken.isEmpty()) return ""
