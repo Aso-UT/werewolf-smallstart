@@ -32,7 +32,7 @@ class ConclaveTest {
 
     private fun fixedOrderConclave(wolves: List<Player>) =
         object : Conclave(wolves) {
-            override fun speakingOrder(players: List<Player>) = players
+            override fun speakingOrder(speakers: List<Player>) = speakers
         }
 
     @Test
