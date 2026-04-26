@@ -1,20 +1,13 @@
 package org.example
 
-object SmallLodge : Lodge {
-    override fun create(): GameSetup {
-        val assignments: List<Pair<Role, (Role) -> Player>> = listOf(
-            Role.HUNTER  to { HumanPlayer(it, "1", ConsolePlayerIO()) },
-            Role.VILLAGER to { HumanPlayer(it, "2", ConsolePlayerIO()) },
-            Role.VILLAGER to { HumanPlayer(it, "3", ConsolePlayerIO()) },
-            Role.WEREWOLF to { HumanPlayer(it, "4", ConsolePlayerIO()) },
-            Role.SEER    to { HumanPlayer(it, "5", ConsolePlayerIO()) },
-            Role.MEDIUM  to { HumanPlayer(it, "6", ConsolePlayerIO()) },
-            Role.WEREWOLF to { HumanPlayer(it, "7", ConsolePlayerIO()) },
-        )
-        val playerRoles = assignments.map { (role, factory) -> factory(role) to role }
-        return GameSetup(
-            players = playerRoles.map { it.first },
-            oracle = Oracle(playerRoles.toMap()),
-        )
-    }
+object SmallLodge : Lodge() {
+    override fun assignments() = listOf(
+        HumanPlayer(Role.HUNTER,   "1", ConsolePlayerIO()) to Role.HUNTER,
+        HumanPlayer(Role.VILLAGER, "2", ConsolePlayerIO()) to Role.VILLAGER,
+        HumanPlayer(Role.VILLAGER, "3", ConsolePlayerIO()) to Role.VILLAGER,
+        HumanPlayer(Role.WEREWOLF, "4", ConsolePlayerIO()) to Role.WEREWOLF,
+        HumanPlayer(Role.SEER,     "5", ConsolePlayerIO()) to Role.SEER,
+        HumanPlayer(Role.MEDIUM,   "6", ConsolePlayerIO()) to Role.MEDIUM,
+        HumanPlayer(Role.WEREWOLF, "7", ConsolePlayerIO()) to Role.WEREWOLF,
+    )
 }
