@@ -5,7 +5,7 @@ class HumanPlayer(role: Role, override val name: String, private val io: PlayerI
         io.prompt(name, context.title, context.description, context.candidates())
 
     override fun onReceive(event: GameEvent) {
-        io.sendMessage(name, event.title, event.body(this))
+        io.sendMessage(name, event.title, event.body())
     }
 
     override fun discuss(players: List<Player>): Statement =
