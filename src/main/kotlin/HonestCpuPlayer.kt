@@ -10,7 +10,7 @@ class HonestCpuPlayer(role: Role, override val name: String) : Player(role) {
 
     override fun discuss(players: List<Player>): Statement {
         if (unspoken.isEmpty()) return Statement.Plain("")
-        return Statement.Plain(unspoken.removeFirst().body(this))
+        return Statement.Plain(unspoken.removeFirst().body())
     }
 
     override fun selectTarget(context: SelectionContext): Player {

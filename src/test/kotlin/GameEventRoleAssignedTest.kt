@@ -24,10 +24,10 @@ class GameEventRoleAssignedTest {
 
         val villagerEvent = villager.received.single() as GameEvent.RoleAssigned
         assertEquals(Role.VILLAGER, villagerEvent.role)
-        assertEquals("あなたの役職は「村人」です。", villagerEvent.body(villager))
+        assertEquals("あなたの役職は「村人」です。", villagerEvent.body())
 
         val werewolfEvent = werewolf.received.single() as GameEvent.RoleAssigned
         assertEquals(Role.WEREWOLF, werewolfEvent.role)
-        assertEquals("あなたの役職は「人狼」です。", werewolfEvent.body(werewolf))
+        assertEquals("あなたの役職は「人狼」です。", werewolfEvent.body())
     }
 }

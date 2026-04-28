@@ -2,6 +2,7 @@ package org.example
 
 abstract class Player(private val role: Role) : Notifiable {
     abstract val name: String
+    override val recipientName: String get() = name
     private val _knowledge: MutableList<GameEvent> = mutableListOf()
 
     final override fun receive(event: GameEvent) {
@@ -12,6 +13,9 @@ abstract class Player(private val role: Role) : Notifiable {
     protected abstract fun onReceive(event: GameEvent)
     abstract fun selectTarget(context: SelectionContext): Player
     abstract fun discuss(players: List<Player>): Statement
+
+    // signal is a capability token: only callers who hold a GameOverSignal (i.e., after game over) can access knowledge
+    fun revealKnowledge(signal: GameOverSignal): List<GameEvent> = _knowledge.toList()
 
     fun buildNightAction(players: List<Player>, isFirstNight: Boolean): NightAction =
         role.buildNightAction(this, players, isFirstNight, _knowledge.toList())
