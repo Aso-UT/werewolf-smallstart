@@ -1,10 +1,9 @@
 package org.example
 
 open class Conclave(oracle: Oracle, playerManager: PlayerManager) :
-    Discussion(oracle.werewolves(playerManager.players)) {
-    private val wolves = Wolves(oracle, playerManager)
+    Discussion<Wolves>(oracle.werewolves(playerManager.players), Wolves(oracle, playerManager)) {
     override val rounds = 3
     override fun speakingOrder(speakers: List<Player>) = speakers.shuffled()
-    override fun sendStatement(round: Int, speakerName: String, statement: Statement) =
-        GameEvent.WerewolfStatementMade.send(round, speakerName, statement.text(), wolves)
+    override fun sendStatement(round: Int, speakerName: String, statement: Statement, recipients: Wolves) =
+        GameEvent.WerewolfStatementMade.send(round, speakerName, statement.text(), recipients)
 }
