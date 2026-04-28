@@ -7,7 +7,7 @@ class NightPhase(
 ) : Phase {
     override fun proceed(): Phase {
         GameEvent.TimeChanged.send(TimeOfDay.Night(nightNumber), playerManager.allPlayers)
-        Conclave(oracle.werewolves(playerManager.players)).conduct()
+        Conclave(oracle, playerManager).conduct()
         val decisions = playerManager.players.map { it to it.buildNightAction(playerManager.players, nightNumber == 1) }
 
         val attacks = decisions.map { it.second }.filterIsInstance<NightAction.Attack>()

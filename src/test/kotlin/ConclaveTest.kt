@@ -30,8 +30,8 @@ class ConclaveTest {
         override fun selectTarget(context: SelectionContext): Player = error("not expected in conclave test")
     }
 
-    private fun fixedOrderConclave(wolves: List<Player>) =
-        object : Conclave(wolves) {
+    private fun fixedOrderConclave(oracle: Oracle, playerManager: PlayerManager) =
+        object : Conclave(oracle, playerManager) {
             override fun speakingOrder(speakers: List<Player>) = speakers
         }
 
@@ -40,8 +40,10 @@ class ConclaveTest {
         val alpha = TestPlayer("Alpha", Role.WEREWOLF, listOf("r1a", "r2a", "r3a"))
         val beta = TestPlayer("Beta", Role.WEREWOLF, listOf("r1b", "r2b", "r3b"))
         val wolves = listOf(alpha, beta)
+        val oracle = Oracle(wolves.associateWith { Role.WEREWOLF })
+        val playerManager = PlayerManager(GameSetup(wolves, oracle))
 
-        fixedOrderConclave(wolves).conduct()
+        fixedOrderConclave(oracle, playerManager).conduct()
 
         assertEquals(listOf(
             "Alpha:said:r1a",
