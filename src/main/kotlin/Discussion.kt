@@ -9,6 +9,7 @@ abstract class Discussion<R : Notifiable>(
     protected abstract fun sendStatement(round: Int, speakerName: String, statement: Statement, recipients: R)
 
     fun conduct() {
+        if (speakers.size <= 1) return
         val order = speakingOrder(speakers)
         repeat(rounds) { index ->
             order.forEach { speaker ->
