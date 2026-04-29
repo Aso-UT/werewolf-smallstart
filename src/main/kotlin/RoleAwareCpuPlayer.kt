@@ -4,6 +4,8 @@ class RoleAwareCpuPlayer(private val myRole: Role, override val name: String) : 
     private val myDivinedResults = mutableMapOf<Player, DivineResult>()
     private val reportedDivinations = mutableMapOf<Player, DivineResult>()
     private val unspokenDivinations = mutableListOf<GameEvent.Divined>()
+    private val unspokenMediumReveals = mutableListOf<GameEvent.MediumRevealed>()
+    private val claimedSeers = mutableListOf<Player>()
 
     override fun onReceive(event: GameEvent) {
         when (event) {
@@ -11,10 +13,12 @@ class RoleAwareCpuPlayer(private val myRole: Role, override val name: String) : 
                 myDivinedResults[event.target] = event.result
                 unspokenDivinations.add(event)
             }
+            is GameEvent.MediumRevealed -> unspokenMediumReveals.add(event)
             is GameEvent.StatementMade -> {
                 val statement = event.statement
                 if (statement is Statement.DivinationReport && statement.claimant !== this) {
                     reportedDivinations[statement.target] = statement.result
+                    if (statement.claimant !in claimedSeers) claimedSeers.add(statement.claimant)
                 }
             }
             else -> {}
@@ -22,14 +26,22 @@ class RoleAwareCpuPlayer(private val myRole: Role, override val name: String) : 
     }
 
     override fun discuss(players: List<Player>): Statement {
-        if (myRole != Role.SEER || unspokenDivinations.isEmpty()) return Statement.Plain("")
-        val event = unspokenDivinations.removeFirst()
-        return Statement.DivinationReport(claimant = this, target = event.target, result = event.result)
+        if (myRole == Role.SEER && unspokenDivinations.isNotEmpty()) {
+            val event = unspokenDivinations.removeFirst()
+            return Statement.DivinationReport(claimant = this, target = event.target, result = event.result)
+        }
+        if (myRole == Role.MEDIUM && unspokenMediumReveals.isNotEmpty()) {
+            val event = unspokenMediumReveals.removeFirst()
+            return Statement.MediumReport(claimant = this, target = event.target, result = event.result)
+        }
+        return Statement.Plain("")
     }
 
     override fun selectTarget(context: SelectionContext): Player = when {
         myRole == Role.SEER && context is SelectionContext.Divine -> selectDivineTarget(context)
         context is SelectionContext.Vote -> selectVoteTarget(context)
+        context is SelectionContext.Attack -> selectAttackTarget(context)
+        context is SelectionContext.Guard -> selectGuardTarget(context)
         else -> context.candidates().random()
     }
 
@@ -37,6 +49,18 @@ class RoleAwareCpuPlayer(private val myRole: Role, override val name: String) : 
         val candidates = context.candidates()
         val undivined = candidates.filter { it !in myDivinedResults }
         return if (undivined.isNotEmpty()) undivined.random() else candidates.random()
+    }
+
+    private fun selectAttackTarget(context: SelectionContext.Attack): Player {
+        val candidates = context.candidates()
+        val targetSeers = candidates.filter { it in claimedSeers }
+        return if (targetSeers.isNotEmpty()) targetSeers.random() else candidates.random()
+    }
+
+    private fun selectGuardTarget(context: SelectionContext.Guard): Player {
+        val candidates = context.candidates()
+        val targetSeers = candidates.filter { it in claimedSeers }
+        return if (targetSeers.isNotEmpty()) targetSeers.random() else candidates.random()
     }
 
     private fun selectVoteTarget(context: SelectionContext.Vote): Player {
