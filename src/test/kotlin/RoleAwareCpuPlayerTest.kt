@@ -59,6 +59,49 @@ class RoleAwareCpuPlayerTest {
     }
 
     @Test
+    fun `medium reports medium result as MediumReport`() {
+        val medium = RoleAwareCpuPlayer(Role.MEDIUM, "Medium")
+        val villager = StubPlayer("Villager", Role.VILLAGER)
+        val oracle = Oracle(mapOf(medium to Role.MEDIUM, villager to Role.VILLAGER))
+        oracle.mediumReveal(medium, villager)
+
+        val statement = medium.discuss(emptyList())
+
+        val report = assertIs<Statement.MediumReport>(statement)
+        assertEquals(medium, report.claimant)
+        assertEquals(villager, report.target)
+        assertEquals(MediumResult.NOT_WEREWOLF, report.result)
+    }
+
+    @Test
+    fun `werewolf attacks claimed seer`() {
+        val wolf = RoleAwareCpuPlayer(Role.WEREWOLF, "Wolf")
+        val seer = StubPlayer("Seer", Role.SEER)
+        val villager = StubPlayer("Villager", Role.VILLAGER)
+        val allPlayers = AllPlayers(listOf(wolf, seer, villager))
+        GameEvent.StatementMade.send(1, seer.name, Statement.DivinationReport(seer, villager, DivineResult.NOT_WEREWOLF), allPlayers)
+
+        repeat(100) {
+            val target = wolf.selectTarget(SelectionContext.Attack(wolf, listOf(seer, villager), emptyList()))
+            assertEquals(seer, target)
+        }
+    }
+
+    @Test
+    fun `hunter guards claimed seer`() {
+        val hunter = RoleAwareCpuPlayer(Role.HUNTER, "Hunter")
+        val seer = StubPlayer("Seer", Role.SEER)
+        val villager = StubPlayer("Villager", Role.VILLAGER)
+        val allPlayers = AllPlayers(listOf(hunter, seer, villager))
+        GameEvent.StatementMade.send(1, seer.name, Statement.DivinationReport(seer, villager, DivineResult.NOT_WEREWOLF), allPlayers)
+
+        repeat(100) {
+            val target = hunter.selectTarget(SelectionContext.Guard(hunter, listOf(seer, villager)))
+            assertEquals(seer, target)
+        }
+    }
+
+    @Test
     fun `villager does not vote for player reported as not werewolf when other candidates exist`() {
         val seer = RoleAwareCpuPlayer(Role.SEER, "Seer")
         val villager = RoleAwareCpuPlayer(Role.VILLAGER, "Villager")
