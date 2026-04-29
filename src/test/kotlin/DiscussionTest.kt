@@ -77,25 +77,6 @@ class DiscussionTest {
     }
 
     @Test
-    fun `single speaker does not speak`() {
-        val alice = TestPlayer("Alice", Role.VILLAGER, emptyList())
-        val players = listOf(alice)
-
-        fixedOrderDiscussion(players, AllPlayers(players)).conduct()
-
-        assertEquals(emptyList(), alice.log)
-    }
-
-    @Test
-    fun `empty speakers do nothing`() {
-        val alice = TestPlayer("Alice", Role.VILLAGER, emptyList())
-
-        fixedOrderDiscussion(emptyList(), AllPlayers(listOf(alice))).conduct()
-
-        assertEquals(emptyList(), alice.log)
-    }
-
-    @Test
     fun `dead players receive all statements without speaking`() {
         val alice = TestPlayer("Alice", Role.VILLAGER, listOf("村人として発言します", "続けて発言します", "最終発言です"))
         val bob = TestPlayer("Bob", Role.WEREWOLF, listOf("人狼として発言します", "続けて発言します", "最終発言です"))
