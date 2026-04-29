@@ -2,25 +2,20 @@ package org.example
 
 abstract class RoleAwareCpuStrategy(
     protected val self: RoleAwareCpuPlayer,
-    private val targetRole: Role
+    private val targetRole: Role,
+    private val votingStrategy: VotingStrategy
 ) {
     fun appliesTo() = self.myRole == targetRole
-    abstract fun discuss(knowledge: List<GameEvent>): Statement
-    abstract fun selectTarget(context: SelectionContext, knowledge: List<GameEvent>): Player
 
-    protected fun claimedSeers(knowledge: List<GameEvent>): Set<Player> =
-        knowledge.filterIsInstance<GameEvent.StatementMade>()
-            .map { it.statement }.filterIsInstance<Statement.DivinationReport>()
-            .map { it.claimant }.toSet()
+    abstract fun discuss(): Statement
 
-    protected fun reportedDivinations(knowledge: List<GameEvent>): Map<Player, DivineResult> =
-        knowledge.filterIsInstance<GameEvent.StatementMade>()
-            .map { it.statement }.filterIsInstance<Statement.DivinationReport>()
-            .associate { it.target to it.result }
+    fun selectTarget(context: SelectionContext): Player {
+        val candidates = context.candidates()
+        return if (context is SelectionContext.Vote)
+            votingStrategy.selectVoteTarget(candidates)
+        else
+            selectTargetForOthers(context, candidates)
+    }
 
-    protected fun candidatesWith(
-        result: DivineResult,
-        from: Map<Player, DivineResult>,
-        candidates: List<Player>
-    ): List<Player> = candidates.filter { from[it] == result }
+    abstract fun selectTargetForOthers(context: SelectionContext, candidates: List<Player>): Player
 }

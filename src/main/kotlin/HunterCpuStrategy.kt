@@ -1,30 +1,18 @@
 package org.example
 
-class HunterCpuStrategy(self: RoleAwareCpuPlayer) : RoleAwareCpuStrategy(self, Role.HUNTER) {
+class HunterCpuStrategy(self: RoleAwareCpuPlayer) : RoleAwareCpuStrategy(self, Role.HUNTER, CitizenVoting(self)) {
+    private val query = KnowledgeQuery(self)
 
-    override fun discuss(knowledge: List<GameEvent>) = Statement.Plain("")
+    override fun discuss() = Statement.Plain("")
 
-    override fun selectTarget(context: SelectionContext, knowledge: List<GameEvent>): Player {
-        val candidates = context.candidates()
-        return when (context) {
-            is SelectionContext.Guard -> selectGuardTarget(candidates, knowledge)
-            is SelectionContext.Vote -> selectVoteTarget(candidates, knowledge)
+    override fun selectTargetForOthers(context: SelectionContext, candidates: List<Player>): Player =
+        when (context) {
+            is SelectionContext.Guard -> selectGuardTarget(candidates)
             else -> candidates.random()
         }
-    }
 
-    private fun selectGuardTarget(candidates: List<Player>, knowledge: List<GameEvent>): Player {
-        val targets = candidates.filter { it in claimedSeers(knowledge) }
+    private fun selectGuardTarget(candidates: List<Player>): Player {
+        val targets = candidates.filter { it in query.claimedSeers() }
         return if (targets.isNotEmpty()) targets.random() else candidates.random()
-    }
-
-    private fun selectVoteTarget(candidates: List<Player>, knowledge: List<GameEvent>): Player {
-        val reported = reportedDivinations(knowledge)
-        val reportedWolves = candidatesWith(DivineResult.WEREWOLF, reported, candidates)
-        val reportedInnocent = candidatesWith(DivineResult.NOT_WEREWOLF, reported, candidates)
-
-        if (reportedWolves.isNotEmpty()) return reportedWolves.random()
-        val votable = candidates - reportedInnocent.toSet()
-        return if (votable.isNotEmpty()) votable.random() else candidates.random()
     }
 }

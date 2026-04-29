@@ -1,54 +1,31 @@
 package org.example
 
-class SeerCpuStrategy(self: RoleAwareCpuPlayer) : RoleAwareCpuStrategy(self, Role.SEER) {
+class SeerCpuStrategy(self: RoleAwareCpuPlayer) : RoleAwareCpuStrategy(self, Role.SEER, SeerVoting(self)) {
 
-    override fun discuss(knowledge: List<GameEvent>): Statement {
-        val next = nextUnreportedDivination(knowledge) ?: return Statement.Plain("")
+    override fun discuss(): Statement {
+        val next = nextUnreportedDivination() ?: return Statement.Plain("")
         return Statement.DivinationReport(self, next.target, next.result)
     }
 
-    override fun selectTarget(context: SelectionContext, knowledge: List<GameEvent>): Player {
-        val candidates = context.candidates()
-        return when (context) {
-            is SelectionContext.Divine -> selectDivineTarget(candidates, knowledge)
-            is SelectionContext.Vote -> selectVoteTarget(candidates, knowledge)
+    override fun selectTargetForOthers(context: SelectionContext, candidates: List<Player>): Player =
+        when (context) {
+            is SelectionContext.Divine -> selectDivineTarget(candidates)
             else -> candidates.random()
         }
+
+    private fun nextUnreportedDivination(): GameEvent.Divined? {
+        val reported = reportedTargets()
+        return self.knowledge.filterIsInstance<GameEvent.Divined>().firstOrNull { it.target !in reported }
     }
 
-    private fun nextUnreportedDivination(knowledge: List<GameEvent>): GameEvent.Divined? {
-        val reported = reportedTargets(knowledge)
-        return knowledge.filterIsInstance<GameEvent.Divined>().firstOrNull { it.target !in reported }
-    }
-
-    private fun reportedTargets(knowledge: List<GameEvent>): Set<Player> =
-        knowledge.filterIsInstance<GameEvent.StatementMade>()
+    private fun reportedTargets(): Set<Player> =
+        self.knowledge.filterIsInstance<GameEvent.StatementMade>()
             .map { it.statement }.filterIsInstance<Statement.DivinationReport>()
             .filter { it.claimant === self }.map { it.target }.toSet()
 
-    private fun selectDivineTarget(candidates: List<Player>, knowledge: List<GameEvent>): Player {
-        val divined = knowledge.filterIsInstance<GameEvent.Divined>().map { it.target }.toSet()
+    private fun selectDivineTarget(candidates: List<Player>): Player {
+        val divined = self.knowledge.filterIsInstance<GameEvent.Divined>().map { it.target }.toSet()
         val undivined = candidates.filter { it !in divined }
         return if (undivined.isNotEmpty()) undivined.random() else candidates.random()
     }
-
-    private fun selectVoteTarget(candidates: List<Player>, knowledge: List<GameEvent>): Player {
-        val myDivined = myDivinedResults(knowledge)
-        val reported = reportedDivinations(knowledge)
-
-        val myWolves = candidatesWith(DivineResult.WEREWOLF, myDivined, candidates)
-        val reportedWolves = candidatesWith(DivineResult.WEREWOLF, reported, candidates)
-        val myInnocent = candidatesWith(DivineResult.NOT_WEREWOLF, myDivined, candidates)
-        val reportedInnocent = candidatesWith(DivineResult.NOT_WEREWOLF, reported, candidates)
-
-        if (myWolves.isNotEmpty()) return myWolves.random()
-        val suspectedWolves = reportedWolves - myInnocent.toSet()
-        if (suspectedWolves.isNotEmpty()) return suspectedWolves.random()
-        val votable = candidates - myInnocent.toSet() - reportedInnocent.toSet()
-        return if (votable.isNotEmpty()) votable.random() else candidates.random()
-    }
-
-    private fun myDivinedResults(knowledge: List<GameEvent>): Map<Player, DivineResult> =
-        knowledge.filterIsInstance<GameEvent.Divined>().associate { it.target to it.result }
-
 }
