@@ -5,7 +5,7 @@ class RoleAwareCpuPlayer(private val myRole: Role, override val name: String) : 
     private val reportedDivinations = mutableMapOf<Player, DivineResult>()
     private val unspokenDivinations = mutableListOf<GameEvent.Divined>()
     private val unspokenMediumReveals = mutableListOf<GameEvent.MediumRevealed>()
-    private val claimedSeers = mutableListOf<Player>()
+    private val claimedSeers = mutableSetOf<Player>()
 
     override fun onReceive(event: GameEvent) {
         when (event) {
@@ -18,7 +18,7 @@ class RoleAwareCpuPlayer(private val myRole: Role, override val name: String) : 
                 val statement = event.statement
                 if (statement is Statement.DivinationReport && statement.claimant !== this) {
                     reportedDivinations[statement.target] = statement.result
-                    if (statement.claimant !in claimedSeers) claimedSeers.add(statement.claimant)
+                    claimedSeers.add(statement.claimant)
                 }
             }
             else -> {}
