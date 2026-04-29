@@ -102,6 +102,20 @@ class RoleAwareCpuPlayerTest {
     }
 
     @Test
+    fun `werewolf votes for claimed seer`() {
+        val wolf = RoleAwareCpuPlayer(Role.WEREWOLF, "Wolf")
+        val seer = StubPlayer("Seer", Role.SEER)
+        val villager = StubPlayer("Villager", Role.VILLAGER)
+        val allPlayers = AllPlayers(listOf(wolf, seer, villager))
+        GameEvent.StatementMade.send(1, seer.name, Statement.DivinationReport(seer, villager, DivineResult.NOT_WEREWOLF), allPlayers)
+
+        repeat(100) {
+            val voted = wolf.selectTarget(SelectionContext.Vote(wolf, listOf(seer, villager)))
+            assertEquals(seer, voted)
+        }
+    }
+
+    @Test
     fun `villager does not vote for player reported as not werewolf when other candidates exist`() {
         val seer = RoleAwareCpuPlayer(Role.SEER, "Seer")
         val villager = RoleAwareCpuPlayer(Role.VILLAGER, "Villager")
