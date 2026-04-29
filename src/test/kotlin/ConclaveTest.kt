@@ -36,6 +36,18 @@ class ConclaveTest {
         }
 
     @Test
+    fun `single werewolf does not speak`() {
+        val alpha = TestPlayer("Alpha", Role.WEREWOLF, emptyList())
+        val wolves = listOf(alpha)
+        val oracle = Oracle(wolves.associateWith { Role.WEREWOLF })
+        val playerManager = PlayerManager(GameSetup(wolves, oracle))
+
+        fixedOrderConclave(oracle, playerManager).conduct()
+
+        assertEquals(emptyList(), alpha.log)
+    }
+
+    @Test
     fun `statements are delivered to all wolves in round order`() {
         val alpha = TestPlayer("Alpha", Role.WEREWOLF, listOf("r1a", "r2a", "r3a"))
         val beta = TestPlayer("Beta", Role.WEREWOLF, listOf("r1b", "r2b", "r3b"))
