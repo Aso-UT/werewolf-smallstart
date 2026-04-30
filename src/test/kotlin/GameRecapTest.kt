@@ -6,12 +6,6 @@ import kotlin.test.assertTrue
 
 class GameRecapTest {
 
-    private class StubPlayer(role: Role, override val name: String) : Player(role) {
-        override fun selectTarget(context: SelectionContext) = this
-        override fun onReceive(event: GameEvent) {}
-        override fun discuss(players: List<Player>): Statement = Statement.Plain("")
-    }
-
     private fun playerManager(vararg players: Player): PlayerManager {
         val oracle = Oracle(players.associateWith { Role.VILLAGER })
         return PlayerManager(GameSetup(players.toList(), oracle))
@@ -26,8 +20,8 @@ class GameRecapTest {
 
     @Test
     fun `public events appear only once even when received by multiple players`() {
-        val playerA = StubPlayer(Role.VILLAGER, "A")
-        val playerB = StubPlayer(Role.VILLAGER, "B")
+        val playerA = ReceivingPlayer(Role.VILLAGER, "A")
+        val playerB = ReceivingPlayer(Role.VILLAGER, "B")
         val pm = playerManager(playerA, playerB)
 
         GameEvent.TimeChanged.send(TimeOfDay.Night(1), pm.allPlayers)
@@ -38,8 +32,8 @@ class GameRecapTest {
 
     @Test
     fun `private events from each player are all collected`() {
-        val playerA = StubPlayer(Role.VILLAGER, "A")
-        val playerB = StubPlayer(Role.VILLAGER, "B")
+        val playerA = ReceivingPlayer(Role.VILLAGER, "A")
+        val playerB = ReceivingPlayer(Role.VILLAGER, "B")
         val pm = playerManager(playerA, playerB)
 
         GameEvent.RoleAssigned.send(Role.VILLAGER, playerA)
@@ -51,8 +45,8 @@ class GameRecapTest {
 
     @Test
     fun `events are sorted by creation order across players`() {
-        val playerA = StubPlayer(Role.VILLAGER, "A")
-        val playerB = StubPlayer(Role.VILLAGER, "B")
+        val playerA = ReceivingPlayer(Role.VILLAGER, "A")
+        val playerB = ReceivingPlayer(Role.VILLAGER, "B")
         val pm = playerManager(playerA, playerB)
 
         // 作成順: RoleAssigned(A) → RoleAssigned(B) → TimeChanged(全員)

@@ -7,16 +7,10 @@ import kotlin.test.assertTrue
 
 class SelectionContextAttackTest {
 
-    private class StubPlayer(override val name: String, role: Role) : Player(role) {
-        override fun selectTarget(context: SelectionContext) = this
-        override fun onReceive(event: GameEvent) = Unit
-        override fun discuss(players: List<Player>): Statement = Statement.Plain("")
-    }
-
     @Test
     fun `excludes self from candidates`() {
-        val wolf = StubPlayer("Wolf", Role.WEREWOLF)
-        val villager = StubPlayer("Villager", Role.VILLAGER)
+        val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
+        val villager = NothingPlayer(Role.VILLAGER, "Villager")
         val players = listOf(wolf, villager)
 
         val candidates = SelectionContext.Attack(wolf, players, emptyList()).candidates()
@@ -27,9 +21,9 @@ class SelectionContextAttackTest {
 
     @Test
     fun `excludes werewolf allies from candidates`() {
-        val wolf1 = StubPlayer("Wolf1", Role.WEREWOLF)
-        val wolf2 = StubPlayer("Wolf2", Role.WEREWOLF)
-        val villager = StubPlayer("Villager", Role.VILLAGER)
+        val wolf1 = NothingPlayer(Role.WEREWOLF, "Wolf1")
+        val wolf2 = NothingPlayer(Role.WEREWOLF, "Wolf2")
+        val villager = NothingPlayer(Role.VILLAGER, "Villager")
         val players = listOf(wolf1, wolf2, villager)
 
         val candidates = SelectionContext.Attack(wolf1, players, allies = listOf(wolf2)).candidates()
@@ -39,9 +33,9 @@ class SelectionContextAttackTest {
 
     @Test
     fun `includes all non-self players when no allies`() {
-        val wolf = StubPlayer("Wolf", Role.WEREWOLF)
-        val villager1 = StubPlayer("V1", Role.VILLAGER)
-        val villager2 = StubPlayer("V2", Role.VILLAGER)
+        val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
+        val villager1 = NothingPlayer(Role.VILLAGER, "V1")
+        val villager2 = NothingPlayer(Role.VILLAGER, "V2")
         val players = listOf(wolf, villager1, villager2)
 
         val candidates = SelectionContext.Attack(wolf, players, emptyList()).candidates()
