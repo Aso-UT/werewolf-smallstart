@@ -15,6 +15,7 @@ abstract class Player(private val role: Role) : Notifiable {
     abstract fun discuss(players: List<Player>): Statement
 
     // signal is a capability token: only callers who hold a GameOverSignal (i.e., after game over) can access knowledge
+    @Suppress("UnusedParameter")
     fun revealKnowledge(signal: GameOverSignal): List<GameEvent> = _knowledge.toList()
 
     fun buildNightAction(players: List<Player>, isFirstNight: Boolean): NightAction =

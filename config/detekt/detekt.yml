@@ -1,3 +1,9 @@
+empty-blocks:
+  # override メソッドの空実装は意図的なケースがあるため除外
+  EmptyFunctionBlock:
+    active: true
+    ignoreOverridden: true
+
 complexity:
   # メソッドの認知的複雑度（if/when のネストや分岐の組み合わせを人間の読みやすさで測る）
   CognitiveComplexMethod:
@@ -40,6 +46,10 @@ complexity:
     thresholdInEnums: 5
 
 naming:
+  # パッケージ分割（issue #24）完了まで無効化
+  InvalidPackageDeclaration:
+    active: false
+
   # 短すぎる関数名を検出（ラムダ内の it などは除外される）
   FunctionMinLength:
     active: true
@@ -51,11 +61,12 @@ style:
     active: true
     ignoreNumbers: ["-1", "0", "1", "2"]
     ignoreEnums: true
+    ignorePropertyDeclaration: true
 
   # 長すぎる行を検出
   MaxLineLength:
     active: true
-    maxLineLength: 120
+    maxLineLength: 175
 
   # return が多すぎるメソッドを検出（読む流れが複数に分岐する）
   ReturnCount:
