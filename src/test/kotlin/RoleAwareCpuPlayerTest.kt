@@ -7,16 +7,10 @@ import kotlin.test.assertNotEquals
 
 class RoleAwareCpuPlayerTest {
 
-    private class StubPlayer(override val name: String, role: Role) : Player(role) {
-        override fun selectTarget(context: SelectionContext) = this
-        override fun onReceive(event: GameEvent) {}
-        override fun discuss(players: List<Player>): Statement = Statement.Plain("")
-    }
-
     @Test
     fun `seer reports divination result as DivinationReport`() {
         val seer = RoleAwareCpuPlayer(Role.SEER, "Seer")
-        val villager = StubPlayer("Villager", Role.VILLAGER)
+        val villager = NothingPlayer(Role.VILLAGER, "Villager")
         val oracle = Oracle(mapOf(seer to Role.SEER, villager to Role.VILLAGER))
         oracle.divine(seer, villager)
 
@@ -31,8 +25,8 @@ class RoleAwareCpuPlayerTest {
     @Test
     fun `seer does not vote for white-confirmed player when other candidates exist`() {
         val seer = RoleAwareCpuPlayer(Role.SEER, "Seer")
-        val wolf = StubPlayer("Wolf", Role.WEREWOLF)
-        val villager = StubPlayer("Villager", Role.VILLAGER)
+        val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
+        val villager = NothingPlayer(Role.VILLAGER, "Villager")
         val oracle = Oracle(mapOf(seer to Role.SEER, wolf to Role.WEREWOLF, villager to Role.VILLAGER))
         oracle.divine(seer, villager)
 
@@ -46,7 +40,7 @@ class RoleAwareCpuPlayerTest {
     fun `villager votes for player reported as werewolf`() {
         val seer = RoleAwareCpuPlayer(Role.SEER, "Seer")
         val villager = RoleAwareCpuPlayer(Role.VILLAGER, "Villager")
-        val wolf = StubPlayer("Wolf", Role.WEREWOLF)
+        val wolf = ReceivingPlayer(Role.WEREWOLF, "Wolf")
         val oracle = Oracle(mapOf(seer to Role.SEER, villager to Role.VILLAGER, wolf to Role.WEREWOLF))
         val allPlayers = AllPlayers(listOf(seer, villager, wolf))
         oracle.divine(seer, wolf)
@@ -61,7 +55,7 @@ class RoleAwareCpuPlayerTest {
     @Test
     fun `medium reports medium result as MediumReport`() {
         val medium = RoleAwareCpuPlayer(Role.MEDIUM, "Medium")
-        val villager = StubPlayer("Villager", Role.VILLAGER)
+        val villager = NothingPlayer(Role.VILLAGER, "Villager")
         val oracle = Oracle(mapOf(medium to Role.MEDIUM, villager to Role.VILLAGER))
         oracle.mediumReveal(medium, villager)
 
@@ -76,8 +70,8 @@ class RoleAwareCpuPlayerTest {
     @Test
     fun `werewolf attacks claimed seer`() {
         val wolf = RoleAwareCpuPlayer(Role.WEREWOLF, "Wolf")
-        val seer = StubPlayer("Seer", Role.SEER)
-        val villager = StubPlayer("Villager", Role.VILLAGER)
+        val seer = ReceivingPlayer(Role.SEER, "Seer")
+        val villager = ReceivingPlayer(Role.VILLAGER, "Villager")
         val allPlayers = AllPlayers(listOf(wolf, seer, villager))
         GameEvent.StatementMade.send(1, seer.name, Statement.DivinationReport(seer, villager, DivineResult.NOT_WEREWOLF), allPlayers)
 
@@ -90,8 +84,8 @@ class RoleAwareCpuPlayerTest {
     @Test
     fun `hunter guards claimed seer`() {
         val hunter = RoleAwareCpuPlayer(Role.HUNTER, "Hunter")
-        val seer = StubPlayer("Seer", Role.SEER)
-        val villager = StubPlayer("Villager", Role.VILLAGER)
+        val seer = ReceivingPlayer(Role.SEER, "Seer")
+        val villager = ReceivingPlayer(Role.VILLAGER, "Villager")
         val allPlayers = AllPlayers(listOf(hunter, seer, villager))
         GameEvent.StatementMade.send(1, seer.name, Statement.DivinationReport(seer, villager, DivineResult.NOT_WEREWOLF), allPlayers)
 
@@ -104,8 +98,8 @@ class RoleAwareCpuPlayerTest {
     @Test
     fun `werewolf votes for claimed seer`() {
         val wolf = RoleAwareCpuPlayer(Role.WEREWOLF, "Wolf")
-        val seer = StubPlayer("Seer", Role.SEER)
-        val villager = StubPlayer("Villager", Role.VILLAGER)
+        val seer = ReceivingPlayer(Role.SEER, "Seer")
+        val villager = ReceivingPlayer(Role.VILLAGER, "Villager")
         val allPlayers = AllPlayers(listOf(wolf, seer, villager))
         GameEvent.StatementMade.send(1, seer.name, Statement.DivinationReport(seer, villager, DivineResult.NOT_WEREWOLF), allPlayers)
 
@@ -119,8 +113,8 @@ class RoleAwareCpuPlayerTest {
     fun `villager does not vote for player reported as not werewolf when other candidates exist`() {
         val seer = RoleAwareCpuPlayer(Role.SEER, "Seer")
         val villager = RoleAwareCpuPlayer(Role.VILLAGER, "Villager")
-        val innocent = StubPlayer("Innocent", Role.VILLAGER)
-        val wolf = StubPlayer("Wolf", Role.WEREWOLF)
+        val innocent = ReceivingPlayer(Role.VILLAGER, "Innocent")
+        val wolf = ReceivingPlayer(Role.WEREWOLF, "Wolf")
         val oracle = Oracle(mapOf(seer to Role.SEER, villager to Role.VILLAGER, innocent to Role.VILLAGER, wolf to Role.WEREWOLF))
         val allPlayers = AllPlayers(listOf(seer, villager, innocent, wolf))
         oracle.divine(seer, innocent)

@@ -5,11 +5,11 @@ import kotlin.test.assertEquals
 
 class DiscussionTest {
 
-    private class TestPlayer(
-        override val name: String,
+    private class ScriptedPlayer(
         role: Role,
+        name: String,
         private val statements: List<String>
-    ) : Player(role) {
+    ) : NothingPlayer(role, name) {
         private val _log = mutableListOf<String>()
         val log: List<String> get() = _log
         private var statementIndex = 0
@@ -26,8 +26,6 @@ class DiscussionTest {
                 else -> error("unexpected event in discussion test: $event")
             }
         }
-
-        override fun selectTarget(context: SelectionContext): Player = error("not expected in discussion test")
     }
 
     private fun fixedOrderDiscussion(alivePlayers: List<Player>, allPlayers: AllPlayers) =
@@ -37,12 +35,12 @@ class DiscussionTest {
 
     @Test
     fun `statements are delivered immediately in order`() {
-        val alice = TestPlayer("Alice", Role.VILLAGER, listOf(
+        val alice = ScriptedPlayer(Role.VILLAGER, "Alice", listOf(
             "私はBobが怪しいと思う",
             "やはりBobだと思う",
             "Bobに投票します"
         ))
-        val bob = TestPlayer("Bob", Role.WEREWOLF, listOf(
+        val bob = ScriptedPlayer(Role.WEREWOLF, "Bob", listOf(
             "私は無実です",
             "Aliceこそ怪しい",
             "Aliceに投票します"
@@ -78,9 +76,9 @@ class DiscussionTest {
 
     @Test
     fun `dead players receive all statements without speaking`() {
-        val alice = TestPlayer("Alice", Role.VILLAGER, listOf("村人として発言します", "続けて発言します", "最終発言です"))
-        val bob = TestPlayer("Bob", Role.WEREWOLF, listOf("人狼として発言します", "続けて発言します", "最終発言です"))
-        val charlie = TestPlayer("Charlie", Role.VILLAGER, emptyList())
+        val alice = ScriptedPlayer(Role.VILLAGER, "Alice", listOf("村人として発言します", "続けて発言します", "最終発言です"))
+        val bob = ScriptedPlayer(Role.WEREWOLF, "Bob", listOf("人狼として発言します", "続けて発言します", "最終発言です"))
+        val charlie = ScriptedPlayer(Role.VILLAGER, "Charlie", emptyList())
         val alivePlayers = listOf(alice, bob)
         val allPlayers = listOf(alice, bob, charlie)
 
