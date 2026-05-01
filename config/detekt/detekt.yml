@@ -1,0 +1,63 @@
+complexity:
+  # メソッドの認知的複雑度（if/when のネストや分岐の組み合わせを人間の読みやすさで測る）
+  CognitiveComplexMethod:
+    active: true
+    threshold: 15
+
+  # メソッドの循環的複雑度（分岐パスの数を数える古典的な指標）
+  CyclomaticComplexMethod:
+    active: true
+    threshold: 15
+
+  # メソッドの行数
+  LongMethod:
+    active: true
+    threshold: 60
+
+  # クラスの行数
+  LargeClass:
+    active: true
+    threshold: 300
+
+  # 引数の数
+  LongParameterList:
+    active: true
+    functionThreshold: 6
+    constructorThreshold: 7
+
+  # ネストの深さ
+  NestedBlockDepth:
+    active: true
+    threshold: 4
+
+  # ファイル・クラス・インターフェースあたりの関数数
+  TooManyFunctions:
+    active: true
+    thresholdInFiles: 20
+    thresholdInClasses: 15
+    thresholdInInterfaces: 10
+    thresholdInObjects: 15
+    thresholdInEnums: 5
+
+naming:
+  # 短すぎる関数名を検出（ラムダ内の it などは除外される）
+  FunctionMinLength:
+    active: true
+    minimumFunctionNameLength: 3
+
+style:
+  # ハードコードされた数値リテラルを検出（定数化を促す）
+  MagicNumber:
+    active: true
+    ignoreNumbers: ["-1", "0", "1", "2"]
+    ignoreEnums: true
+
+  # 長すぎる行を検出
+  MaxLineLength:
+    active: true
+    maxLineLength: 120
+
+  # return が多すぎるメソッドを検出（読む流れが複数に分岐する）
+  ReturnCount:
+    active: true
+    max: 3
