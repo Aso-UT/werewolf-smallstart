@@ -9,5 +9,5 @@ class RollerCpuPlayer(role: Role, override val name: String) : Player(role) {
     }
 
     override fun discuss(players: List<Player>): Statement = Statement.Plain("")
-    override fun onReceive(event: GameEvent) {}
+    override fun onReceive(event: GameEvent) { /* does not use received events */ }
 }
