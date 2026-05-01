@@ -17,9 +17,9 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: gradle
+      - name: Make gradlew executable
+        run: chmod +x gradlew
       - name: Run detekt
         run: ./gradlew detekt
       - name: Run tests
-        run: |
-          chmod +x gradlew
-          ./gradlew test
+        run: ./gradlew test
