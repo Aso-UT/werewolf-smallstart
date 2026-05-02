@@ -13,8 +13,7 @@ class EndPhase(
     }
 
     private fun showRecap() {
-        println("=== ゲーム振り返り ===")
-        GameRecap(playerManager, signal).events()
-            .forEach { println("  ${it.recipientName}: [${it.title}] ${it.body()}") }
+        val events = GameRecap(playerManager, signal).events()
+        playerManager.allPlayers.forEach { it.watchEpilogue(events) }
     }
 }
