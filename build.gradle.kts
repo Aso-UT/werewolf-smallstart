@@ -2,6 +2,7 @@ plugins {
     kotlin("jvm") version "2.1.20"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("org.sonarqube") version "5.1.0.4882"
+    jacoco
 }
 
 group = "org.example"
@@ -17,6 +18,15 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
 }
 kotlin {
     jvmToolchain(17)
@@ -47,5 +57,6 @@ sonar {
         property("sonar.sources", "src/main/kotlin")
         property("sonar.tests", "src/test/kotlin")
         property("sonar.kotlin.detekt.reportPaths", "build/reports/detekt/detekt.xml")
+        property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml")
     }
 }
