@@ -25,6 +25,8 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew detekt
+      - name: Run tests and generate coverage report
+        run: ./gradlew test
       - name: SonarCloud analysis
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
