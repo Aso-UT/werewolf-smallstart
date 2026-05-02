@@ -5,7 +5,7 @@ abstract class CpuLodge : Lodge() {
 
     override fun assignments(): List<Pair<Player, Role>> {
         val roles = listOf(
-            Role.HUNTER, Role.VILLAGER, Role.VILLAGER,
+            Role.HUNTER, Role.VILLAGER, Role.MADMAN,
             Role.WEREWOLF, Role.SEER, Role.MEDIUM, Role.WEREWOLF,
         ).shuffled()
         val players = listOf(HumanPlayer(roles[0], "1", ConsolePlayerIO())) +
