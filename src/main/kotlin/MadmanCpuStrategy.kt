@@ -1,14 +1,12 @@
 package org.example
 
-class MadmanCpuStrategy(self: RoleAwareCpuPlayer) : RoleAwareCpuStrategy(self, Role.MADMAN, WerewolfVoting(self)) {
+class MadmanCpuStrategy(
+    self: RoleAwareCpuPlayer,
+    private val impersonating: Role = listOf(Role.SEER, Role.MEDIUM).random(),
+) : RoleAwareCpuStrategy(self, Role.MADMAN, WerewolfVoting(self)) {
 
-    private val impersonating = listOf(Role.SEER, Role.MEDIUM).random()
-
-    override fun discuss(players: List<Player>): Statement = when (impersonating) {
-        Role.SEER -> fakeSeerDiscuss(players)
-        Role.MEDIUM -> fakeMediumDiscuss()
-        else -> Statement.Plain("")
-    }
+    override fun discuss(players: List<Player>): Statement =
+        if (impersonating == Role.SEER) fakeSeerDiscuss(players) else fakeMediumDiscuss()
 
     override fun selectTargetForOthers(context: SelectionContext, candidates: List<Player>): Player =
         candidates.random()
