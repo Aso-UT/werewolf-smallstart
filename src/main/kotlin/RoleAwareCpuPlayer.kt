@@ -6,7 +6,7 @@ class RoleAwareCpuPlayer(val myRole: Role, override val name: String) : CpuPlaye
 
     private val strategy = setOf(
         SeerCpuStrategy(this), MediumCpuStrategy(this), WerewolfCpuStrategy(this),
-        HunterCpuStrategy(this), VillagerCpuStrategy(this)
+        HunterCpuStrategy(this), VillagerCpuStrategy(this), MadmanCpuStrategy(this)
     ).single { it.appliesTo() }
 
     override fun onReceive(event: GameEvent) { _knowledge.add(event) }

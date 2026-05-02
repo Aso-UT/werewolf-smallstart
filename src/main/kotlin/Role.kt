@@ -35,6 +35,10 @@ enum class Role(val displayName: String, val side: Side, val divineResult: Divin
         override fun firstNightAction(self: Player, players: List<Player>, knowledge: List<GameEvent>): NightAction = NightAction.None
         override fun normalNightAction(self: Player, players: List<Player>, knowledge: List<GameEvent>): NightAction =
             NightAction.Guard(self.selectTarget(SelectionContext.Guard(self, players)))
+    },
+    MADMAN("狂人", Side.CITIZEN, DivineResult.NOT_WEREWOLF, MediumResult.NOT_WEREWOLF) {
+        override fun firstNightAction(self: Player, players: List<Player>, knowledge: List<GameEvent>): NightAction = NightAction.None
+        override fun normalNightAction(self: Player, players: List<Player>, knowledge: List<GameEvent>): NightAction = NightAction.None
     };
 
     abstract fun firstNightAction(self: Player, players: List<Player>, knowledge: List<GameEvent>): NightAction
