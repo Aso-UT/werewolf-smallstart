@@ -2,17 +2,29 @@ package org.example
 
 class MadmanCpuStrategy(self: RoleAwareCpuPlayer) : RoleAwareCpuStrategy(self, Role.MADMAN, WerewolfVoting(self)) {
 
-    override fun discuss(players: List<Player>): Statement {
-        val target = nextUnreportedTarget(players) ?: return Statement.Plain("")
-        return Statement.DivinationReport(self, target, DivineResult.WEREWOLF)
+    private val impersonating = listOf(Role.SEER, Role.MEDIUM).random()
+
+    override fun discuss(players: List<Player>): Statement = when (impersonating) {
+        Role.SEER -> fakeSeerDiscuss(players)
+        Role.MEDIUM -> fakeMediumDiscuss()
+        else -> Statement.Plain("")
     }
 
     override fun selectTargetForOthers(context: SelectionContext, candidates: List<Player>): Player =
         candidates.random()
 
-    private fun nextUnreportedTarget(players: List<Player>): Player? {
-        val accused = accusedByMe()
-        return players.filter { it !== self && it !in accused }.randomOrNull()
+    private fun fakeSeerDiscuss(players: List<Player>): Statement {
+        val target = players.filter { it !== self && it !in accusedByMe() }.randomOrNull()
+            ?: return Statement.Plain("")
+        return Statement.DivinationReport(self, target, DivineResult.WEREWOLF)
+    }
+
+    private fun fakeMediumDiscuss(): Statement {
+        val target = self.knowledge.filterIsInstance<GameEvent.PlayerExecuted>()
+            .map { it.executed }
+            .firstOrNull { it !in fakeMediumedByMe() }
+            ?: return Statement.Plain("")
+        return Statement.MediumReport(self, target, MediumResult.NOT_WEREWOLF)
     }
 
     private fun accusedByMe(): Set<Player> =
@@ -22,5 +34,12 @@ class MadmanCpuStrategy(self: RoleAwareCpuPlayer) : RoleAwareCpuStrategy(self, R
             .filter { it.claimant === self }
             .map { it.target }
             .toSet()
-}
 
+    private fun fakeMediumedByMe(): Set<Player> =
+        self.knowledge.filterIsInstance<GameEvent.StatementMade>()
+            .map { it.statement }
+            .filterIsInstance<Statement.MediumReport>()
+            .filter { it.claimant === self }
+            .map { it.target }
+            .toSet()
+}
