@@ -1,6 +1,6 @@
 package org.example
 
-class RollerCpuPlayer(role: Role, override val name: String) : Player(role) {
+class RollerCpuPlayer(role: Role, override val name: String) : CpuPlayer(role) {
     private var selectCount = 0
 
     override fun selectTarget(context: SelectionContext): Player {

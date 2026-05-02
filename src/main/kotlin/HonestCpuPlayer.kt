@@ -1,6 +1,6 @@
 package org.example
 
-class HonestCpuPlayer(role: Role, override val name: String) : Player(role) {
+class HonestCpuPlayer(role: Role, override val name: String) : CpuPlayer(role) {
     private val unspoken = mutableListOf<GameEvent>()
     private var selectCount = 0
 

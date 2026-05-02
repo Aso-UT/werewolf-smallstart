@@ -1,6 +1,6 @@
 package org.example
 
-class RoleAwareCpuPlayer(val myRole: Role, override val name: String) : Player(myRole) {
+class RoleAwareCpuPlayer(val myRole: Role, override val name: String) : CpuPlayer(myRole) {
     private val _knowledge = mutableListOf<GameEvent>()
     val knowledge: List<GameEvent> get() = _knowledge.toList()
 

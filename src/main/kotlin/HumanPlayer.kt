@@ -10,4 +10,9 @@ class HumanPlayer(role: Role, override val name: String, private val io: PlayerI
 
     override fun discuss(players: List<Player>): Statement =
         Statement.Plain(io.promptFreeText(name, "議論", "発言してください"))
+
+    override fun watchEpilogue(events: List<GameEvent>) {
+        val content = events.joinToString("\n") { "  ${it.recipientName}: [${it.title}] ${it.body()}" }
+        io.sendMessage(name, "ゲーム振り返り", content)
+    }
 }
