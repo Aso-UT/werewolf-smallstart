@@ -2,7 +2,7 @@ package org.example
 
 class SeerCpuStrategy(self: RoleAwareCpuPlayer) : RoleAwareCpuStrategy(self, Role.SEER, SeerVoting(self)) {
 
-    override fun discuss(): Statement {
+    override fun discuss(players: List<Player>): Statement {
         val next = nextUnreportedDivination() ?: return Statement.Plain("")
         return Statement.DivinationReport(self, next.target, next.result)
     }
