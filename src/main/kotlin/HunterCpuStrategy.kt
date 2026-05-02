@@ -3,7 +3,7 @@ package org.example
 class HunterCpuStrategy(self: RoleAwareCpuPlayer) : RoleAwareCpuStrategy(self, Role.HUNTER, CitizenVoting(self)) {
     private val query = KnowledgeQuery(self)
 
-    override fun discuss() = Statement.Plain("")
+    override fun discuss(players: List<Player>) = Statement.Plain("")
 
     override fun selectTargetForOthers(context: SelectionContext, candidates: List<Player>): Player =
         when (context) {

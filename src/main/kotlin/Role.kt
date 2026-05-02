@@ -1,6 +1,6 @@
 package org.example
 
-enum class Role(val displayName: String, val side: Side, val divineResult: DivineResult, val mediumResult: MediumResult) {
+enum class Role(val displayName: String, val side: Side, val divineResult: DivineResult, val mediumResult: MediumResult, val winningSide: Side = side) {
     WEREWOLF("人狼", Side.WEREWOLF, DivineResult.WEREWOLF, MediumResult.WEREWOLF) {
         override fun firstNightAction(self: Player, players: List<Player>, knowledge: List<GameEvent>): NightAction = NightAction.None
         override fun normalNightAction(self: Player, players: List<Player>, knowledge: List<GameEvent>): NightAction {
@@ -35,6 +35,10 @@ enum class Role(val displayName: String, val side: Side, val divineResult: Divin
         override fun firstNightAction(self: Player, players: List<Player>, knowledge: List<GameEvent>): NightAction = NightAction.None
         override fun normalNightAction(self: Player, players: List<Player>, knowledge: List<GameEvent>): NightAction =
             NightAction.Guard(self.selectTarget(SelectionContext.Guard(self, players)))
+    },
+    MADMAN("狂人", Side.CITIZEN, DivineResult.NOT_WEREWOLF, MediumResult.NOT_WEREWOLF, Side.WEREWOLF) {
+        override fun firstNightAction(self: Player, players: List<Player>, knowledge: List<GameEvent>): NightAction = NightAction.None
+        override fun normalNightAction(self: Player, players: List<Player>, knowledge: List<GameEvent>): NightAction = NightAction.None
     };
 
     abstract fun firstNightAction(self: Player, players: List<Player>, knowledge: List<GameEvent>): NightAction
@@ -42,4 +46,6 @@ enum class Role(val displayName: String, val side: Side, val divineResult: Divin
 
     fun buildNightAction(self: Player, players: List<Player>, isFirstNight: Boolean, knowledge: List<GameEvent>): NightAction =
         if (isFirstNight) firstNightAction(self, players, knowledge) else normalNightAction(self, players, knowledge)
+
+    fun isWinner(winningSide: Side) = this.winningSide == winningSide
 }

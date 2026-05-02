@@ -23,5 +23,5 @@ class Oracle(private val roles: Map<Player, Role>) {
 
     fun aliveCounts(alivePlayers: List<Player>): AliveCounts =
         AliveCounts(Side.entries.associateWith { side -> alivePlayers.count { roleOf(it).side == side } })
-    fun isWinner(player: Player, winningSide: Side): Boolean = roleOf(player).side == winningSide
+    fun isWinner(player: Player, winningSide: Side): Boolean = roleOf(player).isWinner(winningSide)
 }
