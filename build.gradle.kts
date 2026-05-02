@@ -27,6 +27,10 @@ detekt {
     config.setFrom(files("config/detekt/detekt.yml"))
 }
 
+tasks.check {
+    dependsOn(tasks.detekt)
+}
+
 tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
     reports {
         xml.required.set(true)
