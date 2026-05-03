@@ -110,6 +110,13 @@ class RoleAwareCpuPlayerTest {
     }
 
     @Test
+    fun `all roles have a strategy in RoleAwareCpuPlayer`() {
+        Role.entries.forEach { role ->
+            RoleAwareCpuPlayer(role, "test")
+        }
+    }
+
+    @Test
     fun `villager does not vote for player reported as not werewolf when other candidates exist`() {
         val seer = RoleAwareCpuPlayer(Role.SEER, "Seer")
         val villager = RoleAwareCpuPlayer(Role.VILLAGER, "Villager")
