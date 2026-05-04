@@ -56,6 +56,13 @@ src/test/kotlin/
 
 パッケージは `org.example`（mainと同じ）を使用する。
 
+## テストプレイヤーの命名
+
+- name・変数名ともに英語表記とする
+- role名（enum名と一致しない略称も可: Wolf など）をデフォルトとする
+- 同じroleが複数いる場合はrole名（または頭文字）＋連番: V1, V2, Wolf1, Wolf2
+- テスト固有の事情でroleより適切な名前がある場合はこの限りでない（例: 処刑対象を Victim と名付ける、議論ログを読みやすくするために人名を使うなど）
+
 ## テストフレームワーク
 
 `kotlin("test")`（JUnit Platform経由）を使用する。`build.gradle.kts` に設定済み。

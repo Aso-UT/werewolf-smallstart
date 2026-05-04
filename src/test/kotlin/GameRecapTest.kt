@@ -18,9 +18,9 @@ class GameRecapTest {
 
     @Test
     fun `public events appear only once even when received by multiple players`() {
-        val playerA = ReceivingPlayer(Role.VILLAGER, "A")
-        val playerB = ReceivingPlayer(Role.VILLAGER, "B")
-        val pm = playerManager(playerA, playerB)
+        val v1 = ReceivingPlayer(Role.VILLAGER, "V1")
+        val v2 = ReceivingPlayer(Role.VILLAGER, "V2")
+        val pm = playerManager(v1, v2)
 
         GameEvent.TimeChanged.send(TimeOfDay.Night(1), AllPlayers(pm))
 
@@ -30,12 +30,12 @@ class GameRecapTest {
 
     @Test
     fun `private events from each player are all collected`() {
-        val playerA = ReceivingPlayer(Role.VILLAGER, "A")
-        val playerB = ReceivingPlayer(Role.VILLAGER, "B")
-        val pm = playerManager(playerA, playerB)
+        val v1 = ReceivingPlayer(Role.VILLAGER, "V1")
+        val v2 = ReceivingPlayer(Role.VILLAGER, "V2")
+        val pm = playerManager(v1, v2)
 
-        GameEvent.RoleAssigned.send(Role.VILLAGER, playerA)
-        GameEvent.RoleAssigned.send(Role.VILLAGER, playerB)
+        GameEvent.RoleAssigned.send(Role.VILLAGER, v1)
+        GameEvent.RoleAssigned.send(Role.VILLAGER, v2)
 
         val events = GameRecap(pm, anySignal()).events()
         assertEquals(2, events.size)
@@ -43,22 +43,22 @@ class GameRecapTest {
 
     @Test
     fun `events are sorted by creation order across players`() {
-        val playerA = ReceivingPlayer(Role.VILLAGER, "A")
-        val playerB = ReceivingPlayer(Role.VILLAGER, "B")
-        val pm = playerManager(playerA, playerB)
+        val v1 = ReceivingPlayer(Role.VILLAGER, "V1")
+        val v2 = ReceivingPlayer(Role.VILLAGER, "V2")
+        val pm = playerManager(v1, v2)
 
         // 作成順: RoleAssigned(A) → RoleAssigned(B) → TimeChanged(全員)
         // flatMap後: [RoleAssigned(A), TimeChanged, RoleAssigned(B), TimeChanged]
         // distinct後: [RoleAssigned(A), TimeChanged, RoleAssigned(B)] ← ソートなしでは誤順
         // sortedBy後: [RoleAssigned(A), RoleAssigned(B), TimeChanged] ← 正しい順
-        GameEvent.RoleAssigned.send(Role.VILLAGER, playerA)
-        GameEvent.RoleAssigned.send(Role.VILLAGER, playerB)
+        GameEvent.RoleAssigned.send(Role.VILLAGER, v1)
+        GameEvent.RoleAssigned.send(Role.VILLAGER, v2)
         GameEvent.TimeChanged.send(TimeOfDay.Night(1), AllPlayers(pm))
 
         val events = GameRecap(pm, anySignal()).events()
         assertEquals(3, events.size)
-        assertEquals("A", events[0].recipientName)
-        assertEquals("B", events[1].recipientName)
+        assertEquals("V1", events[0].recipientName)
+        assertEquals("V2", events[1].recipientName)
         assertTrue(events[2] is GameEvent.TimeChanged)
     }
 }
