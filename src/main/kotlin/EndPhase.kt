@@ -6,7 +6,7 @@ class EndPhase(
     private val signal: GameOverSignal
 ) : Phase {
     override fun proceed(): Phase {
-        GameEvent.GameOver.send(signal.winningSide, playerManager.allPlayers)
+        GameEvent.GameOver.send(signal.winningSide, AllPlayers(playerManager))
         playerManager.allPlayers.forEach { GameEvent.GameResult.send(oracle.isWinner(it, signal.winningSide), it) }
         showRecap()
         return this

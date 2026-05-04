@@ -46,8 +46,9 @@ class DiscussionTest {
             "Aliceに投票します"
         ))
         val players = listOf(alice, bob)
+        val playerManager = TestLodge(alice to Role.VILLAGER, bob to Role.WEREWOLF).create().playerManager
 
-        fixedOrderDiscussion(players, AllPlayers(players)).conduct()
+        fixedOrderDiscussion(players, AllPlayers(playerManager)).conduct()
 
         assertEquals(listOf(
             "Alice:said:私はBobが怪しいと思う",
@@ -80,9 +81,9 @@ class DiscussionTest {
         val bob = ScriptedPlayer(Role.WEREWOLF, "Bob", listOf("人狼として発言します", "続けて発言します", "最終発言です"))
         val charlie = ScriptedPlayer(Role.VILLAGER, "Charlie", emptyList())
         val alivePlayers = listOf(alice, bob)
-        val allPlayers = listOf(alice, bob, charlie)
+        val playerManager = TestLodge(alice to Role.VILLAGER, bob to Role.WEREWOLF, charlie to Role.VILLAGER).create().playerManager
 
-        fixedOrderDiscussion(alivePlayers, AllPlayers(allPlayers)).conduct()
+        fixedOrderDiscussion(alivePlayers, AllPlayers(playerManager)).conduct()
 
         assertEquals(listOf(
             "Charlie:heard:Alice:村人として発言します",

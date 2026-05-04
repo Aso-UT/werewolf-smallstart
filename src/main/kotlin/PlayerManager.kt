@@ -7,7 +7,7 @@ class PlayerManager(players: List<Player>, private val oracle: Oracle) {
     private var _nightDeath: Player? = null
     val nightDeath: Player? get() = _nightDeath
     val players: List<Player> get() = _alivePlayers
-    val allPlayers get() = AllPlayers(_allPlayers)
+    val allPlayers: List<Player> get() = _allPlayers
 
     private fun checkWinner() {
         GameOverSignal.throwIfGameOver(oracle.aliveCounts(_alivePlayers))
@@ -23,12 +23,12 @@ class PlayerManager(players: List<Player>, private val oracle: Oracle) {
     }
 
     fun execute(mostVoted: Player) {
-        GameEvent.PlayerExecuted.send(mostVoted, allPlayers)
+        GameEvent.PlayerExecuted.send(mostVoted, AllPlayers(this))
         die(mostVoted)
     }
 
     fun kill(target: Player) {
-        GameEvent.PlayerAttacked.send(target, allPlayers)
+        GameEvent.PlayerAttacked.send(target, AllPlayers(this))
         _nightDeath = target
         die(target)
     }

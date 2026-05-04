@@ -27,7 +27,8 @@ class RoleMediumNightActionTest {
     fun `reveals executed player when not yet revealed`() {
         val medium = ReceivingPlayer(Role.MEDIUM, "Medium")
         val villager = ReceivingPlayer(Role.VILLAGER, "Villager")
-        GameEvent.PlayerExecuted.send(villager, AllPlayers(listOf(medium, villager)))
+        val allPlayers = AllPlayers(TestLodge(medium to Role.MEDIUM, villager to Role.VILLAGER).create().playerManager)
+        GameEvent.PlayerExecuted.send(villager, allPlayers)
 
         val action = medium.buildNightAction(listOf(medium), isFirstNight = false)
 
@@ -38,7 +39,8 @@ class RoleMediumNightActionTest {
     fun `returns None when executed player is already revealed`() {
         val medium = ReceivingPlayer(Role.MEDIUM, "Medium")
         val villager = ReceivingPlayer(Role.VILLAGER, "Villager")
-        GameEvent.PlayerExecuted.send(villager, AllPlayers(listOf(medium, villager)))
+        val allPlayers = AllPlayers(TestLodge(medium to Role.MEDIUM, villager to Role.VILLAGER).create().playerManager)
+        GameEvent.PlayerExecuted.send(villager, allPlayers)
         GameEvent.MediumRevealed.send(villager, MediumResult.NOT_WEREWOLF, medium)
 
         val action = medium.buildNightAction(listOf(medium), isFirstNight = false)
@@ -51,7 +53,7 @@ class RoleMediumNightActionTest {
         val medium = ReceivingPlayer(Role.MEDIUM, "Medium")
         val villager1 = ReceivingPlayer(Role.VILLAGER, "V1")
         val villager2 = ReceivingPlayer(Role.VILLAGER, "V2")
-        val allPlayers = AllPlayers(listOf(medium, villager1, villager2))
+        val allPlayers = AllPlayers(TestLodge(medium to Role.MEDIUM, villager1 to Role.VILLAGER, villager2 to Role.VILLAGER).create().playerManager)
         GameEvent.PlayerExecuted.send(villager1, allPlayers)
         GameEvent.PlayerExecuted.send(villager2, allPlayers)
 
@@ -65,7 +67,7 @@ class RoleMediumNightActionTest {
         val medium = ReceivingPlayer(Role.MEDIUM, "Medium")
         val villager1 = ReceivingPlayer(Role.VILLAGER, "V1")
         val villager2 = ReceivingPlayer(Role.VILLAGER, "V2")
-        val allPlayers = AllPlayers(listOf(medium, villager1, villager2))
+        val allPlayers = AllPlayers(TestLodge(medium to Role.MEDIUM, villager1 to Role.VILLAGER, villager2 to Role.VILLAGER).create().playerManager)
         GameEvent.PlayerExecuted.send(villager1, allPlayers)
         GameEvent.MediumRevealed.send(villager1, MediumResult.NOT_WEREWOLF, medium)
         GameEvent.PlayerExecuted.send(villager2, allPlayers)

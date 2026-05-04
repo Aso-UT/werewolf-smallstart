@@ -12,7 +12,7 @@ class LodgeTest {
         val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
         val setup = TestLodge(villager to Role.VILLAGER, wolf to Role.WEREWOLF).create()
 
-        val players = setup.playerManager.allPlayers.toList()
+        val players = setup.playerManager.allPlayers
         assertSame(villager, players[0])
         assertSame(wolf, players[1])
         assertEquals(listOf(wolf), setup.oracle.werewolves(players))
