@@ -6,7 +6,7 @@ fun main() {
     try {
         while (true) { phase = phase.proceed() }
     } catch (signal: GameOverSignal) {
-        EndPhase(setup.playerManager, setup.oracle, signal).proceed()
+        Epilogue(setup.playerManager, setup.oracle, signal).perform()
     }
 }
 
