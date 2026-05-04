@@ -43,7 +43,7 @@ class ConclaveTest {
         val villager = NothingPlayer(Role.VILLAGER, "Villager")
         val players = listOf(alpha, beta, villager)
         val oracle = Oracle(mapOf(alpha to Role.WEREWOLF, beta to Role.WEREWOLF, villager to Role.VILLAGER))
-        val playerManager = PlayerManager(GameSetup(players, oracle))
+        val playerManager = PlayerManager(players, oracle)
 
         fixedOrderConclave(oracle, playerManager).conduct()
 
@@ -63,7 +63,7 @@ class ConclaveTest {
             alpha to Role.WEREWOLF, gamma to Role.WEREWOLF, beta to Role.WEREWOLF,
             v1 to Role.VILLAGER, v2 to Role.VILLAGER, v3 to Role.VILLAGER,
         ))
-        val playerManager = PlayerManager(GameSetup(players, oracle))
+        val playerManager = PlayerManager(players, oracle)
         playerManager.execute(beta)
 
         fixedOrderConclave(oracle, playerManager).conduct()
@@ -80,7 +80,7 @@ class ConclaveTest {
         val alpha = ScriptedPlayer(Role.WEREWOLF, "Alpha", emptyList())
         val wolves = listOf(alpha)
         val oracle = Oracle(wolves.associateWith { Role.WEREWOLF })
-        val playerManager = PlayerManager(GameSetup(wolves, oracle))
+        val playerManager = PlayerManager(wolves, oracle)
 
         fixedOrderConclave(oracle, playerManager).conduct()
 
@@ -93,7 +93,7 @@ class ConclaveTest {
         val beta = ScriptedPlayer(Role.WEREWOLF, "Beta", listOf("r1b", "r2b", "r3b"))
         val wolves = listOf(alpha, beta)
         val oracle = Oracle(wolves.associateWith { Role.WEREWOLF })
-        val playerManager = PlayerManager(GameSetup(wolves, oracle))
+        val playerManager = PlayerManager(wolves, oracle)
 
         fixedOrderConclave(oracle, playerManager).conduct()
 

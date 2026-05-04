@@ -1,3 +1,3 @@
 package org.example
 
-data class GameSetup(val players: List<Player>, val oracle: Oracle)
+class GameSetup(val playerManager: PlayerManager, val oracle: Oracle)

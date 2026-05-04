@@ -5,9 +5,8 @@ abstract class Lodge {
 
     fun create(): GameSetup {
         val assignments = assignments()
-        return GameSetup(
-            players = assignments.map { it.first },
-            oracle = Oracle(assignments.toMap()),
-        )
+        val oracle = Oracle(assignments.toMap())
+        val playerManager = PlayerManager(assignments.map { it.first }, oracle)
+        return GameSetup(playerManager, oracle)
     }
 }

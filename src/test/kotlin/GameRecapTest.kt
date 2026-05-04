@@ -8,7 +8,7 @@ class GameRecapTest {
 
     private fun playerManager(vararg players: Player): PlayerManager {
         val oracle = Oracle(players.associateWith { Role.VILLAGER })
-        return PlayerManager(GameSetup(players.toList(), oracle))
+        return PlayerManager(players.toList(), oracle)
     }
 
     private fun anySignal(): GameOverSignal {
