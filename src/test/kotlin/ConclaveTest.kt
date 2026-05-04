@@ -38,10 +38,10 @@ class ConclaveTest {
 
     @Test
     fun `non-werewolf neither speaks nor listens`() {
-        val alpha = ScriptedPlayer(Role.WEREWOLF, "Alpha", listOf("r1a", "r2a", "r3a"))
-        val beta = ScriptedPlayer(Role.WEREWOLF, "Beta", listOf("r1b", "r2b", "r3b"))
+        val wolf1 = ScriptedPlayer(Role.WEREWOLF, "Wolf1", listOf("r1a", "r2a", "r3a"))
+        val wolf2 = ScriptedPlayer(Role.WEREWOLF, "Wolf2", listOf("r1b", "r2b", "r3b"))
         val villager = NothingPlayer(Role.VILLAGER, "Villager")
-        val setup = TestLodge(alpha to Role.WEREWOLF, beta to Role.WEREWOLF, villager to Role.VILLAGER).create()
+        val setup = TestLodge(wolf1 to Role.WEREWOLF, wolf2 to Role.WEREWOLF, villager to Role.VILLAGER).create()
 
         fixedOrderConclave(setup.oracle, setup.playerManager).conduct()
 
@@ -50,67 +50,67 @@ class ConclaveTest {
 
     @Test
     fun `dead werewolf listens but does not speak`() {
-        val alpha = ScriptedPlayer(Role.WEREWOLF, "Alpha", listOf("r1a", "r2a", "r3a"), receivesExecutionEvent = true)
-        val gamma = ScriptedPlayer(Role.WEREWOLF, "Gamma", listOf("r1g", "r2g", "r3g"), receivesExecutionEvent = true)
-        val beta = ScriptedPlayer(Role.WEREWOLF, "Beta", emptyList(), receivesExecutionEvent = true)
+        val wolf1 = ScriptedPlayer(Role.WEREWOLF, "Wolf1", listOf("r1a", "r2a", "r3a"), receivesExecutionEvent = true)
+        val wolf2 = ScriptedPlayer(Role.WEREWOLF, "Wolf2", listOf("r1g", "r2g", "r3g"), receivesExecutionEvent = true)
+        val wolf3 = ScriptedPlayer(Role.WEREWOLF, "Wolf3", emptyList(), receivesExecutionEvent = true)
         val v1 = ReceivingPlayer(Role.VILLAGER, "V1")
         val v2 = ReceivingPlayer(Role.VILLAGER, "V2")
         val v3 = ReceivingPlayer(Role.VILLAGER, "V3")
         val setup = TestLodge(
-            alpha to Role.WEREWOLF, gamma to Role.WEREWOLF, beta to Role.WEREWOLF,
+            wolf1 to Role.WEREWOLF, wolf2 to Role.WEREWOLF, wolf3 to Role.WEREWOLF,
             v1 to Role.VILLAGER, v2 to Role.VILLAGER, v3 to Role.VILLAGER,
         ).create()
-        setup.playerManager.execute(beta)
+        setup.playerManager.execute(wolf3)
 
         fixedOrderConclave(setup.oracle, setup.playerManager).conduct()
 
         assertEquals(listOf(
-            "Beta:heard:Alpha:r1a", "Beta:heard:Gamma:r1g",
-            "Beta:heard:Alpha:r2a", "Beta:heard:Gamma:r2g",
-            "Beta:heard:Alpha:r3a", "Beta:heard:Gamma:r3g",
-        ), beta.log)
+            "Wolf3:heard:Wolf1:r1a", "Wolf3:heard:Wolf2:r1g",
+            "Wolf3:heard:Wolf1:r2a", "Wolf3:heard:Wolf2:r2g",
+            "Wolf3:heard:Wolf1:r3a", "Wolf3:heard:Wolf2:r3g",
+        ), wolf3.log)
     }
 
     @Test
     fun `single werewolf does not speak`() {
-        val alpha = ScriptedPlayer(Role.WEREWOLF, "Alpha", emptyList())
-        val setup = TestLodge(alpha to Role.WEREWOLF).create()
+        val wolf1 = ScriptedPlayer(Role.WEREWOLF, "Wolf1", emptyList())
+        val setup = TestLodge(wolf1 to Role.WEREWOLF).create()
 
         fixedOrderConclave(setup.oracle, setup.playerManager).conduct()
 
-        assertEquals(emptyList(), alpha.log)
+        assertEquals(emptyList(), wolf1.log)
     }
 
     @Test
     fun `statements are delivered to all wolves in round order`() {
-        val alpha = ScriptedPlayer(Role.WEREWOLF, "Alpha", listOf("r1a", "r2a", "r3a"))
-        val beta = ScriptedPlayer(Role.WEREWOLF, "Beta", listOf("r1b", "r2b", "r3b"))
-        val setup = TestLodge(alpha to Role.WEREWOLF, beta to Role.WEREWOLF).create()
+        val wolf1 = ScriptedPlayer(Role.WEREWOLF, "Wolf1", listOf("r1a", "r2a", "r3a"))
+        val wolf2 = ScriptedPlayer(Role.WEREWOLF, "Wolf2", listOf("r1b", "r2b", "r3b"))
+        val setup = TestLodge(wolf1 to Role.WEREWOLF, wolf2 to Role.WEREWOLF).create()
 
         fixedOrderConclave(setup.oracle, setup.playerManager).conduct()
 
         assertEquals(listOf(
-            "Alpha:said:r1a",
-            "Alpha:heard:Alpha:r1a",
-            "Alpha:heard:Beta:r1b",
-            "Alpha:said:r2a",
-            "Alpha:heard:Alpha:r2a",
-            "Alpha:heard:Beta:r2b",
-            "Alpha:said:r3a",
-            "Alpha:heard:Alpha:r3a",
-            "Alpha:heard:Beta:r3b",
-        ), alpha.log)
+            "Wolf1:said:r1a",
+            "Wolf1:heard:Wolf1:r1a",
+            "Wolf1:heard:Wolf2:r1b",
+            "Wolf1:said:r2a",
+            "Wolf1:heard:Wolf1:r2a",
+            "Wolf1:heard:Wolf2:r2b",
+            "Wolf1:said:r3a",
+            "Wolf1:heard:Wolf1:r3a",
+            "Wolf1:heard:Wolf2:r3b",
+        ), wolf1.log)
 
         assertEquals(listOf(
-            "Beta:heard:Alpha:r1a",
-            "Beta:said:r1b",
-            "Beta:heard:Beta:r1b",
-            "Beta:heard:Alpha:r2a",
-            "Beta:said:r2b",
-            "Beta:heard:Beta:r2b",
-            "Beta:heard:Alpha:r3a",
-            "Beta:said:r3b",
-            "Beta:heard:Beta:r3b",
-        ), beta.log)
+            "Wolf2:heard:Wolf1:r1a",
+            "Wolf2:said:r1b",
+            "Wolf2:heard:Wolf2:r1b",
+            "Wolf2:heard:Wolf1:r2a",
+            "Wolf2:said:r2b",
+            "Wolf2:heard:Wolf2:r2b",
+            "Wolf2:heard:Wolf1:r3a",
+            "Wolf2:said:r3b",
+            "Wolf2:heard:Wolf2:r3b",
+        ), wolf2.log)
     }
 }
