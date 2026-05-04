@@ -24,11 +24,6 @@ class EpilogueTest {
         }
     }
 
-    private fun fakeCitizenWinSignal(): GameOverSignal = try {
-        GameOverSignal.throwIfGameOver(AliveCounts(mapOf(Side.CITIZEN to 2, Side.WEREWOLF to 0)))
-        error("unreachable")
-    } catch (s: GameOverSignal) { s }
-
     @Test
     fun `GameOver is broadcast with winning side`() {
         val villager = WatchingPlayer(Role.VILLAGER, "Villager")
