@@ -5,7 +5,8 @@ interface Notifiable {
     fun receive(event: GameEvent)
 }
 
-class AllPlayers(private val players: List<Player>) : Notifiable, Iterable<Player> by players {
+class AllPlayers(playerManager: PlayerManager) : Notifiable {
+    private val players = playerManager.allPlayers
     override val recipientName = "全プレイヤー"
     override fun receive(event: GameEvent) = players.forEach { it.receive(event) }
 }
@@ -13,5 +14,5 @@ class AllPlayers(private val players: List<Player>) : Notifiable, Iterable<Playe
 class Wolves(private val oracle: Oracle, private val playerManager: PlayerManager) : Notifiable {
     override val recipientName = "全人狼"
     override fun receive(event: GameEvent) =
-        oracle.werewolves(playerManager.allPlayers.toList()).forEach { it.receive(event) }
+        oracle.werewolves(playerManager.allPlayers).forEach { it.receive(event) }
 }

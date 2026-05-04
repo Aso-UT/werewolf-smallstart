@@ -6,10 +6,8 @@ import kotlin.test.assertTrue
 
 class GameRecapTest {
 
-    private fun playerManager(vararg players: Player): PlayerManager {
-        val oracle = Oracle(players.associateWith { Role.VILLAGER })
-        return PlayerManager(players.toList(), oracle)
-    }
+    private fun playerManager(vararg players: Player): PlayerManager =
+        TestLodge(*players.map { it to Role.VILLAGER }.toTypedArray()).create().playerManager
 
     private fun anySignal(): GameOverSignal {
         return try {
@@ -24,7 +22,7 @@ class GameRecapTest {
         val playerB = ReceivingPlayer(Role.VILLAGER, "B")
         val pm = playerManager(playerA, playerB)
 
-        GameEvent.TimeChanged.send(TimeOfDay.Night(1), pm.allPlayers)
+        GameEvent.TimeChanged.send(TimeOfDay.Night(1), AllPlayers(pm))
 
         val events = GameRecap(pm, anySignal()).events()
         assertEquals(1, events.size)
@@ -55,7 +53,7 @@ class GameRecapTest {
         // sortedBy後: [RoleAssigned(A), RoleAssigned(B), TimeChanged] ← 正しい順
         GameEvent.RoleAssigned.send(Role.VILLAGER, playerA)
         GameEvent.RoleAssigned.send(Role.VILLAGER, playerB)
-        GameEvent.TimeChanged.send(TimeOfDay.Night(1), pm.allPlayers)
+        GameEvent.TimeChanged.send(TimeOfDay.Night(1), AllPlayers(pm))
 
         val events = GameRecap(pm, anySignal()).events()
         assertEquals(3, events.size)

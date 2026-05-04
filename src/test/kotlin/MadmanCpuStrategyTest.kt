@@ -11,7 +11,9 @@ class MadmanCpuStrategyTest {
     private val madman = RoleAwareCpuPlayer(Role.MADMAN, "狂人")
     private val player1 = ReceivingPlayer(Role.VILLAGER, "村人1")
     private val player2 = ReceivingPlayer(Role.VILLAGER, "村人2")
-    private val allPlayers = AllPlayers(listOf(madman, player1, player2))
+    private val allPlayers = AllPlayers(
+        TestLodge(madman to Role.MADMAN, player1 to Role.VILLAGER, player2 to Role.VILLAGER).create().playerManager
+    )
 
     @Test
     fun `fake seer reports an alive player as werewolf`() {

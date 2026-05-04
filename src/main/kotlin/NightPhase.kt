@@ -6,7 +6,7 @@ class NightPhase(
     private val nightNumber: Int
 ) : Phase {
     override fun proceed(): Phase {
-        GameEvent.TimeChanged.send(TimeOfDay.Night(nightNumber), playerManager.allPlayers)
+        GameEvent.TimeChanged.send(TimeOfDay.Night(nightNumber), AllPlayers(playerManager))
         Conclave(oracle, playerManager).conduct()
         val decisions = playerManager.players.map { it to it.buildNightAction(playerManager.players, nightNumber == 1) }
 

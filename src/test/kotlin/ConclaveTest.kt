@@ -41,11 +41,9 @@ class ConclaveTest {
         val alpha = ScriptedPlayer(Role.WEREWOLF, "Alpha", listOf("r1a", "r2a", "r3a"))
         val beta = ScriptedPlayer(Role.WEREWOLF, "Beta", listOf("r1b", "r2b", "r3b"))
         val villager = NothingPlayer(Role.VILLAGER, "Villager")
-        val players = listOf(alpha, beta, villager)
-        val oracle = Oracle(mapOf(alpha to Role.WEREWOLF, beta to Role.WEREWOLF, villager to Role.VILLAGER))
-        val playerManager = PlayerManager(players, oracle)
+        val setup = TestLodge(alpha to Role.WEREWOLF, beta to Role.WEREWOLF, villager to Role.VILLAGER).create()
 
-        fixedOrderConclave(oracle, playerManager).conduct()
+        fixedOrderConclave(setup.oracle, setup.playerManager).conduct()
 
         // villager の discuss・onReceive が呼ばれた場合は NothingPlayer がエラーを投げる
     }
@@ -58,15 +56,13 @@ class ConclaveTest {
         val v1 = ReceivingPlayer(Role.VILLAGER, "V1")
         val v2 = ReceivingPlayer(Role.VILLAGER, "V2")
         val v3 = ReceivingPlayer(Role.VILLAGER, "V3")
-        val players = listOf(alpha, gamma, beta, v1, v2, v3)
-        val oracle = Oracle(mapOf(
+        val setup = TestLodge(
             alpha to Role.WEREWOLF, gamma to Role.WEREWOLF, beta to Role.WEREWOLF,
             v1 to Role.VILLAGER, v2 to Role.VILLAGER, v3 to Role.VILLAGER,
-        ))
-        val playerManager = PlayerManager(players, oracle)
-        playerManager.execute(beta)
+        ).create()
+        setup.playerManager.execute(beta)
 
-        fixedOrderConclave(oracle, playerManager).conduct()
+        fixedOrderConclave(setup.oracle, setup.playerManager).conduct()
 
         assertEquals(listOf(
             "Beta:heard:Alpha:r1a", "Beta:heard:Gamma:r1g",
@@ -78,11 +74,9 @@ class ConclaveTest {
     @Test
     fun `single werewolf does not speak`() {
         val alpha = ScriptedPlayer(Role.WEREWOLF, "Alpha", emptyList())
-        val wolves = listOf(alpha)
-        val oracle = Oracle(wolves.associateWith { Role.WEREWOLF })
-        val playerManager = PlayerManager(wolves, oracle)
+        val setup = TestLodge(alpha to Role.WEREWOLF).create()
 
-        fixedOrderConclave(oracle, playerManager).conduct()
+        fixedOrderConclave(setup.oracle, setup.playerManager).conduct()
 
         assertEquals(emptyList(), alpha.log)
     }
@@ -91,11 +85,9 @@ class ConclaveTest {
     fun `statements are delivered to all wolves in round order`() {
         val alpha = ScriptedPlayer(Role.WEREWOLF, "Alpha", listOf("r1a", "r2a", "r3a"))
         val beta = ScriptedPlayer(Role.WEREWOLF, "Beta", listOf("r1b", "r2b", "r3b"))
-        val wolves = listOf(alpha, beta)
-        val oracle = Oracle(wolves.associateWith { Role.WEREWOLF })
-        val playerManager = PlayerManager(wolves, oracle)
+        val setup = TestLodge(alpha to Role.WEREWOLF, beta to Role.WEREWOLF).create()
 
-        fixedOrderConclave(oracle, playerManager).conduct()
+        fixedOrderConclave(setup.oracle, setup.playerManager).conduct()
 
         assertEquals(listOf(
             "Alpha:said:r1a",
