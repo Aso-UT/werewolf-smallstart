@@ -4,7 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-class EndPhaseTest {
+class EpilogueTest {
 
     private class WatchingPlayer(role: Role, name: String) : ReceivingPlayer(role, name) {
         var gameOver: GameEvent.GameOver? = null
@@ -34,7 +34,7 @@ class EndPhaseTest {
         val villager = WatchingPlayer(Role.VILLAGER, "Villager")
         val setup = TestLodge(villager to Role.VILLAGER).create()
 
-        EndPhase(setup.playerManager, setup.oracle, fakeCitizenWinSignal()).proceed()
+        Epilogue(setup.playerManager, setup.oracle, fakeCitizenWinSignal()).perform()
 
         assertEquals(Side.CITIZEN, villager.gameOver?.winnerSide)
     }
@@ -45,7 +45,7 @@ class EndPhaseTest {
         val villager = WatchingPlayer(Role.VILLAGER, "Villager")
         val setup = TestLodge(wolf to Role.WEREWOLF, villager to Role.VILLAGER).create()
 
-        EndPhase(setup.playerManager, setup.oracle, fakeCitizenWinSignal()).proceed()
+        Epilogue(setup.playerManager, setup.oracle, fakeCitizenWinSignal()).perform()
 
         assertEquals(false, wolf.gameResult?.isWinner)
         assertEquals(true, villager.gameResult?.isWinner)
@@ -57,10 +57,9 @@ class EndPhaseTest {
         val villager = WatchingPlayer(Role.VILLAGER, "Villager")
         val setup = TestLodge(wolf to Role.WEREWOLF, villager to Role.VILLAGER).create()
 
-        EndPhase(setup.playerManager, setup.oracle, fakeCitizenWinSignal()).proceed()
+        Epilogue(setup.playerManager, setup.oracle, fakeCitizenWinSignal()).perform()
 
         assertNotNull(wolf.epilogueEvents)
         assertNotNull(villager.epilogueEvents)
     }
 }
-

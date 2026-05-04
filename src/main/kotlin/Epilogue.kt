@@ -1,15 +1,14 @@
 package org.example
 
-class EndPhase(
+class Epilogue(
     private val playerManager: PlayerManager,
     private val oracle: Oracle,
     private val signal: GameOverSignal
-) : Phase {
-    override fun proceed(): Phase {
+) {
+    fun perform() {
         GameEvent.GameOver.send(signal.winningSide, AllPlayers(playerManager))
         playerManager.allPlayers.forEach { GameEvent.GameResult.send(oracle.isWinner(it, signal.winningSide), it) }
         showRecap()
-        return this
     }
 
     private fun showRecap() {
