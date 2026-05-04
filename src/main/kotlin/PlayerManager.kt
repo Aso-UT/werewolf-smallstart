@@ -1,9 +1,8 @@
 package org.example
 
-class PlayerManager(setup: GameSetup) {
+class PlayerManager(players: List<Player>, private val oracle: Oracle) {
 
-    private val oracle = setup.oracle
-    private val _allPlayers: List<Player> = setup.players
+    private val _allPlayers: List<Player> = players
     private val _alivePlayers: MutableList<Player> = _allPlayers.toMutableList()
     private var _nightDeath: Player? = null
     val nightDeath: Player? get() = _nightDeath
