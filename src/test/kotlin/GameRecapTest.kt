@@ -6,10 +6,8 @@ import kotlin.test.assertTrue
 
 class GameRecapTest {
 
-    private fun playerManager(vararg players: Player): PlayerManager {
-        val oracle = Oracle(players.associateWith { Role.VILLAGER })
-        return PlayerManager(players.toList(), oracle)
-    }
+    private fun playerManager(vararg players: Player): PlayerManager =
+        TestLodge(*players.map { it to Role.VILLAGER }.toTypedArray()).create().playerManager
 
     private fun anySignal(): GameOverSignal {
         return try {

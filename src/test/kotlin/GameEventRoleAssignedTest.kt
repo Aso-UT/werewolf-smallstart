@@ -14,9 +14,8 @@ class GameEventRoleAssignedTest {
     fun `InitialPhase notifies each player of their assigned role`() {
         val villager = RecordingPlayer(Role.VILLAGER, "Alice")
         val werewolf = RecordingPlayer(Role.WEREWOLF, "Bob")
-        val players = listOf(villager, werewolf)
-        val oracle = Oracle(mapOf(villager to Role.VILLAGER, werewolf to Role.WEREWOLF))
-        InitialPhase(PlayerManager(players, oracle), oracle).proceed()
+        val setup = TestLodge(villager to Role.VILLAGER, werewolf to Role.WEREWOLF).create()
+        InitialPhase(setup.playerManager, setup.oracle).proceed()
 
         val villagerEvent = villager.received.single() as GameEvent.RoleAssigned
         assertEquals(Role.VILLAGER, villagerEvent.role)

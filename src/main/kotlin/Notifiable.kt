@@ -5,7 +5,7 @@ interface Notifiable {
     fun receive(event: GameEvent)
 }
 
-class AllPlayers(playerManager: PlayerManager) : Notifiable, Iterable<Player> by playerManager.allPlayers {
+class AllPlayers(playerManager: PlayerManager) : Notifiable {
     private val players = playerManager.allPlayers
     override val recipientName = "全プレイヤー"
     override fun receive(event: GameEvent) = players.forEach { it.receive(event) }
