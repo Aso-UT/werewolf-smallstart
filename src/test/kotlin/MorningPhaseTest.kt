@@ -53,19 +53,20 @@ class MorningPhaseTest {
     }
 
     @Test
-    fun `nightDeath is cleared after proceed`() {
+    fun `nightDeath is cleared by bury as seen in consecutive MorningReports`() {
+        val observer = RecordingPlayer(Role.VILLAGER, "Observer")
         val villager1 = ReceivingPlayer(Role.VILLAGER, "V1")
         val villager2 = ReceivingPlayer(Role.VILLAGER, "V2")
-        val villager3 = ReceivingPlayer(Role.VILLAGER, "V3")
         val setup = TestLodge(
             ReceivingPlayer(Role.WEREWOLF, "Wolf") to Role.WEREWOLF,
-            villager1 to Role.VILLAGER, villager2 to Role.VILLAGER, villager3 to Role.VILLAGER,
+            observer to Role.VILLAGER, villager1 to Role.VILLAGER, villager2 to Role.VILLAGER,
         ).create()
         setup.playerManager.kill(villager1)
 
         MorningPhase(setup.playerManager, setup.oracle, 1).proceed()
+        MorningPhase(setup.playerManager, setup.oracle, 2).proceed()
 
-        assertNull(setup.playerManager.nightDeath)
+        assertEquals(villager1, observer.morningReports[0].victim)
+        assertNull(observer.morningReports[1].victim)
     }
 }
-
