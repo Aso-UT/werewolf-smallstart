@@ -27,7 +27,9 @@ class PocAiPlayer(role: Role, override val name: String) : Player(role) {
     override fun watchEpilogue(events: List<GameEvent>) {
         println()
         println("=== エピローグ（プレイヤー $name） ===")
-        events.forEach { println("[${it.title}] ${it.body()}") }
+        events.forEach { println("[${it.recipientName}] [${it.title}] ${it.body()}") }
+        printPrompt("プレイヤーとして200文字以内でゲームの振り返りをしてください。")
+        readLine()
     }
 
     private fun printPrompt(instruction: String) {
