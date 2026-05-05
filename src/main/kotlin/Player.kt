@@ -12,7 +12,12 @@ abstract class Player(private val role: Role) : Notifiable {
 
     protected abstract fun onReceive(event: GameEvent)
     abstract fun selectTarget(context: SelectionContext): Player
-    abstract fun discuss(players: List<Player>): Statement
+    fun discuss(context: DiscussionContext): Statement {
+        val statement = buildStatement(context)
+        require(statement.type in context.availableTypes)
+        return statement
+    }
+    protected abstract fun buildStatement(context: DiscussionContext): Statement
     abstract fun watchEpilogue(events: List<GameEvent>)
 
     // signal is a capability token: only callers who hold a GameOverSignal (i.e., after game over) can access knowledge

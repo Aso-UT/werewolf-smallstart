@@ -5,19 +5,22 @@ class MadmanCpuStrategy(
     private val impersonating: Role = listOf(Role.SEER, Role.MEDIUM).random(),
 ) : RoleAwareCpuStrategy(self, Role.MADMAN, WerewolfVoting(self)) {
 
-    override fun discuss(players: List<Player>): Statement =
-        if (impersonating == Role.SEER) fakeSeerDiscuss(players) else fakeMediumDiscuss()
+    override fun buildStatement(context: DiscussionContext): Statement {
+        if (context.round > 1) return Statement.Plain("")
+        return if (impersonating == Role.SEER) fakeSeerStatement(context) else fakeMediumStatement()
+    }
 
     override fun selectTargetForOthers(context: SelectionContext, candidates: List<Player>): Player =
         candidates.random()
 
-    private fun fakeSeerDiscuss(players: List<Player>): Statement {
-        val target = players.filter { it !== self && it !in accusedByMe() }.randomOrNull()
+    private fun fakeSeerStatement(context: DiscussionContext): Statement {
+        val result = if (context.day == 1) DivineResult.NOT_WEREWOLF else DivineResult.WEREWOLF
+        val target = context.players.filter { it !== self && it !in accusedByMe() }.randomOrNull()
             ?: return Statement.Plain("")
-        return Statement.DivinationReport(self, target, DivineResult.WEREWOLF)
+        return Statement.DivinationReport(self, target, result)
     }
 
-    private fun fakeMediumDiscuss(): Statement {
+    private fun fakeMediumStatement(): Statement {
         val target = self.knowledge.filterIsInstance<GameEvent.PlayerExecuted>()
             .map { it.executed }
             .firstOrNull { it !in fakeMediumedByMe() }

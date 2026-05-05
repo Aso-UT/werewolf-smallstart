@@ -27,7 +27,7 @@ class PocAiPlayerTest {
     @Test
     fun `discuss returns Plain statement from input`() {
         val villager = PocAiPlayer(Role.VILLAGER, "Villager")
-        val (result, _) = withIO("hello\n") { villager.discuss(emptyList()) }
+        val (result, _) = withIO("hello\n") { villager.discuss(openContext()) }
         assertIs<Statement.Plain>(result)
         assertEquals("hello", result.text())
     }
@@ -54,7 +54,7 @@ class PocAiPlayerTest {
     fun `prompt includes received events in discuss output`() {
         val villager = PocAiPlayer(Role.VILLAGER, "Villager")
         GameEvent.RoleAssigned.send(Role.VILLAGER, villager)
-        val (_, output) = withIO("\n") { villager.discuss(emptyList()) }
+        val (_, output) = withIO("\n") { villager.discuss(openContext()) }
         assertContains(output, "役職通知")
     }
 

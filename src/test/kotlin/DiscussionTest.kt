@@ -8,28 +8,30 @@ class DiscussionTest {
     private class ScriptedPlayer(
         role: Role,
         name: String,
-        private val statements: List<String>
+        private val statements: List<String>,
+        private val receivesExecutionEvent: Boolean = false,
     ) : NothingPlayer(role, name) {
         private val _log = mutableListOf<String>()
         val log: List<String> get() = _log
         private var statementIndex = 0
 
-        override fun discuss(players: List<Player>): Statement {
+        override fun buildStatement(context: DiscussionContext): Statement {
             val statement = statements[statementIndex++]
             _log.add("$name:said:$statement")
             return Statement.Plain(statement)
         }
 
         override fun onReceive(event: GameEvent) {
-            when (event) {
-                is GameEvent.StatementMade -> _log.add("$name:heard:${event.speakerName}:${event.statement.text()}")
+            when {
+                event is GameEvent.StatementMade -> _log.add("$name:heard:${event.speakerName}:${event.statement.text()}")
+                receivesExecutionEvent && event is GameEvent.PlayerExecuted -> {}
                 else -> error("unexpected event in discussion test: $event")
             }
         }
     }
 
-    private fun fixedOrderDiscussion(alivePlayers: List<Player>, allPlayers: AllPlayers) =
-        object : OpenDiscussion(alivePlayers, allPlayers) {
+    private fun fixedOrderDiscussion(playerManager: PlayerManager) =
+        object : OpenDiscussion(playerManager, 1) {
             override fun speakingOrder(speakers: List<Player>) = speakers
         }
 
@@ -45,10 +47,9 @@ class DiscussionTest {
             "Aliceこそ怪しい",
             "Aliceに投票します"
         ))
-        val players = listOf(alice, bob)
         val playerManager = TestLodge(alice to Role.VILLAGER, bob to Role.WEREWOLF).create().playerManager
 
-        fixedOrderDiscussion(players, AllPlayers(playerManager)).conduct()
+        fixedOrderDiscussion(playerManager).conduct()
 
         assertEquals(listOf(
             "Alice:said:私はBobが怪しいと思う",
@@ -77,21 +78,27 @@ class DiscussionTest {
 
     @Test
     fun `dead players receive all statements without speaking`() {
-        val alice = ScriptedPlayer(Role.VILLAGER, "Alice", listOf("村人として発言します", "続けて発言します", "最終発言です"))
-        val bob = ScriptedPlayer(Role.WEREWOLF, "Bob", listOf("人狼として発言します", "続けて発言します", "最終発言です"))
-        val charlie = ScriptedPlayer(Role.VILLAGER, "Charlie", emptyList())
-        val alivePlayers = listOf(alice, bob)
-        val playerManager = TestLodge(alice to Role.VILLAGER, bob to Role.WEREWOLF, charlie to Role.VILLAGER).create().playerManager
+        val alice = ScriptedPlayer(Role.VILLAGER, "Alice", listOf("村人として発言します", "続けて発言します", "最終発言です"), receivesExecutionEvent = true)
+        val bob = ScriptedPlayer(Role.WEREWOLF, "Bob", listOf("人狼として発言します", "続けて発言します", "最終発言です"), receivesExecutionEvent = true)
+        val charlie = ScriptedPlayer(Role.VILLAGER, "Charlie", listOf("同じく疑っています", "まだ様子見です", "最終判断します"), receivesExecutionEvent = true)
+        val victim = ScriptedPlayer(Role.VILLAGER, "Victim", emptyList(), receivesExecutionEvent = true)
+        val playerManager = TestLodge(
+            alice to Role.VILLAGER, bob to Role.WEREWOLF, charlie to Role.VILLAGER, victim to Role.VILLAGER
+        ).create().playerManager
+        playerManager.execute(victim)
 
-        fixedOrderDiscussion(alivePlayers, AllPlayers(playerManager)).conduct()
+        fixedOrderDiscussion(playerManager).conduct()
 
         assertEquals(listOf(
-            "Charlie:heard:Alice:村人として発言します",
-            "Charlie:heard:Bob:人狼として発言します",
-            "Charlie:heard:Alice:続けて発言します",
-            "Charlie:heard:Bob:続けて発言します",
-            "Charlie:heard:Alice:最終発言です",
-            "Charlie:heard:Bob:最終発言です",
-        ), charlie.log)
+            "Victim:heard:Alice:村人として発言します",
+            "Victim:heard:Bob:人狼として発言します",
+            "Victim:heard:Charlie:同じく疑っています",
+            "Victim:heard:Alice:続けて発言します",
+            "Victim:heard:Bob:続けて発言します",
+            "Victim:heard:Charlie:まだ様子見です",
+            "Victim:heard:Alice:最終発言です",
+            "Victim:heard:Bob:最終発言です",
+            "Victim:heard:Charlie:最終判断します",
+        ), victim.log)
     }
 }

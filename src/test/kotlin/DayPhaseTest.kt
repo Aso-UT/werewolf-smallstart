@@ -11,7 +11,7 @@ class DayPhaseTest {
         role: Role, name: String, private val voteTarget: Player? = null
     ) : ReceivingPlayer(role, name) {
         var discussedCount = 0
-        override fun discuss(players: List<Player>): Statement {
+        override fun buildStatement(context: DiscussionContext): Statement {
             discussedCount++
             return Statement.Plain("")
         }

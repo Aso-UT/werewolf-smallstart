@@ -3,7 +3,7 @@ package org.example
 class WerewolfCpuStrategy(self: RoleAwareCpuPlayer) : RoleAwareCpuStrategy(self, Role.WEREWOLF, WerewolfVoting(self)) {
     private val query = KnowledgeQuery(self)
 
-    override fun discuss(players: List<Player>) = Statement.Plain("")
+    override fun buildStatement(context: DiscussionContext) = Statement.Plain("")
 
     override fun selectTargetForOthers(context: SelectionContext, candidates: List<Player>): Player =
         when (context) {

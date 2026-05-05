@@ -14,7 +14,7 @@ class RoleAwareCpuPlayerTest {
         val setup = TestLodge(seer to Role.SEER, villager to Role.VILLAGER).create()
         setup.oracle.divine(seer, villager)
 
-        val statement = seer.discuss(emptyList())
+        val statement = seer.discuss(openContext())
 
         val report = assertIs<Statement.DivinationReport>(statement)
         assertEquals(seer, report.claimant)
@@ -44,7 +44,7 @@ class RoleAwareCpuPlayerTest {
         val setup = TestLodge(seer to Role.SEER, villager to Role.VILLAGER, wolf to Role.WEREWOLF).create()
         val allPlayers = AllPlayers(setup.playerManager)
         setup.oracle.divine(seer, wolf)
-        GameEvent.StatementMade.send(1, seer.name, seer.discuss(emptyList()), allPlayers)
+        GameEvent.StatementMade.send(1, seer.name, seer.discuss(openContext()), allPlayers)
 
         repeat(100) {
             val voted = villager.selectTarget(SelectionContext.Vote(villager, listOf(seer, villager, wolf)))
@@ -59,7 +59,7 @@ class RoleAwareCpuPlayerTest {
         val setup = TestLodge(medium to Role.MEDIUM, villager to Role.VILLAGER).create()
         setup.oracle.mediumReveal(medium, villager)
 
-        val statement = medium.discuss(emptyList())
+        val statement = medium.discuss(openContext())
 
         val report = assertIs<Statement.MediumReport>(statement)
         assertEquals(medium, report.claimant)
@@ -125,7 +125,7 @@ class RoleAwareCpuPlayerTest {
         val setup = TestLodge(seer to Role.SEER, villager to Role.VILLAGER, innocent to Role.VILLAGER, wolf to Role.WEREWOLF).create()
         val allPlayers = AllPlayers(setup.playerManager)
         setup.oracle.divine(seer, innocent)
-        GameEvent.StatementMade.send(1, seer.name, seer.discuss(emptyList()), allPlayers)
+        GameEvent.StatementMade.send(1, seer.name, seer.discuss(openContext()), allPlayers)
 
         repeat(100) {
             val voted = villager.selectTarget(SelectionContext.Vote(villager, listOf(seer, villager, innocent, wolf)))

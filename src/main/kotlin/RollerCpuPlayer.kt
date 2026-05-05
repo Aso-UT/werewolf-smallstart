@@ -8,6 +8,6 @@ class RollerCpuPlayer(role: Role, override val name: String) : CpuPlayer(role) {
         return candidates[selectCount++ % candidates.size]
     }
 
-    override fun discuss(players: List<Player>): Statement = Statement.Plain("")
+    override fun buildStatement(context: DiscussionContext): Statement = Statement.Plain("")
     override fun onReceive(event: GameEvent) { /* does not use received events */ }
 }
