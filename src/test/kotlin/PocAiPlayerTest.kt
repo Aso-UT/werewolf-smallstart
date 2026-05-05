@@ -59,15 +59,16 @@ class PocAiPlayerTest {
     }
 
     @Test
-    fun `watchEpilogue prints event title and body`() {
+    fun `watchEpilogue prints event recipientName, title and body, then prompts for reflection`() {
         val villager = PocAiPlayer(Role.VILLAGER, "Villager")
         // ① 通常ルートでイベントを送る
         GameEvent.RoleAssigned.send(Role.VILLAGER, villager)
         // ② fakeのGameOverSignalでknowledgeを取り出す
         val events = villager.revealKnowledge(fakeCitizenWinSignal())
-        // ③ watchEpilogueに渡して出力を検証
-        val (_, output) = withIO("") { villager.watchEpilogue(events) }
+        // ③ watchEpilogueに渡して出力を検証（printPromptのreadLine分の入力を用意）
+        val (_, output) = withIO("\n") { villager.watchEpilogue(events) }
+        assertContains(output, "Villager")
         assertContains(output, "役職通知")
-        assertContains(output, "村人")
+        assertContains(output, "振り返り")
     }
 }
