@@ -14,14 +14,24 @@ class PocAiPlayer(role: Role, override val name: String) : Player(role) {
 
     override fun selectTarget(context: SelectionContext): Player {
         val candidates = context.candidates()
-        val candidateNames = candidates.joinToString(", ") { it.name }
-        printPrompt("${context.title}：${context.description}（候補: $candidateNames）")
-        while (true) {
+        val candidateNames = candidates.joinToString("、") { it.name }
+        val instruction = """
+            ${context.title}：${context.description}
+
+            候補：$candidateNames
+
+            「候補名：選んだ理由」の形式で答えてください。
+            例：${candidates.first().name}：最も怪しいと思うため
+        """.trimIndent()
+        repeat(2) {
+            printPrompt(instruction)
             val input = readLine()?.trim() ?: ""
-            val target = candidates.firstOrNull { it.name == input }
+            val playerName = input.split("：", ":").first().trim()
+            val target = candidates.firstOrNull { it.name == playerName }
             if (target != null) return target
-            println("「$input」は候補にいません。再入力してください。")
         }
+        // 2回失敗したためランダムで選択
+        return candidates.random()
     }
 
     override fun watchEpilogue(events: List<GameEvent>) {

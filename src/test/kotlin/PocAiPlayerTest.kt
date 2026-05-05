@@ -7,6 +7,7 @@ import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 class PocAiPlayerTest {
 
@@ -33,21 +34,39 @@ class PocAiPlayerTest {
     }
 
     @Test
-    fun `selectTarget returns matching player`() {
+    fun `selectTarget returns matching player from name-colon-reason format`() {
         val villager = PocAiPlayer(Role.VILLAGER, "Villager")
         val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
         val context = SelectionContext.Vote(villager, listOf(villager, wolf))
-        val (result, _) = withIO("Wolf\n") { villager.selectTarget(context) }
+        val (result, _) = withIO("Wolf：怪しいから\n") { villager.selectTarget(context) }
         assertEquals(wolf, result)
     }
 
     @Test
-    fun `selectTarget retries on invalid input then returns correct player`() {
+    fun `selectTarget retries when player name is not a candidate`() {
         val villager = PocAiPlayer(Role.VILLAGER, "Villager")
         val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
         val context = SelectionContext.Vote(villager, listOf(villager, wolf))
-        val (result, _) = withIO("Unknown\nWolf\n") { villager.selectTarget(context) }
+        val (result, _) = withIO("Unknown：理由\nWolf：怪しいから\n") { villager.selectTarget(context) }
         assertEquals(wolf, result)
+    }
+
+    @Test
+    fun `selectTarget falls back to random candidate after two invalid responses`() {
+        val villager = PocAiPlayer(Role.VILLAGER, "Villager")
+        val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
+        val context = SelectionContext.Vote(villager, listOf(villager, wolf))
+        val (result, _) = withIO("Unknown：理由\nAlsoUnknown：理由\n") { villager.selectTarget(context) }
+        assertTrue(result in context.candidates())
+    }
+
+    @Test
+    fun `selectTarget prompt includes format instruction`() {
+        val villager = PocAiPlayer(Role.VILLAGER, "Villager")
+        val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
+        val context = SelectionContext.Vote(villager, listOf(villager, wolf))
+        val (_, output) = withIO("Wolf：怪しいから\n") { villager.selectTarget(context) }
+        assertContains(output, "候補名：選んだ理由")
     }
 
     @Test
