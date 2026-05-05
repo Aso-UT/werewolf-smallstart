@@ -7,8 +7,8 @@ class PocAiPlayer(role: Role, override val name: String) : Player(role) {
         eventLog.add(event)
     }
 
-    override fun discuss(players: List<Player>): Statement {
-        printPrompt("50文字以内で発言してください")
+    override fun buildStatement(context: DiscussionContext): Statement {
+        printPrompt("【${context.title}】${context.description}\n50文字以内で発言してください")
         return Statement.Plain(readLine()?.trim() ?: "")
     }
 

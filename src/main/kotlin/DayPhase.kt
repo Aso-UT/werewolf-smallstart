@@ -6,7 +6,7 @@ class DayPhase(
     private val nightNumber: Int
 ) : Phase {
     override fun proceed(): Phase {
-        OpenDiscussion(playerManager.players, AllPlayers(playerManager)).conduct()
+        OpenDiscussion(playerManager, nightNumber).conduct()
         val votes = playerManager.players.map { it.selectTarget(SelectionContext.Vote(it, playerManager.players)) }
         val mostVoted = MajorityVoteResolver.resolveNonEmpty(votes)
         playerManager.execute(mostVoted)

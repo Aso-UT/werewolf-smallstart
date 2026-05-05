@@ -2,7 +2,7 @@ package org.example
 
 class MediumCpuStrategy(self: RoleAwareCpuPlayer) : RoleAwareCpuStrategy(self, Role.MEDIUM, CitizenVoting(self)) {
 
-    override fun discuss(players: List<Player>): Statement {
+    override fun buildStatement(context: DiscussionContext): Statement {
         val next = nextUnreportedReveal() ?: return Statement.Plain("")
         return Statement.MediumReport(self, next.target, next.result)
     }

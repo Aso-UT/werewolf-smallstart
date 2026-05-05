@@ -16,7 +16,7 @@ class ConclaveTest {
         val log: List<String> get() = _log
         private var statementIndex = 0
 
-        override fun discuss(players: List<Player>): Statement {
+        override fun buildStatement(context: DiscussionContext): Statement {
             val statement = statements[statementIndex++]
             _log.add("$name:said:$statement")
             return Statement.Plain(statement)
@@ -32,7 +32,7 @@ class ConclaveTest {
     }
 
     private fun fixedOrderConclave(oracle: Oracle, playerManager: PlayerManager) =
-        object : Conclave(oracle, playerManager) {
+        object : Conclave(oracle, playerManager, 1) {
             override fun speakingOrder(speakers: List<Player>) = speakers
         }
 
