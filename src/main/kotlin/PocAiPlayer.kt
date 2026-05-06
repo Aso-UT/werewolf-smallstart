@@ -8,8 +8,21 @@ class PocAiPlayer(role: Role, override val name: String) : Player(role) {
     }
 
     override fun buildStatement(context: DiscussionContext): Statement {
-        printPrompt("【${context.title}】${context.description}\n50文字以内で発言してください")
-        return Statement.Plain(readLine()?.trim() ?: "")
+        val instruction = """
+            【${context.title}】${context.description}
+
+            以下の形式で発言してください。
+            ゲーム上の発言（100文字以内）[発言の真意（100文字以内）]
+            例：占い師です。Aliceは白でした。[狂人として占い師を偽装し、信用を得るための発言]
+        """.trimIndent()
+        repeat(2) {
+            printPrompt(instruction)
+            val input = readLine()?.trim() ?: ""
+            val separatorIdx = input.indexOf("[").takeIf { it >= 0 }
+            if (separatorIdx != null) return Statement.Plain(input.substring(0, separatorIdx).trim())
+        }
+        // 2回失敗したため空文字を返す
+        return Statement.Plain("")
     }
 
     override fun selectTarget(context: SelectionContext): Player {
