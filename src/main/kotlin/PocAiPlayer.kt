@@ -20,7 +20,7 @@ class PocAiPlayer(role: Role, override val name: String) : Player(role) {
 
             候補：$candidateNames
 
-            「候補名：選んだ理由」の形式で答えてください。
+            「候補名：選んだ理由（200文字以内）」の形式で答えてください。
             例：${candidates.first().name}：最も怪しいと思うため
         """.trimIndent()
         repeat(2) {
