@@ -19,7 +19,7 @@ sealed class SelectionContext(val title: String, val description: String) {
     }
 
     class Vote(private val self: Player, private val players: List<Player>)
-        : SelectionContext("投票", "投票先を選んでください") {
+        : SelectionContext("投票", "処刑する人を選んでください") {
         override fun candidates() = players.filterNot { it === self }
     }
 }
