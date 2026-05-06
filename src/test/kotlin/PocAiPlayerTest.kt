@@ -26,11 +26,34 @@ class PocAiPlayerTest {
     }
 
     @Test
-    fun `discuss returns Plain statement from input`() {
+    fun `discuss extracts statement before bracket from input`() {
         val villager = PocAiPlayer(Role.VILLAGER, "Villager")
-        val (result, _) = withIO("hello\n") { villager.discuss(openContext()) }
+        val (result, _) = withIO("hello[真意]\n") { villager.discuss(openContext()) }
         assertIs<Statement.Plain>(result)
         assertEquals("hello", result.text())
+    }
+
+    @Test
+    fun `discuss retries when bracket is missing and returns empty string after two failures`() {
+        val villager = PocAiPlayer(Role.VILLAGER, "Villager")
+        val (result, _) = withIO("no bracket\nno bracket\n") { villager.discuss(openContext()) }
+        assertIs<Statement.Plain>(result)
+        assertEquals("", result.text())
+    }
+
+    @Test
+    fun `discuss retries and succeeds on second input`() {
+        val villager = PocAiPlayer(Role.VILLAGER, "Villager")
+        val (result, _) = withIO("no bracket\nhello[真意]\n") { villager.discuss(openContext()) }
+        assertIs<Statement.Plain>(result)
+        assertEquals("hello", result.text())
+    }
+
+    @Test
+    fun `discuss prompt includes format instruction`() {
+        val villager = PocAiPlayer(Role.VILLAGER, "Villager")
+        val (_, output) = withIO("hello[真意]\n") { villager.discuss(openContext()) }
+        assertContains(output, "ゲーム上の発言（100文字以内）[発言の真意（100文字以内）]")
     }
 
     @Test
