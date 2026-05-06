@@ -67,7 +67,7 @@ class PocAiPlayer(role: Role, override val name: String) : Player(role) {
 
     private val gameDescription = """
 あなたはプレイヤー${name}です。あなたの役職はゲームの流れの「役職通知」をご確認ください。
-役職構成：人狼2・狂人1・村人1・占い師1・霊能者1・狩人1（計7人）
+役職構成：人狼2・狂人1・村人3・占い師1・霊能者1・狩人1（計9人）
 
 【勝利条件】
 村人（村人・占い師・霊能者・狩人）：人狼が全員死亡すれば勝利
