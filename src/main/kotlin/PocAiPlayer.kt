@@ -3,7 +3,7 @@ package org.example
 class PocAiPlayer(
     role: Role,
     override val name: String,
-    private val languageModel: LanguageModel = ConsoleLanguageModel(),
+    private val languageModel: LanguageModel,
 ) : Player(role) {
     private val eventLog = mutableListOf<GameEvent>()
 

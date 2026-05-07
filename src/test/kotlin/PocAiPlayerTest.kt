@@ -27,7 +27,7 @@ class PocAiPlayerTest {
 
     @Test
     fun `discuss extracts statement before bracket from input`() {
-        val villager = PocAiPlayer(Role.VILLAGER, "Villager")
+        val villager = PocAiPlayer(Role.VILLAGER, "Villager", ConsoleLanguageModel())
         val (result, _) = withIO("hello[真意]\n") { villager.discuss(openContext()) }
         assertIs<Statement.Plain>(result)
         assertEquals("hello", result.text())
@@ -35,7 +35,7 @@ class PocAiPlayerTest {
 
     @Test
     fun `discuss retries when bracket is missing and returns empty string after two failures`() {
-        val villager = PocAiPlayer(Role.VILLAGER, "Villager")
+        val villager = PocAiPlayer(Role.VILLAGER, "Villager", ConsoleLanguageModel())
         val (result, _) = withIO("no bracket\nno bracket\n") { villager.discuss(openContext()) }
         assertIs<Statement.Plain>(result)
         assertEquals("", result.text())
@@ -43,7 +43,7 @@ class PocAiPlayerTest {
 
     @Test
     fun `discuss retries and succeeds on second input`() {
-        val villager = PocAiPlayer(Role.VILLAGER, "Villager")
+        val villager = PocAiPlayer(Role.VILLAGER, "Villager", ConsoleLanguageModel())
         val (result, _) = withIO("no bracket\nhello[真意]\n") { villager.discuss(openContext()) }
         assertIs<Statement.Plain>(result)
         assertEquals("hello", result.text())
@@ -51,14 +51,14 @@ class PocAiPlayerTest {
 
     @Test
     fun `discuss prompt includes format instruction`() {
-        val villager = PocAiPlayer(Role.VILLAGER, "Villager")
+        val villager = PocAiPlayer(Role.VILLAGER, "Villager", ConsoleLanguageModel())
         val (_, output) = withIO("hello[真意]\n") { villager.discuss(openContext()) }
         assertContains(output, "ゲーム上の発言（100文字以内）[発言の真意（100文字以内）]")
     }
 
     @Test
     fun `selectTarget returns matching player from name-colon-reason format`() {
-        val villager = PocAiPlayer(Role.VILLAGER, "Villager")
+        val villager = PocAiPlayer(Role.VILLAGER, "Villager", ConsoleLanguageModel())
         val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
         val context = SelectionContext.Vote(villager, listOf(villager, wolf))
         val (result, _) = withIO("Wolf：怪しいから\n") { villager.selectTarget(context) }
@@ -67,7 +67,7 @@ class PocAiPlayerTest {
 
     @Test
     fun `selectTarget retries when player name is not a candidate`() {
-        val villager = PocAiPlayer(Role.VILLAGER, "Villager")
+        val villager = PocAiPlayer(Role.VILLAGER, "Villager", ConsoleLanguageModel())
         val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
         val context = SelectionContext.Vote(villager, listOf(villager, wolf))
         val (result, _) = withIO("Unknown：理由\nWolf：怪しいから\n") { villager.selectTarget(context) }
@@ -76,7 +76,7 @@ class PocAiPlayerTest {
 
     @Test
     fun `selectTarget falls back to random candidate after two invalid responses`() {
-        val villager = PocAiPlayer(Role.VILLAGER, "Villager")
+        val villager = PocAiPlayer(Role.VILLAGER, "Villager", ConsoleLanguageModel())
         val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
         val context = SelectionContext.Vote(villager, listOf(villager, wolf))
         val (result, _) = withIO("Unknown：理由\nAlsoUnknown：理由\n") { villager.selectTarget(context) }
@@ -85,7 +85,7 @@ class PocAiPlayerTest {
 
     @Test
     fun `selectTarget prompt includes format instruction`() {
-        val villager = PocAiPlayer(Role.VILLAGER, "Villager")
+        val villager = PocAiPlayer(Role.VILLAGER, "Villager", ConsoleLanguageModel())
         val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
         val context = SelectionContext.Vote(villager, listOf(villager, wolf))
         val (_, output) = withIO("Wolf：怪しいから\n") { villager.selectTarget(context) }
@@ -94,7 +94,7 @@ class PocAiPlayerTest {
 
     @Test
     fun `prompt includes received events in discuss output`() {
-        val villager = PocAiPlayer(Role.VILLAGER, "Villager")
+        val villager = PocAiPlayer(Role.VILLAGER, "Villager", ConsoleLanguageModel())
         GameEvent.RoleAssigned.send(Role.VILLAGER, villager)
         val (_, output) = withIO("\n") { villager.discuss(openContext()) }
         assertContains(output, "役職通知")
@@ -102,7 +102,7 @@ class PocAiPlayerTest {
 
     @Test
     fun `watchEpilogue prints event recipientName, title and body, then prompts for reflection`() {
-        val villager = PocAiPlayer(Role.VILLAGER, "Villager")
+        val villager = PocAiPlayer(Role.VILLAGER, "Villager", ConsoleLanguageModel())
         // ① 通常ルートでイベントを送る
         GameEvent.RoleAssigned.send(Role.VILLAGER, villager)
         // ② fakeのGameOverSignalでknowledgeを取り出す
