@@ -1,6 +1,10 @@
 package org.example
 
-class PocAiPlayer(role: Role, override val name: String) : Player(role) {
+class PocAiPlayer(
+    role: Role,
+    override val name: String,
+    private val languageModel: LanguageModel = ConsoleLanguageModel(),
+) : Player(role) {
     private val eventLog = mutableListOf<GameEvent>()
 
     override fun onReceive(event: GameEvent) {
@@ -16,8 +20,7 @@ class PocAiPlayer(role: Role, override val name: String) : Player(role) {
             例：占い師です。Aliceは白でした。[狂人として占い師を偽装し、信用を得るための発言]
         """.trimIndent()
         repeat(2) {
-            printPrompt(instruction)
-            val input = readLine()?.trim() ?: ""
+            val input = prompt(instruction) ?: ""
             val separatorIdx = input.indexOf("[").takeIf { it >= 0 }
             if (separatorIdx != null) return Statement.Plain(input.substring(0, separatorIdx).trim())
         }
@@ -37,8 +40,7 @@ class PocAiPlayer(role: Role, override val name: String) : Player(role) {
             例：${candidates.first().name}：最も怪しいと思うため
         """.trimIndent()
         repeat(2) {
-            printPrompt(instruction)
-            val input = readLine()?.trim() ?: ""
+            val input = prompt(instruction) ?: ""
             val playerName = input.split("：", ":").first().trim()
             val target = candidates.firstOrNull { it.name == playerName }
             if (target != null) return target
@@ -48,29 +50,32 @@ class PocAiPlayer(role: Role, override val name: String) : Player(role) {
     }
 
     override fun watchEpilogue(events: List<GameEvent>) {
-        println()
-        println("=== エピローグ（プレイヤー $name） ===")
-        events.forEach { println("[${it.recipientName}] [${it.title}] ${it.body()}") }
-        printPrompt("プレイヤーとして200文字以内でゲームの振り返りをしてください。")
-        readLine()
+        val instruction = buildString {
+            appendLine("=== エピローグ（プレイヤー $name） ===")
+            events.forEach { appendLine("[${it.recipientName}] [${it.title}] ${it.body()}") }
+            append("プレイヤーとして200文字以内でゲームの振り返りをしてください。")
+        }
+        prompt(instruction)
     }
 
-    private fun printPrompt(instruction: String) {
-        println()
-        println(SEPARATOR)
-        println("AIプレイヤー $name へのプロンプト")
-        println(SEPARATOR)
-        println("【指示】")
-        println(instruction)
-        println()
-        println("【ゲームの説明】")
-        println(gameDescription)
-        println()
-        println("【ここまでのゲームの流れ】")
-        if (eventLog.isEmpty()) println("（なし）")
-        else eventLog.forEach { println("[${it.title}] ${it.body()}") }
-        println(SEPARATOR)
-        print("回答 > ")
+    private fun prompt(instruction: String): String? {
+        val fullPrompt = buildString {
+            appendLine()
+            appendLine(SEPARATOR)
+            appendLine("AIプレイヤー $name へのプロンプト")
+            appendLine(SEPARATOR)
+            appendLine("【指示】")
+            appendLine(instruction)
+            appendLine()
+            appendLine("【ゲームの説明】")
+            appendLine(gameDescription)
+            appendLine()
+            appendLine("【ここまでのゲームの流れ】")
+            if (eventLog.isEmpty()) appendLine("（なし）")
+            else eventLog.forEach { appendLine("[${it.title}] ${it.body()}") }
+            append(SEPARATOR)
+        }
+        return languageModel.ask(fullPrompt)
     }
 
     companion object {
