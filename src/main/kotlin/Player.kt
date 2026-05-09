@@ -21,7 +21,7 @@ abstract class Player(private val role: Role) : Notifiable {
         return statement
     }
     protected abstract fun buildStatement(context: DiscussionContext): Statement
-    abstract fun watchEpilogue(memories: List<Recallable>)
+    abstract fun watchEpilogue(chronicles: List<Recallable>)
 
     // signal is a capability token: only callers who hold a GameOverSignal (i.e., after game over) can access memories
     @Suppress("UnusedParameter")

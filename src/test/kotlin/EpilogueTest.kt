@@ -19,8 +19,8 @@ class EpilogueTest {
             }
         }
 
-        override fun watchEpilogue(memories: List<Recallable>) {
-            epilogueEvents = memories
+        override fun watchEpilogue(chronicles: List<Recallable>) {
+            epilogueEvents = chronicles
         }
     }
 

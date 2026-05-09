@@ -49,10 +49,10 @@ class PocAiPlayer(
         return candidates.random()
     }
 
-    override fun watchEpilogue(memories: List<Recallable>) {
+    override fun watchEpilogue(chronicles: List<Recallable>) {
         val instruction = buildString {
             appendLine("=== エピローグ（プレイヤー $name） ===")
-            memories.forEach { appendLine(it.chronicle()) }
+            chronicles.forEach { appendLine(it.chronicle()) }
             append("プレイヤーとして200文字以内でゲームの振り返りをしてください。")
         }
         prompt(instruction)
