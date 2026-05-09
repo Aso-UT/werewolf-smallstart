@@ -3,12 +3,12 @@ package org.example
 // Each subclass must have a private constructor and a companion send() function
 // that creates and dispatches atomically. This ensures notification targets are
 // always defined explicitly at the point of creation.
-sealed class GameEvent {
-    val sequenceId: Long = System.nanoTime()
+sealed class GameEvent : Recallable() {
     abstract val title: String
     abstract fun body(): String
     protected abstract val recipients: Notifiable
-    val recipientName: String get() = recipients.recipientName
+    override fun recall() = "[${title}] ${body()}"
+    override fun chronicle() = "[${recipients.recipientName}] [${title}] ${body()}"
     protected fun dispatch() = recipients.receive(this)
     fun isPublicKnowledge(): Boolean = recipients is AllPlayers
 

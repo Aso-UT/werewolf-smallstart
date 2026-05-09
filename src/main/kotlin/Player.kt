@@ -3,10 +3,13 @@ package org.example
 abstract class Player(private val role: Role) : Notifiable {
     abstract val name: String
     override val recipientName: String get() = name
-    private val _knowledge: MutableList<GameEvent> = mutableListOf()
+    // role and _memories are each player's private information and must not be visible to other players.
+    // protected would allow subclasses to access any Player instance's data without casting,
+    // breaking information asymmetry. Subclasses that need their own memories should manage a separate copy.
+    private val _memories: MutableList<Recallable> = mutableListOf()
 
     final override fun receive(event: GameEvent) {
-        _knowledge.add(event)
+        _memories.add(event)
         onReceive(event)
     }
 
@@ -18,12 +21,12 @@ abstract class Player(private val role: Role) : Notifiable {
         return statement
     }
     protected abstract fun buildStatement(context: DiscussionContext): Statement
-    abstract fun watchEpilogue(events: List<GameEvent>)
+    abstract fun watchEpilogue(chronicles: List<Recallable>)
 
-    // signal is a capability token: only callers who hold a GameOverSignal (i.e., after game over) can access knowledge
+    // signal is a capability token: only callers who hold a GameOverSignal (i.e., after game over) can access memories
     @Suppress("UnusedParameter")
-    fun revealKnowledge(signal: GameOverSignal): List<GameEvent> = _knowledge.toList()
+    fun reveal(signal: GameOverSignal): List<Recallable> = _memories.toList()
 
     fun buildNightAction(players: List<Player>, isFirstNight: Boolean): NightAction =
-        role.buildNightAction(this, players, isFirstNight, _knowledge.toList())
+        role.buildNightAction(this, players, isFirstNight, _memories.filterIsInstance<GameEvent>())
 }

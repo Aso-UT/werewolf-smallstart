@@ -1,6 +1,7 @@
 package org.example
 
 import kotlin.test.Test
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -57,8 +58,8 @@ class GameRecapTest {
 
         val events = GameRecap(pm, anySignal()).events()
         assertEquals(3, events.size)
-        assertEquals("V1", events[0].recipientName)
-        assertEquals("V2", events[1].recipientName)
+        assertContains(events[0].chronicle(), "V1")
+        assertContains(events[1].chronicle(), "V2")
         assertTrue(events[2] is GameEvent.TimeChanged)
     }
 }

@@ -41,8 +41,8 @@ class HumanPlayer(role: Role, override val name: String, private val io: PlayerI
         return Statement.MediumReport(this, target, results[resultIdx])
     }
 
-    override fun watchEpilogue(events: List<GameEvent>) {
-        val content = events.joinToString("\n") { "  ${it.recipientName}: [${it.title}] ${it.body()}" }
+    override fun watchEpilogue(chronicles: List<Recallable>) {
+        val content = chronicles.joinToString("\n") { "  ${it.chronicle()}" }
         io.sendMessage(name, "ゲーム振り返り", content)
     }
 }

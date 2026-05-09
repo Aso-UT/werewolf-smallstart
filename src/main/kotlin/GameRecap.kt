@@ -1,9 +1,9 @@
 package org.example
 
 class GameRecap(private val playerManager: PlayerManager, private val signal: GameOverSignal) {
-    fun events(): List<GameEvent> =
+    fun events(): List<Recallable> =
         playerManager.allPlayers
-            .flatMap { it.revealKnowledge(signal) }
+            .flatMap { it.reveal(signal) }
             .distinct()
             .sortedBy { it.sequenceId }
 }

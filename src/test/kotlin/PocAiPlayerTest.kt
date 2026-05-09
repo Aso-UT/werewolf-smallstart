@@ -103,12 +103,12 @@ class PocAiPlayerTest {
     }
 
     @Test
-    fun `watchEpilogue prompt includes event recipientName, title, body and reflection instruction`() {
+    fun `watchEpilogue prompt includes chronicle of events and reflection instruction`() {
         val lm = FakeLanguageModel("")
         val villager = PocAiPlayer(Role.VILLAGER, "Villager", lm)
         GameEvent.RoleAssigned.send(Role.VILLAGER, villager)
-        val events = villager.revealKnowledge(fakeCitizenWinSignal())
-        villager.watchEpilogue(events)
+        val memories = villager.reveal(fakeCitizenWinSignal())
+        villager.watchEpilogue(memories)
         assertContains(lm.prompts.first(), "Villager")
         assertContains(lm.prompts.first(), "役職通知")
         assertContains(lm.prompts.first(), "振り返り")
