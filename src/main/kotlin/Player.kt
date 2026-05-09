@@ -3,6 +3,9 @@ package org.example
 abstract class Player(private val role: Role) : Notifiable {
     abstract val name: String
     override val recipientName: String get() = name
+    // role and _memories are each player's private information and must not be visible to other players.
+    // protected would allow subclasses to access any Player instance's data without casting,
+    // breaking information asymmetry. Subclasses that need their own memories should manage a separate copy.
     private val _memories: MutableList<Recallable> = mutableListOf()
 
     final override fun receive(event: GameEvent) {
