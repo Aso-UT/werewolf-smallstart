@@ -1,5 +1,5 @@
 package org.example
 
 abstract class CpuPlayer(role: Role) : Player(role) {
-    override fun watchEpilogue(events: List<GameEvent>) = Unit
+    override fun watchEpilogue(memories: List<Recallable>) = Unit
 }

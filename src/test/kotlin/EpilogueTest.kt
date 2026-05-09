@@ -9,7 +9,7 @@ class EpilogueTest {
     private class WatchingPlayer(role: Role, name: String) : ReceivingPlayer(role, name) {
         var gameOver: GameEvent.GameOver? = null
         var gameResult: GameEvent.GameResult? = null
-        var epilogueEvents: List<GameEvent>? = null
+        var epilogueEvents: List<Recallable>? = null
 
         override fun onReceive(event: GameEvent) {
             when (event) {
@@ -19,8 +19,8 @@ class EpilogueTest {
             }
         }
 
-        override fun watchEpilogue(events: List<GameEvent>) {
-            epilogueEvents = events
+        override fun watchEpilogue(memories: List<Recallable>) {
+            epilogueEvents = memories
         }
     }
 

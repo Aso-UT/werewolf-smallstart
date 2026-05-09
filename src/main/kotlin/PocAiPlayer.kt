@@ -5,10 +5,10 @@ class PocAiPlayer(
     override val name: String,
     private val languageModel: LanguageModel,
 ) : Player(role) {
-    private val eventLog = mutableListOf<GameEvent>()
+    private val _myMemories = mutableListOf<Recallable>()
 
     override fun onReceive(event: GameEvent) {
-        eventLog.add(event)
+        _myMemories.add(event)
     }
 
     override fun buildStatement(context: DiscussionContext): Statement {
@@ -49,10 +49,10 @@ class PocAiPlayer(
         return candidates.random()
     }
 
-    override fun watchEpilogue(events: List<GameEvent>) {
+    override fun watchEpilogue(memories: List<Recallable>) {
         val instruction = buildString {
             appendLine("=== エピローグ（プレイヤー $name） ===")
-            events.forEach { appendLine("[${it.recipientName}] [${it.title}] ${it.body()}") }
+            memories.forEach { appendLine(it.chronicle()) }
             append("プレイヤーとして200文字以内でゲームの振り返りをしてください。")
         }
         prompt(instruction)
@@ -71,8 +71,8 @@ class PocAiPlayer(
             appendLine(gameDescription)
             appendLine()
             appendLine("【ここまでのゲームの流れ】")
-            if (eventLog.isEmpty()) appendLine("（なし）")
-            else eventLog.forEach { appendLine("[${it.title}] ${it.body()}") }
+            if (_myMemories.isEmpty()) appendLine("（なし）")
+            else _myMemories.forEach { appendLine(it.recall()) }
             append(SEPARATOR)
         }
         return languageModel.ask(fullPrompt)
