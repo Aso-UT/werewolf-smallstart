@@ -3,9 +3,9 @@ package org.example
 class RollerCpuPlayer(role: Role, override val name: String) : CpuPlayer(role) {
     private var selectCount = 0
 
-    override fun selectTarget(context: SelectionContext): Player {
+    override fun choose(context: SelectionContext): Choice {
         val candidates = context.candidates()
-        return candidates[selectCount++ % candidates.size]
+        return Choice(this, context, candidates[selectCount++ % candidates.size], "順番通りに選択")
     }
 
     override fun buildStatement(context: DiscussionContext): Statement = Statement.Plain("")

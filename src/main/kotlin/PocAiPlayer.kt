@@ -28,26 +28,36 @@ class PocAiPlayer(
         return Statement.Plain("")
     }
 
-    override fun selectTarget(context: SelectionContext): Player {
+    override fun choose(context: SelectionContext): Choice {
         val candidates = context.candidates()
-        val candidateNames = candidates.joinToString("、") { it.name }
         val instruction = """
             ${context.title}：${context.description}
 
-            候補：$candidateNames
+            候補：${candidates.joinToString("、") { it.name }}
 
             「候補名：選んだ理由（200文字以内）」の形式で答えてください。
             例：${candidates.first().name}：最も怪しいと思うため
         """.trimIndent()
         repeat(2) {
-            val input = prompt(instruction) ?: ""
-            val playerName = input.split("：", ":").first().trim()
-            val target = candidates.firstOrNull { it.name == playerName }
-            if (target != null) return target
+            try {
+                val (target, intent) = parseChoiceResponse(prompt(instruction) ?: "", candidates)
+                val choice = Choice(this, context, target, intent)
+                _myMemories.add(choice)
+                return choice
+            } catch (_: IllegalAiInputException) { }
         }
-        // 2回失敗したためランダムで選択
-        return candidates.random()
+        return FallbackChoice(this, context)
     }
+
+    private fun parseChoiceResponse(input: String, candidates: List<Player>): Pair<Player, String> {
+        val (targetString, intent) = input.split("：", ":", limit = 2).takeIf { it.size == 2 }
+            ?: throw IllegalAiInputException("「ターゲット：理由」の形式ではありません: $input")
+        val target = candidates.firstOrNull { it.name == targetString.trim() }
+            ?: throw IllegalAiInputException("候補に存在しないターゲットです: ${targetString.trim()}")
+        return target to intent.trim()
+    }
+
+    private class IllegalAiInputException(message: String) : Exception(message)
 
     override fun watchEpilogue(chronicles: List<Recallable>) {
         val instruction = buildString {

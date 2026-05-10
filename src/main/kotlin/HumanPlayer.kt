@@ -1,8 +1,8 @@
 package org.example
 
 class HumanPlayer(role: Role, override val name: String, private val io: PlayerIO) : Player(role) {
-    override fun selectTarget(context: SelectionContext): Player =
-        io.promptPlayer(name, context.title, context.description, context.candidates())
+    override fun choose(context: SelectionContext): Choice =
+        Choice(this, context, io.promptPlayer(name, context.title, context.description, context.candidates()), "プレイヤーが選択")
 
     override fun onReceive(event: GameEvent) {
         io.sendMessage(name, event.title, event.body())

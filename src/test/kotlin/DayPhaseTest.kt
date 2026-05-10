@@ -15,8 +15,8 @@ class DayPhaseTest {
             discussedCount++
             return Statement.Plain("")
         }
-        override fun selectTarget(context: SelectionContext): Player =
-            voteTarget?.takeIf { it in context.candidates() } ?: context.candidates().first()
+        override fun choose(context: SelectionContext): Choice =
+            Choice(this, context, voteTarget?.takeIf { it in context.candidates() } ?: context.candidates().first(), "テスト用投票")
     }
 
     @Test

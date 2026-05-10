@@ -12,10 +12,7 @@ class NightPhaseTest {
     private class FixedTargetPlayer(
         role: Role, name: String, private val target: Player
     ) : RecordingPlayer(role, name) {
-        override fun selectTarget(context: SelectionContext): Player {
-            require(target in context.candidates()) { "fixed target '${target.name}' is not in candidates" }
-            return target
-        }
+        override fun choose(context: SelectionContext): Choice = Choice(this, context, target, "固定ターゲット")
     }
 
     private open class RecordingPlayer(role: Role, name: String) : ReceivingPlayer(role, name) {

@@ -11,5 +11,5 @@ class RoleAwareCpuPlayer(val myRole: Role, override val name: String) : CpuPlaye
 
     override fun onReceive(event: GameEvent) { _knowledge.add(event) }
     override fun buildStatement(context: DiscussionContext) = strategy.buildStatement(context)
-    override fun selectTarget(context: SelectionContext) = strategy.selectTarget(context)
+    override fun choose(context: SelectionContext) = Choice(this, context, strategy.selectTarget(context), "戦略による選択")
 }
