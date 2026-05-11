@@ -20,7 +20,7 @@ class PocAiPlayer(
             例：占い師です。Aliceは白でした。[狂人として占い師を偽装し、信用を得るための発言]
         """.trimIndent()
         repeat(2) {
-            val input = prompt(instruction) ?: ""
+            val input = prompt(instruction)
             val separatorIdx = input.indexOf("[").takeIf { it >= 0 }
             if (separatorIdx != null) return Statement.Plain(input.substring(0, separatorIdx).trim())
         }
@@ -40,24 +40,26 @@ class PocAiPlayer(
         """.trimIndent()
         repeat(2) {
             try {
-                val (target, intent) = parseChoiceResponse(prompt(instruction) ?: "", candidates)
+                val (target, intent) = parseChoiceResponse(prompt(instruction), candidates)
                 val choice = Choice(this, context, target, intent)
                 _myMemories.add(choice)
                 return choice
-            } catch (_: IllegalAiInputException) { }
+            } catch (_: InvalidAiInputException) {
+                // AI応答が不正な形式のため、次のイテレーションでリトライする
+            }
         }
         return FallbackChoice(this, context)
     }
 
     private fun parseChoiceResponse(input: String, candidates: List<Player>): Pair<Player, String> {
         val (targetString, intent) = input.split("：", ":", limit = 2).takeIf { it.size == 2 }
-            ?: throw IllegalAiInputException("「ターゲット：理由」の形式ではありません: $input")
+            ?: throw InvalidAiInputException("「ターゲット：理由」の形式ではありません: $input")
         val target = candidates.firstOrNull { it.name == targetString.trim() }
-            ?: throw IllegalAiInputException("候補に存在しないターゲットです: ${targetString.trim()}")
+            ?: throw InvalidAiInputException("候補に存在しないターゲットです: ${targetString.trim()}")
         return target to intent.trim()
     }
 
-    private class IllegalAiInputException(message: String) : Exception(message)
+    private class InvalidAiInputException(message: String) : Exception(message)
 
     override fun watchEpilogue(chronicles: List<Recallable>) {
         val instruction = buildString {
@@ -68,7 +70,7 @@ class PocAiPlayer(
         prompt(instruction)
     }
 
-    private fun prompt(instruction: String): String? {
+    private fun prompt(instruction: String): String {
         val fullPrompt = buildString {
             appendLine()
             appendLine(SEPARATOR)

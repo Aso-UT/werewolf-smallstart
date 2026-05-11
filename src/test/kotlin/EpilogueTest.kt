@@ -2,14 +2,18 @@ package org.example
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class EpilogueTest {
 
-    private class WatchingPlayer(role: Role, name: String) : ReceivingPlayer(role, name) {
+    private class ChoosingWatchingPlayer(role: Role, name: String) : WatchingPlayer(role, name) {
+        override fun choose(context: SelectionContext): Choice = FallbackChoice(this, context)
+    }
+
+    private open class WatchingPlayer(role: Role, name: String) : ReceivingPlayer(role, name) {
         var gameOver: GameEvent.GameOver? = null
         var gameResult: GameEvent.GameResult? = null
-        var epilogueEvents: List<Recallable>? = null
+        val watchedEvents: MutableList<Recallable> = mutableListOf()
 
         override fun onReceive(event: GameEvent) {
             when (event) {
@@ -20,7 +24,7 @@ class EpilogueTest {
         }
 
         override fun watchEpilogue(chronicles: List<Recallable>) {
-            epilogueEvents = chronicles
+            watchedEvents.addAll(chronicles)
         }
     }
 
@@ -54,7 +58,21 @@ class EpilogueTest {
 
         Epilogue(setup.playerManager, setup.oracle, fakeCitizenWinSignal()).perform()
 
-        assertNotNull(wolf.epilogueEvents)
-        assertNotNull(villager.epilogueEvents)
+        assertTrue(wolf.watchedEvents.isNotEmpty())
+        assertTrue(villager.watchedEvents.isNotEmpty())
+    }
+
+    @Test
+    fun `choice made by player appears in epilogue chronicles`() {
+        val wolf = WatchingPlayer(Role.WEREWOLF, "Wolf")
+        val chooser = ChoosingWatchingPlayer(Role.VILLAGER, "Chooser")
+        val setup = TestLodge(wolf to Role.WEREWOLF, chooser to Role.VILLAGER).create()
+        val signal = fakeCitizenWinSignal()
+
+        chooser.selectTarget(SelectionContext.Vote(chooser, setup.playerManager.players))
+
+        Epilogue(setup.playerManager, setup.oracle, signal).perform()
+
+        assertTrue(chooser.watchedEvents.any { it is Choice })
     }
 }
