@@ -124,6 +124,18 @@ class PocAiPlayerTest {
     }
 
     @Test
+    fun `claim recorded in memories appears in next prompt`() {
+        val lm = FakeLanguageModel("hello[真意内容]", "Wolf：怪しいから")
+        val villager = PocAiPlayer(Role.VILLAGER, "Villager", lm)
+        val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
+        villager.discuss(openContext())
+        villager.selectTarget(SelectionContext.Vote(villager, listOf(villager, wolf)))
+        assertContains(lm.prompts[1], "議論")
+        assertContains(lm.prompts[1], "hello")
+        assertContains(lm.prompts[1], "真意内容")
+    }
+
+    @Test
     fun `watchEpilogue prompt includes chronicle of events and reflection instruction`() {
         val lm = FakeLanguageModel("")
         val villager = PocAiPlayer(Role.VILLAGER, "Villager", lm)

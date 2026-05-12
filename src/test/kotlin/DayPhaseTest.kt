@@ -11,9 +11,9 @@ class DayPhaseTest {
         role: Role, name: String, private val voteTarget: Player? = null
     ) : ReceivingPlayer(role, name) {
         var discussedCount = 0
-        override fun buildStatement(context: DiscussionContext): Statement {
+        override fun speak(context: DiscussionContext): Claim {
             discussedCount++
-            return Statement.Plain("")
+            return Claim(this, context, Statement.Plain(""), "")
         }
         override fun choose(context: SelectionContext): Choice =
             Choice(this, context, voteTarget?.takeIf { it in context.candidates() } ?: context.candidates().first(), "テスト用投票")
