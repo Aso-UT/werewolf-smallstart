@@ -13,8 +13,8 @@ class HonestCpuPlayer(role: Role, override val name: String) : CpuPlayer(role) {
         return Statement.Plain(unspoken.removeFirst().body())
     }
 
-    override fun selectTarget(context: SelectionContext): Player {
+    override fun choose(context: SelectionContext): Choice {
         val candidates = context.candidates()
-        return candidates[selectCount++ % candidates.size]
+        return Choice(this, context, candidates[selectCount++ % candidates.size], "順番通りに選択")
     }
 }

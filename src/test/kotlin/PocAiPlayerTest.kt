@@ -12,9 +12,9 @@ class PocAiPlayerTest {
         private val responseQueue = ArrayDeque(responses.toList())
         val prompts = mutableListOf<String>()
 
-        override fun ask(prompt: String): String? {
+        override fun ask(prompt: String): String {
             prompts.add(prompt)
-            return responseQueue.removeFirstOrNull()
+            return responseQueue.removeFirst()
         }
     }
 
@@ -95,11 +95,32 @@ class PocAiPlayerTest {
 
     @Test
     fun `prompt includes received events`() {
-        val lm = FakeLanguageModel("")
+        val lm = FakeLanguageModel("[真意]")
         val villager = PocAiPlayer(Role.VILLAGER, "Villager", lm)
         GameEvent.RoleAssigned.send(Role.VILLAGER, villager)
         villager.discuss(openContext())
         assertContains(lm.prompts.first(), "役職通知")
+    }
+
+    @Test
+    fun `selectTarget retries when response has no separator`() {
+        val lm = FakeLanguageModel("no separator", "Wolf：怪しいから")
+        val villager = PocAiPlayer(Role.VILLAGER, "Villager", lm)
+        val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
+        val context = SelectionContext.Vote(villager, listOf(villager, wolf))
+        val result = villager.selectTarget(context)
+        assertEquals(wolf, result)
+    }
+
+    @Test
+    fun `choice recorded in memories appears in next prompt`() {
+        val lm = FakeLanguageModel("Wolf：怪しいから", "hello[真意]")
+        val villager = PocAiPlayer(Role.VILLAGER, "Villager", lm)
+        val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
+        villager.selectTarget(SelectionContext.Vote(villager, listOf(villager, wolf)))
+        villager.discuss(openContext())
+        assertContains(lm.prompts[1], "投票")
+        assertContains(lm.prompts[1], "Wolf")
     }
 
     @Test

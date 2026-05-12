@@ -14,7 +14,13 @@ abstract class Player(private val role: Role) : Notifiable {
     }
 
     protected abstract fun onReceive(event: GameEvent)
-    abstract fun selectTarget(context: SelectionContext): Player
+    fun selectTarget(context: SelectionContext): Player {
+        val choice = choose(context)
+        require(choice.chooser === this) { "${choice.chooser.name} is not the choosing player" }
+        _memories.add(choice)
+        return choice.selected
+    }
+    protected abstract fun choose(context: SelectionContext): Choice
     fun discuss(context: DiscussionContext): Statement {
         val statement = buildStatement(context)
         require(statement.type in context.availableTypes)
