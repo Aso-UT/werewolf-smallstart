@@ -22,11 +22,12 @@ abstract class Player(private val role: Role) : Notifiable {
     }
     protected abstract fun choose(context: SelectionContext): Choice
     fun discuss(context: DiscussionContext): Statement {
-        val statement = buildStatement(context)
-        require(statement.type in context.availableTypes)
-        return statement
+        val claim = speak(context)
+        require(claim.speaker === this) { "${claim.speaker.name} is not the speaking player" }
+        _memories.add(claim)
+        return claim.statement
     }
-    protected abstract fun buildStatement(context: DiscussionContext): Statement
+    protected abstract fun speak(context: DiscussionContext): Claim
     abstract fun watchEpilogue(chronicles: List<Recallable>)
 
     // signal is a capability token: only callers who hold a GameOverSignal (i.e., after game over) can access memories

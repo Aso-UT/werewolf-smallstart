@@ -8,13 +8,14 @@ class HumanPlayer(role: Role, override val name: String, private val io: PlayerI
         io.sendMessage(name, event.title, event.body())
     }
 
-    override fun buildStatement(context: DiscussionContext): Statement {
+    override fun speak(context: DiscussionContext): Claim {
         val type = selectType(context)
-        return when (type) {
+        val statement = when (type) {
             StatementType.PLAIN -> buildPlain(context)
             StatementType.DIVINATION_REPORT -> buildDivinationReport(context)
             StatementType.MEDIUM_REPORT -> buildMediumReport(context)
         }
+        return Claim(this, context, statement, "プレイヤーが発言")
     }
 
     private fun selectType(context: DiscussionContext): StatementType {

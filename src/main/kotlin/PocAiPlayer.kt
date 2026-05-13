@@ -11,7 +11,7 @@ class PocAiPlayer(
         _myMemories.add(event)
     }
 
-    override fun buildStatement(context: DiscussionContext): Statement {
+    override fun speak(context: DiscussionContext): Claim {
         val instruction = """
             【${context.title}】${context.description}
 
@@ -20,12 +20,24 @@ class PocAiPlayer(
             例：占い師です。Aliceは白でした。[狂人として占い師を偽装し、信用を得るための発言]
         """.trimIndent()
         repeat(2) {
-            val input = prompt(instruction)
-            val separatorIdx = input.indexOf("[").takeIf { it >= 0 }
-            if (separatorIdx != null) return Statement.Plain(input.substring(0, separatorIdx).trim())
+            try {
+                val (text, intent) = parseSpeakResponse(prompt(instruction))
+                val claim = Claim(this, context, Statement.Plain(text), intent)
+                _myMemories.add(claim)
+                return claim
+            } catch (_: InvalidAiInputException) {
+                // AI応答が不正な形式のため、次のイテレーションでリトライする
+            }
         }
-        // 2回失敗したため空文字を返す
-        return Statement.Plain("")
+        return FallbackClaim(this, context)
+    }
+
+    private fun parseSpeakResponse(input: String): Pair<String, String> {
+        val separatorIdx = input.indexOf("[").takeIf { it >= 0 }
+            ?: throw InvalidAiInputException("「発言[真意]」の形式ではありません: $input")
+        val text = input.substring(0, separatorIdx).trim()
+        val intent = input.substring(separatorIdx + 1).removeSuffix("]").trim()
+        return text to intent
     }
 
     override fun choose(context: SelectionContext): Choice {

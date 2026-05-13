@@ -15,10 +15,10 @@ class DiscussionTest {
         val log: List<String> get() = _log
         private var statementIndex = 0
 
-        override fun buildStatement(context: DiscussionContext): Statement {
+        override fun speak(context: DiscussionContext): Claim {
             val statement = statements[statementIndex++]
             _log.add("$name:said:$statement")
-            return Statement.Plain(statement)
+            return Claim(this, context, Statement.Plain(statement), "")
         }
 
         override fun onReceive(event: GameEvent) {
