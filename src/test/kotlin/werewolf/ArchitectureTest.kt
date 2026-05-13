@@ -1,57 +1,51 @@
 package werewolf
 
-import com.tngtech.archunit.core.importer.ClassFileImporter
+import com.tngtech.archunit.junit.AnalyzeClasses
+import com.tngtech.archunit.junit.ArchTest
+import com.tngtech.archunit.lang.ArchRule
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses
-import kotlin.test.Test
 
+@AnalyzeClasses(packages = ["werewolf"])
 class ArchitectureTest {
-    private val classes = ClassFileImporter().importPackages("werewolf")
 
-    @Test
-    fun `game must not depend on any other werewolf package`() {
+    @ArchTest
+    val gameMustNotDependOnOtherPackages: ArchRule =
         noClasses().that().resideInAPackage("werewolf.game..")
             .should().dependOnClassesThat().resideInAnyPackage(
                 "werewolf.phase..", "werewolf.cpu..", "werewolf.ai..",
                 "werewolf.human..", "werewolf.lodge.."
-            ).check(classes)
-    }
+            )
 
-    @Test
-    fun `phase must not depend on cpu, ai, human, or lodge`() {
+    @ArchTest
+    val phaseMustNotDependOnCpuAiHumanOrLodge: ArchRule =
         noClasses().that().resideInAPackage("werewolf.phase..")
             .should().dependOnClassesThat().resideInAnyPackage(
                 "werewolf.cpu..", "werewolf.ai..", "werewolf.human..", "werewolf.lodge.."
-            ).check(classes)
-    }
+            )
 
-    @Test
-    fun `cpu must not depend on phase, ai, human, or lodge`() {
+    @ArchTest
+    val cpuMustNotDependOnPhaseAiHumanOrLodge: ArchRule =
         noClasses().that().resideInAPackage("werewolf.cpu..")
             .should().dependOnClassesThat().resideInAnyPackage(
                 "werewolf.phase..", "werewolf.ai..", "werewolf.human..", "werewolf.lodge.."
-            ).check(classes)
-    }
+            )
 
-    @Test
-    fun `ai must not depend on phase, cpu, human, or lodge`() {
+    @ArchTest
+    val aiMustNotDependOnPhaseCpuHumanOrLodge: ArchRule =
         noClasses().that().resideInAPackage("werewolf.ai..")
             .should().dependOnClassesThat().resideInAnyPackage(
                 "werewolf.phase..", "werewolf.cpu..", "werewolf.human..", "werewolf.lodge.."
-            ).check(classes)
-    }
+            )
 
-    @Test
-    fun `human must not depend on phase, cpu, ai, or lodge`() {
+    @ArchTest
+    val humanMustNotDependOnPhaseCpuAiOrLodge: ArchRule =
         noClasses().that().resideInAPackage("werewolf.human..")
             .should().dependOnClassesThat().resideInAnyPackage(
                 "werewolf.phase..", "werewolf.cpu..", "werewolf.ai..", "werewolf.lodge.."
-            ).check(classes)
-    }
+            )
 
-    @Test
-    fun `lodge must not depend on phase`() {
+    @ArchTest
+    val lodgeMustNotDependOnPhase: ArchRule =
         noClasses().that().resideInAPackage("werewolf.lodge..")
             .should().dependOnClassesThat().resideInAPackage("werewolf.phase..")
-            .check(classes)
-    }
 }
