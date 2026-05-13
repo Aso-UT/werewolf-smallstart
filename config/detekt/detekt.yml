@@ -56,6 +56,10 @@ naming:
     minimumFunctionNameLength: 3
 
 style:
+  WildcardImport:
+    active: true
+    excludes: ['**/test/**']
+
   # ハードコードされた数値リテラルを検出（定数化を促す）
   MagicNumber:
     active: true
