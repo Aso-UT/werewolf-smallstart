@@ -1,16 +1,10 @@
 package werewolf
 
 import werewolf.game.*
-import werewolf.phase.*
-import werewolf.cpu.*
-import werewolf.ai.*
-import werewolf.human.*
-import werewolf.lodge.*
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import kotlin.test.assertContains
 import kotlin.test.assertFailsWith
 
 class MajorityVoteResolverTest {

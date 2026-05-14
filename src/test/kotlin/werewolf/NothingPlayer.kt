@@ -1,11 +1,6 @@
 package werewolf
 
 import werewolf.game.*
-import werewolf.phase.*
-import werewolf.cpu.*
-import werewolf.ai.*
-import werewolf.human.*
-import werewolf.lodge.*
 
 open class NothingPlayer(role: Role, override val name: String) : Player(role) {
     override fun speak(context: DiscussionContext): Claim = error("speak not expected")

@@ -2,10 +2,6 @@ package werewolf
 
 import werewolf.game.*
 import werewolf.phase.*
-import werewolf.cpu.*
-import werewolf.ai.*
-import werewolf.human.*
-import werewolf.lodge.*
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -27,7 +23,7 @@ class NightPhaseTest {
         override fun onReceive(event: GameEvent) { received.add(event) }
     }
 
-    private class ConclavingWolf(name: String) : ReceivingPlayer(Role.WEREWOLF, name) {
+    private class ConclaveWolf(name: String) : ReceivingPlayer(Role.WEREWOLF, name) {
         val heardStatements = mutableListOf<GameEvent.WerewolfStatementMade>()
         override fun speak(context: DiscussionContext): Claim = Claim(this, context, Statement.Plain(""), "")
         override fun onReceive(event: GameEvent) {
@@ -85,8 +81,8 @@ class NightPhaseTest {
 
     @Test
     fun `wolves conduct conclave when multiple wolves are present`() {
-        val wolf1 = ConclavingWolf("Wolf1")
-        val wolf2 = ConclavingWolf("Wolf2")
+        val wolf1 = ConclaveWolf("Wolf1")
+        val wolf2 = ConclaveWolf("Wolf2")
         val villager1 = ReceivingPlayer(Role.VILLAGER, "V1")
         val villager2 = ReceivingPlayer(Role.VILLAGER, "V2")
         val setup = TestLodge(

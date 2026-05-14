@@ -1,11 +1,7 @@
 package werewolf
 
 import werewolf.game.*
-import werewolf.phase.*
-import werewolf.cpu.*
 import werewolf.ai.*
-import werewolf.human.*
-import werewolf.lodge.*
 
 import kotlin.test.Test
 import kotlin.test.assertContains
