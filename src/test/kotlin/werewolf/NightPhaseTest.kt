@@ -115,6 +115,39 @@ class NightPhaseTest {
     }
 
     @Test
+    fun `guard protecting different player does not prevent wolf attack`() {
+        val villager1 = ReceivingPlayer(Role.VILLAGER, "V1")
+        val villager2 = ReceivingPlayer(Role.VILLAGER, "V2")
+        val wolf = FixedTargetPlayer(Role.WEREWOLF, "Wolf", villager1)
+        val hunter = FixedTargetPlayer(Role.HUNTER, "Hunter", villager2)
+        val setup = TestLodge(
+            wolf to Role.WEREWOLF, hunter to Role.HUNTER,
+            villager1 to Role.VILLAGER, villager2 to Role.VILLAGER,
+        ).create()
+
+        NightPhase(setup.playerManager, setup.oracle, 2).proceed()
+
+        assertEquals(villager1, setup.playerManager.nightDeath)
+        assertFalse(setup.playerManager.players.contains(villager1))
+    }
+
+    @Test
+    fun `seer receives divination result on first night via firstNightDivine`() {
+        val villager = ReceivingPlayer(Role.VILLAGER, "Villager")
+        val wolf = ReceivingPlayer(Role.WEREWOLF, "Wolf")
+        val seer = RecordingPlayer(Role.SEER, "Seer")
+        val setup = TestLodge(
+            wolf to Role.WEREWOLF, seer to Role.SEER, villager to Role.VILLAGER,
+        ).create()
+
+        NightPhase(setup.playerManager, setup.oracle, 1).proceed()
+
+        val divined = seer.received.filterIsInstance<GameEvent.Divined>()
+        assertEquals(1, divined.size)
+        assertEquals(villager, divined.single().target)
+    }
+
+    @Test
     fun `medium receives medium result for executed player`() {
         val villager1 = ReceivingPlayer(Role.VILLAGER, "V1")
         val villager2 = ReceivingPlayer(Role.VILLAGER, "V2")

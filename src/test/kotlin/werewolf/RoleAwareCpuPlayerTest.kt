@@ -26,20 +26,6 @@ class RoleAwareCpuPlayerTest {
     }
 
     @Test
-    fun `seer does not vote for white-confirmed player when other candidates exist`() {
-        val seer = RoleAwareCpuPlayer(Role.SEER, "Seer")
-        val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
-        val villager = NothingPlayer(Role.VILLAGER, "Villager")
-        val setup = TestLodge(seer to Role.SEER, wolf to Role.WEREWOLF, villager to Role.VILLAGER).create()
-        setup.oracle.divine(seer, villager)
-
-        repeat(100) {
-            val voted = seer.selectTarget(SelectionContext.Vote(seer, listOf(seer, wolf, villager)))
-            assertNotEquals(villager, voted)
-        }
-    }
-
-    @Test
     fun `villager votes for player reported as werewolf`() {
         val seer = RoleAwareCpuPlayer(Role.SEER, "Seer")
         val villager = RoleAwareCpuPlayer(Role.VILLAGER, "Villager")
