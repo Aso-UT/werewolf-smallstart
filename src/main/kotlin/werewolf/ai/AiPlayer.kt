@@ -12,7 +12,7 @@ import werewolf.game.Role
 import werewolf.game.SelectionContext
 import werewolf.game.Statement
 
-class PocAiPlayer(
+class AiPlayer(
     role: Role,
     override val name: String,
     private val languageModel: LanguageModel,

@@ -1,7 +1,7 @@
 package werewolf.ai
 
 
-class ConsoleLanguageModel : LanguageModel {
+class PocConsoleLanguageModel : LanguageModel {
     override fun ask(prompt: String): String {
         println(prompt)
         print("回答 > ")
