@@ -14,8 +14,16 @@ class GeminiLanguageModel(
         val config = GenerateContentConfig.builder()
             .systemInstruction(Content.fromParts(Part.fromText(system)))
             .build()
-        return client.models.generateContent(model, user, config).text() ?: ""
+        // Catch broadly and swallow cause to prevent API key leakage via exception messages or URLs
+        @Suppress("TooGenericExceptionCaught", "SwallowedException")
+        return try {
+            client.models.generateContent(model, user, config).text() ?: ""
+        } catch (e: Exception) {
+            throw GeminiApiException("Gemini API call failed: ${e.javaClass.simpleName}")
+        }
     }
+
+    class GeminiApiException(message: String) : Exception(message)
 
     companion object {
         private const val DEFAULT_MODEL = "gemini-2.5-flash"
