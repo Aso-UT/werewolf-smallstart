@@ -2,5 +2,5 @@ package werewolf.ai
 
 
 interface LanguageModel {
-    fun ask(prompt: String): String
+    fun ask(system: String, user: String): String
 }
