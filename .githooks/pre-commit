@@ -1,2 +1,16 @@
 #!/bin/sh
+
+PATTERNS="AIza|sk-ant-|sk-live-|sk_live_|ghp_|gho_|AKIA|BEGIN.*PRIVATE KEY"
+
+if git diff --cached --diff-filter=ACM | grep -qE "$PATTERNS"; then
+    echo "BLOCKED: potential secret pattern detected in staged changes."
+    echo "Remove the secret and try again."
+    exit 1
+fi
+
+if git diff --cached --name-only | grep -qE "(^|/)\.env"; then
+    echo "BLOCKED: Attempted to commit .env file."
+    exit 1
+fi
+
 ./gradlew check
