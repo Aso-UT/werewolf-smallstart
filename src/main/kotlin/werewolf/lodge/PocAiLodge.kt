@@ -27,7 +27,7 @@ object PocAiLodge : Lodge() {
             Role.WEREWOLF, Role.SEER, Role.MEDIUM, Role.WEREWOLF,
         ).shuffled()
         return roles.mapIndexed { i, role ->
-            AiPlayer(role, names[i], PocConsoleLanguageModel(), Instruction(personalities[i])) to role
+            AiPlayer(role, names[i], PocConsoleLanguageModel(), Instruction(names[i], personalities[i])) to role
         }
     }
 }
