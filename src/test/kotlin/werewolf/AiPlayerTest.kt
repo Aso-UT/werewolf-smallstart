@@ -15,8 +15,8 @@ class AiPlayerTest {
         private val responseQueue = ArrayDeque(responses.toList())
         val prompts = mutableListOf<String>()
 
-        override fun ask(prompt: String): String {
-            prompts.add(prompt)
+        override fun ask(system: String, user: String): String {
+            prompts.add(user)
             return responseQueue.removeFirst()
         }
     }

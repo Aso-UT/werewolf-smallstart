@@ -95,28 +95,15 @@ class AiPlayer(
     }
 
     private fun prompt(instruction: String): String {
-        val fullPrompt = buildString {
-            appendLine()
-            appendLine(SEPARATOR)
-            appendLine("AIプレイヤー $name へのプロンプト")
-            appendLine(SEPARATOR)
+        val user = buildString {
             appendLine("【指示】")
             appendLine(instruction)
-            appendLine()
-            appendLine("【ゲームの説明】")
-            appendLine(gameDescription)
             appendLine()
             appendLine("【ここまでのゲームの流れ】")
             if (_myMemories.isEmpty()) appendLine("（なし）")
             else _myMemories.forEach { appendLine(it.recall()) }
-            append(SEPARATOR)
         }
-        return languageModel.ask(fullPrompt)
-    }
-
-    companion object {
-        private const val SEPARATOR_WIDTH = 50
-        private val SEPARATOR = "=".repeat(SEPARATOR_WIDTH)
+        return languageModel.ask(gameDescription, user)
     }
 
     private val gameDescription = """
