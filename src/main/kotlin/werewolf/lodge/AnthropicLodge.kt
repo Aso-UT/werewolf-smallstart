@@ -16,7 +16,7 @@ object AnthropicLodge : Lodge() {
             Role.HUNTER, Role.VILLAGER, Role.VILLAGER, Role.VILLAGER, Role.MADMAN,
             Role.WEREWOLF, Role.SEER, Role.MEDIUM, Role.WEREWOLF,
         ).shuffled()
-        val human = HumanPlayer(roles[0], "You", ConsolePlayerIO()) to roles[0]
+        val human = HumanPlayer(roles[0], "Ivan", ConsolePlayerIO()) to roles[0]
         val aiPlayers = roles.drop(1).mapIndexed { i, role -> AiPlayer(role, aiNames[i], languageModel) to role }
         return listOf(human) + aiPlayers
     }
