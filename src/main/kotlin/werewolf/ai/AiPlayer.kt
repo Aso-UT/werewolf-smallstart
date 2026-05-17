@@ -16,8 +16,16 @@ class AiPlayer(
     role: Role,
     override val name: String,
     private val languageModel: LanguageModel,
+    vararg instructions: Instruction,
 ) : Player(role) {
     private val _myMemories = mutableListOf<Recallable>()
+
+    init {
+        instructions.forEach {
+            memorize(it)
+            _myMemories.add(it)
+        }
+    }
 
     override fun onReceive(event: GameEvent) {
         _myMemories.add(event)
@@ -108,6 +116,7 @@ class AiPlayer(
 
     private val gameDescription = """
 あなたはプレイヤー${name}です。あなたの役職はゲームの流れの「役職通知」をご確認ください。
+ゲームの流れの冒頭にある指示に従って行動してください。
 役職構成：人狼2・狂人1・村人3・占い師1・霊能者1・狩人1（計9人）
 
 【勝利条件】

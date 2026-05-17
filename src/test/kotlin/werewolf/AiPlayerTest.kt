@@ -139,6 +139,30 @@ class AiPlayerTest {
     }
 
     @Test
+    fun `instruction appears in prompt`() {
+        val lm = FakeLanguageModel("[真意]")
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, Instruction("Villager", "慎重に行動してください。"))
+        villager.discuss(openContext())
+        assertContains(lm.prompts.first(), "慎重に行動してください。")
+    }
+
+    @Test
+    fun `instruction is included in reveal`() {
+        val lm = FakeLanguageModel()
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, Instruction("Villager", "慎重に行動してください。"))
+        val memories = villager.reveal(fakeCitizenWinSignal())
+        assertTrue(memories.any { it.chronicle().contains("慎重に行動してください。") })
+    }
+
+    @Test
+    fun `instruction chronicle includes recipient name`() {
+        val lm = FakeLanguageModel()
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, Instruction("Villager", "慎重に行動してください。"))
+        val memories = villager.reveal(fakeCitizenWinSignal())
+        assertTrue(memories.any { it.chronicle().contains("Villager") && it.chronicle().contains("慎重に行動してください。") })
+    }
+
+    @Test
     fun `watchEpilogue prompt includes chronicle of events and reflection instruction`() {
         val lm = FakeLanguageModel("")
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm)

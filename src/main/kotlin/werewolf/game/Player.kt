@@ -30,6 +30,10 @@ abstract class Player(private val role: Role) : Notifiable {
     protected abstract fun speak(context: DiscussionContext): Claim
     abstract fun watchEpilogue(chronicles: List<Recallable>)
 
+    protected fun memorize(recallable: Recallable) {
+        _memories.add(recallable)
+    }
+
     // signal is a capability token: only callers who hold a GameOverSignal (i.e., after game over) can access memories
     @Suppress("UnusedParameter")
     fun reveal(signal: GameOverSignal): List<Recallable> = _memories.toList()
