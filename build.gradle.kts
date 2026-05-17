@@ -14,6 +14,7 @@ repositories {
 
 dependencies {
     implementation("com.google.genai:google-genai:1.53.0")
+    implementation("com.anthropic:anthropic-java:2.27.0")
     testImplementation(kotlin("test"))
     testImplementation("com.tngtech.archunit:archunit-junit5:1.3.0")
 }
