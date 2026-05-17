@@ -4,6 +4,7 @@ import werewolf.game.GameOverSignal
 import werewolf.phase.Epilogue
 import werewolf.phase.InitialPhase
 import werewolf.phase.Phase
+import werewolf.lodge.AnthropicLodge
 import werewolf.lodge.GeminiLodge
 import werewolf.lodge.HonestCpuLodge
 import werewolf.lodge.Lodge
@@ -24,7 +25,7 @@ fun main() {
 }
 
 private fun getLodge(): Lodge {
-    println("Lodgeを選択してください: AllHuman / RollerCPU / RandomCPU / HonestCPU / RoleAwareCPU / PocAI / Gemini")
+    println("Lodgeを選択してください: AllHuman / RollerCPU / RandomCPU / HonestCPU / RoleAwareCPU / PocAI / Gemini / Anthropic")
     return when (readLine()?.trim()) {
         "RollerCPU"    -> RollerCpuLodge
         "RandomCPU"    -> RandomCpuLodge
@@ -32,6 +33,7 @@ private fun getLodge(): Lodge {
         "RoleAwareCPU" -> RoleAwareCpuLodge
         "PocAI"        -> PocAiLodge
         "Gemini"       -> GeminiLodge
+        "Anthropic"    -> AnthropicLodge
         else           -> SmallLodge
     }
 }
