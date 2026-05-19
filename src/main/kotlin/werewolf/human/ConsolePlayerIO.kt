@@ -3,14 +3,13 @@ package werewolf.human
 import werewolf.game.Player
 
 class ConsolePlayerIO : PlayerIO {
-    override fun sendMessage(playerName: String, title: String, content: String) {
-        println("=== ${playerName}：${title} ===")
-        println(content)
+    override fun sendMessage(title: String, content: String) {
+        println("[$title] $content")
     }
 
-    override fun promptPlayer(playerName: String, title: String, content: String, candidates: List<Player>): Player {
+    override fun promptPlayer(title: String, content: String, candidates: List<Player>): Player {
         while (true) {
-            sendMessage(playerName, title, "$content: ${candidates.joinToString(", ") { it.name }}")
+            sendMessage(title, "$content: ${candidates.joinToString(", ") { it.name }}")
             val input = readLine() ?: ""
             val player = candidates.firstOrNull { it.name == input }
             if (player != null) return player
@@ -18,14 +17,14 @@ class ConsolePlayerIO : PlayerIO {
         }
     }
 
-    override fun promptFreeText(playerName: String, title: String, content: String): String {
-        sendMessage(playerName, title, content)
+    override fun promptFreeText(title: String, content: String): String {
+        sendMessage(title, content)
         return readLine() ?: ""
     }
 
-    override fun promptChoice(playerName: String, title: String, content: String, options: List<String>): Int {
+    override fun promptChoice(title: String, content: String, options: List<String>): Int {
         while (true) {
-            sendMessage(playerName, title, content)
+            sendMessage(title, content)
             options.forEachIndexed { i, option -> println("${i + 1}: $option") }
             val input = readLine()?.toIntOrNull()
             if (input != null && input in 1..options.size) return input - 1
