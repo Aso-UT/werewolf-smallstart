@@ -20,7 +20,15 @@ sealed class Choice(
             context: SelectionContext,
             selected: Player,
             intent: String,
-        ): Choice = NormalChoice(chooser, context, selected, intent)
+        ): Choice = NormalChoice(chooser, context, selected, intent, intent)
+
+        operator fun invoke(
+            chooser: Player,
+            context: SelectionContext,
+            selected: Player,
+            intentForRecall: String,
+            intentForChronicle: String,
+        ): Choice = NormalChoice(chooser, context, selected, intentForRecall, intentForChronicle)
     }
 }
 
@@ -28,8 +36,9 @@ private class NormalChoice(
     chooser: Player,
     context: SelectionContext,
     selected: Player,
-    intent: String,
-) : Choice(chooser, context, selected, intent, intent)
+    intentForRecall: String,
+    intentForChronicle: String,
+) : Choice(chooser, context, selected, intentForRecall, intentForChronicle)
 
 class FallbackChoice(chooser: Player, context: SelectionContext) : Choice(
     chooser, context, context.candidates().random(),

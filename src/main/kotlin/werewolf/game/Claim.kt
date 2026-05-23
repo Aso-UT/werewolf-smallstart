@@ -20,7 +20,15 @@ sealed class Claim(
             context: DiscussionContext,
             statement: Statement,
             intent: String,
-        ): Claim = NormalClaim(speaker, context, statement, intent)
+        ): Claim = NormalClaim(speaker, context, statement, intent, intent)
+
+        operator fun invoke(
+            speaker: Player,
+            context: DiscussionContext,
+            statement: Statement,
+            intentForRecall: String,
+            intentForChronicle: String,
+        ): Claim = NormalClaim(speaker, context, statement, intentForRecall, intentForChronicle)
     }
 }
 
@@ -28,8 +36,9 @@ private class NormalClaim(
     speaker: Player,
     context: DiscussionContext,
     statement: Statement,
-    intent: String,
-) : Claim(speaker, context, statement, intent, intent)
+    intentForRecall: String,
+    intentForChronicle: String,
+) : Claim(speaker, context, statement, intentForRecall, intentForChronicle)
 
 class FallbackClaim(speaker: Player, context: DiscussionContext) : Claim(
     speaker, context, Statement.Plain(""),

@@ -10,16 +10,35 @@ class GeminiLanguageModel(
 ) : LanguageModel {
     private val client = Client()
 
-    override fun ask(system: String, user: String): String {
+    override fun ask(system: String, user: String): Completion {
         val config = GenerateContentConfig.builder()
             .systemInstruction(Content.fromParts(Part.fromText(system)))
             .build()
         // Catch broadly and swallow cause to prevent API key leakage via exception messages or URLs
         @Suppress("TooGenericExceptionCaught", "SwallowedException")
         return try {
-            client.models.generateContent(model, user, config).text() ?: ""
+            val response = client.models.generateContent(model, user, config)
+            val usageMeta = response.usageMetadata().orElse(null)
+            val metadata = GeminiMetadata(
+                model = model,
+                promptTokenCount = usageMeta?.promptTokenCount()?.orElse(null),
+                candidatesTokenCount = usageMeta?.candidatesTokenCount()?.orElse(null),
+            )
+            Completion(response.text() ?: "", metadata)
         } catch (e: Exception) {
             throw GeminiApiException("Gemini API call failed: ${e.javaClass.simpleName}")
+        }
+    }
+
+    private class GeminiMetadata(
+        val model: String,
+        val promptTokenCount: Int?,
+        val candidatesTokenCount: Int?,
+    ) : ModelMetadata {
+        override fun toDisplayString() = buildString {
+            append("model=$model")
+            if (promptTokenCount != null) append(" in=$promptTokenCount")
+            if (candidatesTokenCount != null) append(" out=$candidatesTokenCount")
         }
     }
 

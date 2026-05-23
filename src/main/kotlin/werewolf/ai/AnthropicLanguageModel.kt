@@ -11,7 +11,7 @@ class AnthropicLanguageModel(
 ) : LanguageModel {
     private val client: AnthropicClient = AnthropicOkHttpClient.fromEnv()
 
-    override fun ask(system: String, user: String): String {
+    override fun ask(system: String, user: String): Completion {
         val params = MessageCreateParams.builder()
             .model(model)
             .maxTokens(MAX_TOKENS)
@@ -26,9 +26,19 @@ class AnthropicLanguageModel(
         // Catch broadly and swallow cause to prevent API key leakage via exception messages or URLs
         @Suppress("TooGenericExceptionCaught", "SwallowedException")
         return try {
-            client.messages().create(params).content()
+            val message = client.messages().create(params)
+            val usage = message.usage()
+            val metadata = AnthropicMetadata(
+                model = model,
+                inputTokens = usage.inputTokens(),
+                outputTokens = usage.outputTokens(),
+                cacheCreationInputTokens = usage.cacheCreationInputTokens().orElse(0L),
+                cacheReadInputTokens = usage.cacheReadInputTokens().orElse(0L),
+            )
+            val text = message.content()
                 .mapNotNull { it.text().orElse(null) }
                 .joinToString("") { it.text() }
+            Completion(text, metadata)
         } catch (e: Exception) {
             throw AnthropicApiException("Anthropic API call failed: ${e.javaClass.simpleName}")
         }
