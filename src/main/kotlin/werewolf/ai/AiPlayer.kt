@@ -41,8 +41,13 @@ class AiPlayer(
         """.trimIndent()
         repeat(2) {
             try {
-                val (text, intent) = parseSpeakResponse(prompt(instruction))
-                val claim = Claim(this, context, Statement.Plain(text), intent)
+                val completion = prompt(instruction)
+                val (text, intent) = parseSpeakResponse(completion.text)
+                val claim = Claim(
+                    this, context, Statement.Plain(text),
+                    intentForRecall = intent,
+                    intentForChronicle = withMetadata(intent, completion.metadata),
+                )
                 _myMemories.add(claim)
                 return claim
             } catch (_: InvalidAiInputException) {
@@ -72,8 +77,13 @@ class AiPlayer(
         """.trimIndent()
         repeat(2) {
             try {
-                val (target, intent) = parseChoiceResponse(prompt(instruction), candidates)
-                val choice = Choice(this, context, target, intent)
+                val completion = prompt(instruction)
+                val (target, intent) = parseChoiceResponse(completion.text, candidates)
+                val choice = Choice(
+                    this, context, target,
+                    intentForRecall = intent,
+                    intentForChronicle = withMetadata(intent, completion.metadata),
+                )
                 _myMemories.add(choice)
                 return choice
             } catch (_: InvalidAiInputException) {
@@ -102,7 +112,7 @@ class AiPlayer(
         prompt(instruction)
     }
 
-    private fun prompt(instruction: String): String {
+    private fun prompt(instruction: String): Completion {
         val user = buildString {
             appendLine("【指示】")
             appendLine(instruction)
@@ -113,6 +123,9 @@ class AiPlayer(
         }
         return languageModel.ask(gameDescription, user)
     }
+
+    private fun withMetadata(intent: String, metadata: ModelMetadata) =
+        "$intent | ${metadata.toDisplayString()}"
 
     private val gameDescription = """
 あなたはプレイヤー${name}です。あなたの役職はゲームの流れの「役職通知」をご確認ください。

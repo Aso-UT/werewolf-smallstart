@@ -1,7 +1,7 @@
 package werewolf.lodge
 
 import werewolf.ai.AiPlayer
-import werewolf.ai.AnthropicLanguageModel
+import werewolf.ai.anthropic.AnthropicLanguageModel
 import werewolf.game.Player
 import werewolf.game.Role
 import werewolf.human.ConsolePlayerIO
