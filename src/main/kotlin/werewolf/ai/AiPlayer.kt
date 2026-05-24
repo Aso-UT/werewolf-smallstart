@@ -124,10 +124,8 @@ class AiPlayer(
         return languageModel.ask(gameDescription, user)
     }
 
-    private fun withMetadata(intent: String, metadata: ModelMetadata): String {
-        val display = metadata.toDisplayString()
-        return if (display.isEmpty()) intent else "$intent | $display"
-    }
+    private fun withMetadata(intent: String, metadata: ModelMetadata) =
+        "$intent | ${metadata.toDisplayString()}"
 
     private val gameDescription = """
 あなたはプレイヤー${name}です。あなたの役職はゲームの流れの「役職通知」をご確認ください。

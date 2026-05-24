@@ -6,18 +6,22 @@ import werewolf.ai.*
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class AiPlayerTest {
 
-    private class FakeLanguageModel(vararg responses: String) : LanguageModel {
+    private class FakeLanguageModel(
+        vararg responses: String,
+        private val metadata: ModelMetadata = ModelMetadata { "" },
+    ) : LanguageModel {
         private val responseQueue = ArrayDeque(responses.toList())
         val prompts = mutableListOf<String>()
 
         override fun ask(system: String, user: String): Completion {
             prompts.add(user)
-            return Completion(responseQueue.removeFirst(), ModelMetadata { "" })
+            return Completion(responseQueue.removeFirst(), metadata)
         }
     }
 
@@ -160,6 +164,30 @@ class AiPlayerTest {
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, Instruction("Villager", "慎重に行動してください。"))
         val memories = villager.reveal(fakeCitizenWinSignal())
         assertTrue(memories.any { it.chronicle().contains("Villager") && it.chronicle().contains("慎重に行動してください。") })
+    }
+
+    @Test
+    fun `speak metadata is included in claim chronicle but not in recall`() {
+        val lm = FakeLanguageModel("hello[真意内容]", "[dummy]", metadata = ModelMetadata { "model=test" })
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm)
+        villager.discuss(openContext())
+        villager.discuss(openContext())
+        val memories = villager.reveal(fakeCitizenWinSignal())
+        assertTrue(memories.filterIsInstance<Claim>().any { it.chronicle().contains("model=test") })
+        assertFalse(lm.prompts[1].contains("model=test"))
+    }
+
+    @Test
+    fun `choose metadata is included in choice chronicle but not in recall`() {
+        val lm = FakeLanguageModel("Wolf：怪しいから", "[dummy]", metadata = ModelMetadata { "model=test" })
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm)
+        val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
+        val context = SelectionContext.Vote(villager, listOf(villager, wolf))
+        villager.selectTarget(context)
+        villager.discuss(openContext())
+        val memories = villager.reveal(fakeCitizenWinSignal())
+        assertTrue(memories.filterIsInstance<Choice>().any { it.chronicle().contains("model=test") })
+        assertFalse(lm.prompts[1].contains("model=test"))
     }
 
     @Test
