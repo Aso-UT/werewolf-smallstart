@@ -192,6 +192,30 @@ class AiPlayerTest {
     }
 
     @Test
+    fun `speak records InvalidAiInput with raw response when format is invalid`() {
+        val lm = FakeLanguageModel("bad response", "[valid]", metadata = ModelMetadata { "model=test" })
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm)
+        villager.discuss(openContext())
+        val memories = villager.reveal(fakeCitizenWinSignal())
+        val record = memories.filterIsInstance<InvalidAiInput>().first()
+        assertTrue(record.chronicle().contains("bad response"))
+        assertEquals("model=test", record.intentForChronicle)
+    }
+
+    @Test
+    fun `choose records InvalidAiInput with raw response when format is invalid`() {
+        val lm = FakeLanguageModel("bad response", "Wolf：怪しいから", metadata = ModelMetadata { "model=test" })
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm)
+        val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
+        val context = SelectionContext.Vote(villager, listOf(villager, wolf))
+        villager.selectTarget(context)
+        val memories = villager.reveal(fakeCitizenWinSignal())
+        val record = memories.filterIsInstance<InvalidAiInput>().first()
+        assertTrue(record.chronicle().contains("bad response"))
+        assertEquals("model=test", record.intentForChronicle)
+    }
+
+    @Test
     fun `watchEpilogue does not call languageModel`() {
         val lm = FakeLanguageModel()
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm)
