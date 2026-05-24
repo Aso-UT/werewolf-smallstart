@@ -168,18 +168,18 @@ class AiPlayerTest {
     }
 
     @Test
-    fun `speak metadata is included in claim chronicle but not in recall`() {
+    fun `speak metadata is included in intentForChronicle but not in recall`() {
         val lm = FakeLanguageModel("hello[真意内容]", "[dummy]", metadata = ModelMetadata { "model=test" })
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm)
         villager.discuss(openContext())
         villager.discuss(openContext())
         val memories = villager.reveal(fakeCitizenWinSignal())
-        assertTrue(memories.filterIsInstance<Claim>().any { it.chronicle().contains("model=test") })
+        assertTrue(memories.filterIsInstance<Claim>().any { it.intentForChronicle?.contains("model=test") == true })
         assertFalse(lm.prompts[1].contains("model=test"))
     }
 
     @Test
-    fun `choose metadata is included in choice chronicle but not in recall`() {
+    fun `choose metadata is included in intentForChronicle but not in recall`() {
         val lm = FakeLanguageModel("Wolf：怪しいから", "[dummy]", metadata = ModelMetadata { "model=test" })
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm)
         val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
@@ -187,7 +187,7 @@ class AiPlayerTest {
         villager.selectTarget(context)
         villager.discuss(openContext())
         val memories = villager.reveal(fakeCitizenWinSignal())
-        assertTrue(memories.filterIsInstance<Choice>().any { it.chronicle().contains("model=test") })
+        assertTrue(memories.filterIsInstance<Choice>().any { it.intentForChronicle?.contains("model=test") == true })
         assertFalse(lm.prompts[1].contains("model=test"))
     }
 

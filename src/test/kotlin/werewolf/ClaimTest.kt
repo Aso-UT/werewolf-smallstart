@@ -36,11 +36,19 @@ class ClaimTest {
     }
 
     @Test
-    fun `chronicle returns speaker name, context title, statement text, and intent`() {
+    fun `chronicle returns speaker name, context title, and statement text`() {
         val speaker = NothingPlayer(Role.VILLAGER, "Speaker")
         val context = openContext(listOf(speaker))
         val claim = Claim(speaker, context, Statement.Plain("発言内容"), "真意内容")
-        assertEquals("[Speaker] [議論] 発言内容 [真意内容]", claim.chronicle())
+        assertEquals("[Speaker] [議論] 発言内容", claim.chronicle())
+    }
+
+    @Test
+    fun `intentForChronicle returns the chronicle intent`() {
+        val speaker = NothingPlayer(Role.VILLAGER, "Speaker")
+        val context = openContext(listOf(speaker))
+        val claim = Claim(speaker, context, Statement.Plain("発言内容"), "真意内容")
+        assertEquals("真意内容", claim.intentForChronicle)
     }
 
     @Test
