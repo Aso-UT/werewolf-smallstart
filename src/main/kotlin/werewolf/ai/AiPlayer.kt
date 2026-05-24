@@ -53,9 +53,7 @@ class AiPlayer(
                 return claim
             } catch (_: InvalidAiInputException) {
                 // AI応答が不正な形式のため、記録して次のイテレーションでリトライする
-                val record = InvalidAiInput(completion.text, completion.metadata)
-                memorize(record)
-                _myMemories.add(record)
+                memorize(InvalidAiInput(completion.text, completion.metadata))
             }
         }
         return FallbackClaim(this, context)
@@ -92,9 +90,7 @@ class AiPlayer(
                 return choice
             } catch (_: InvalidAiInputException) {
                 // AI応答が不正な形式のため、記録して次のイテレーションでリトライする
-                val record = InvalidAiInput(completion.text, completion.metadata)
-                memorize(record)
-                _myMemories.add(record)
+                memorize(InvalidAiInput(completion.text, completion.metadata))
             }
         }
         return FallbackChoice(this, context)
