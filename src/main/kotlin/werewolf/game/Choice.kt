@@ -5,14 +5,14 @@ sealed class Choice(
     val context: SelectionContext,
     val selected: Player,
     private val intentForRecall: String,
-    val intentForChronicle: String,
+    override val intentForChronicle: String,
 ) : Recallable() {
     init {
         require(selected in context.candidates()) { "${selected.name} is not in candidates" }
     }
 
     override fun recall() = "[${context.title}] ${selected.name} [$intentForRecall]"
-    override fun chronicle() = "[${chooser.name}] [${context.title}] ${selected.name} [$intentForChronicle]"
+    override fun chronicle() = "[${chooser.name}] [${context.title}] ${selected.name}"
 
     companion object {
         operator fun invoke(

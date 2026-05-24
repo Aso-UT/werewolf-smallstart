@@ -56,7 +56,10 @@ class HumanPlayer(role: Role, override val name: String, private val io: PlayerI
     }
 
     override fun watchEpilogue(chronicles: List<Recallable>) {
-        val content = chronicles.joinToString("\n") { "  ${it.chronicle()}" }
+        val content = chronicles.joinToString("\n") {
+            val intent = it.intentForChronicle
+            if (intent != null) "${it.chronicle()}\n  [$intent]" else it.chronicle()
+        }
         io.sendMessage("ゲーム振り返り", content)
     }
 }
