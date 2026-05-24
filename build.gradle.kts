@@ -73,5 +73,8 @@ sonar {
         property("sonar.tests", "src/test/kotlin")
         property("sonar.kotlin.detekt.reportPaths", "build/reports/detekt/detekt.xml")
         property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml")
+        // JaCoCo除外と合わせて、SonarCloud側でもソースファイルとして計測対象外にする
+        property("sonar.coverage.exclusions",
+            "**/ai/anthropic/**,**/ai/gemini/**,**/ai/poc/**")
     }
 }
