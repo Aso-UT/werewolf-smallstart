@@ -1,5 +1,5 @@
 package werewolf.ai
 
-interface ModelMetadata {
+fun interface ModelMetadata {
     fun toDisplayString(): String
 }

@@ -11,11 +11,7 @@ class PocConsoleLanguageModel : LanguageModel {
         println(user)
         println("=".repeat(SEPARATOR_WIDTH))
         print("回答 > ")
-        return Completion(readLine()?.trim() ?: "", ConsoleMetadata)
-    }
-
-    private object ConsoleMetadata : ModelMetadata {
-        override fun toDisplayString() = ""
+        return Completion(readLine()?.trim() ?: "", ModelMetadata { "不明（コンソール経由のため）" })
     }
 
     companion object {

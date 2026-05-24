@@ -15,13 +15,9 @@ class AiPlayerTest {
         private val responseQueue = ArrayDeque(responses.toList())
         val prompts = mutableListOf<String>()
 
-        private object NoMetadata : ModelMetadata {
-            override fun toDisplayString() = ""
-        }
-
         override fun ask(system: String, user: String): Completion {
             prompts.add(user)
-            return Completion(responseQueue.removeFirst(), NoMetadata)
+            return Completion(responseQueue.removeFirst(), ModelMetadata { "" })
         }
     }
 
