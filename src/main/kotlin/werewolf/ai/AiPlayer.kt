@@ -74,8 +74,8 @@ class AiPlayer(
 
             候補：${candidates.joinToString("、") { it.name }}
 
-            「候補名：選んだ理由（200文字以内）」の形式で答えてください。
-            例：${candidates.first().name}：最も怪しいと思うため
+            「選んだ理由（200文字以内）：候補名」の形式で答えてください。
+            例：最も怪しいと思うため：${candidates.first().name}
         """.trimIndent()
         repeat(2) {
             val completion = prompt(instruction)
@@ -97,11 +97,14 @@ class AiPlayer(
     }
 
     private fun parseChoiceResponse(input: String, candidates: List<Player>): Pair<Player, String> {
-        val (targetString, intent) = input.split("：", ":", limit = 2).takeIf { it.size == 2 }
-            ?: throw InvalidAiInputException("「ターゲット：理由」の形式ではありません: $input")
-        val target = candidates.firstOrNull { it.name == targetString.trim() }
-            ?: throw InvalidAiInputException("候補に存在しないターゲットです: ${targetString.trim()}")
-        return target to intent.trim()
+        val separatorIdx = maxOf(input.lastIndexOf("："), input.lastIndexOf(":"))
+            .takeIf { it >= 0 }
+            ?: throw InvalidAiInputException("「理由：候補名」の形式ではありません: $input")
+        val intent = input.substring(0, separatorIdx).trim()
+        val targetString = input.substring(separatorIdx + 1).trim()
+        val target = candidates.firstOrNull { it.name == targetString }
+            ?: throw InvalidAiInputException("候補に存在しないターゲットです: $targetString")
+        return target to intent
     }
 
     private class InvalidAiInputException(message: String) : Exception(message)
