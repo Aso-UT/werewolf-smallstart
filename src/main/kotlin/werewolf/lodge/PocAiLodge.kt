@@ -4,7 +4,7 @@ import werewolf.game.Player
 import werewolf.game.Role
 import werewolf.ai.AiPlayer
 import werewolf.ai.Instruction
-import werewolf.ai.PocConsoleLanguageModel
+import werewolf.ai.poc.PocConsoleLanguageModel
 
 object PocAiLodge : Lodge() {
     private val names = listOf("Alice", "Bob", "Charlie", "Dave", "Eve", "Frank", "Grace", "Heidi", "Ivan")

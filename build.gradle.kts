@@ -26,6 +26,18 @@ tasks.test {
 
 tasks.jacocoTestReport {
     dependsOn(tasks.test)
+    // サブパッケージ配下は外部APIやコンソール入力に直結する実装のため、カバレッジ計測対象外とする
+    classDirectories.setFrom(
+        files(classDirectories.files.map {
+            fileTree(it) {
+                exclude(
+                    "werewolf/ai/anthropic/**",
+                    "werewolf/ai/gemini/**",
+                    "werewolf/ai/poc/**",
+                )
+            }
+        })
+    )
     reports {
         xml.required.set(true)
         html.required.set(true)

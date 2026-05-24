@@ -1,5 +1,8 @@
-package werewolf.ai
+package werewolf.ai.poc
 
+import werewolf.ai.Completion
+import werewolf.ai.LanguageModel
+import werewolf.ai.ModelMetadata
 
 class PocConsoleLanguageModel : LanguageModel {
     override fun ask(system: String, user: String): Completion {

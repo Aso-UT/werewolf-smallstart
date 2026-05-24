@@ -1,9 +1,12 @@
-package werewolf.ai
+package werewolf.ai.gemini
 
 import com.google.genai.Client
 import com.google.genai.types.Content
 import com.google.genai.types.GenerateContentConfig
 import com.google.genai.types.Part
+import werewolf.ai.Completion
+import werewolf.ai.LanguageModel
+import werewolf.ai.ModelMetadata
 
 class GeminiLanguageModel(
     private val model: String = DEFAULT_MODEL,

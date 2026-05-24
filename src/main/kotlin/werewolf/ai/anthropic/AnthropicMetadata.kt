@@ -1,4 +1,6 @@
-package werewolf.ai
+package werewolf.ai.anthropic
+
+import werewolf.ai.ModelMetadata
 
 class AnthropicMetadata(
     val model: String,
