@@ -19,10 +19,11 @@ class HumanPlayerTest {
         override fun promptChoice(title: String, content: String, options: List<String>): Int = error("not used")
     }
 
-    private fun recallable(chronicleText: String, intent: String? = null) = object : Recallable() {
+    private fun recallable(chronicleText: String, intent: String? = null, redundant: Boolean = false) = object : Recallable() {
         override fun recall() = chronicleText
         override fun chronicle() = chronicleText
         override val intentForChronicle get() = intent
+        override val isRedundantInChronicle get() = redundant
     }
 
     @Test
@@ -39,5 +40,13 @@ class HumanPlayerTest {
         val player = HumanPlayer(Role.VILLAGER, "Player", io)
         player.watchEpilogue(listOf(recallable("some chronicle", "some intent")))
         assertEquals("some chronicle\n  [some intent]", io.messages.last().second)
+    }
+
+    @Test
+    fun `watchEpilogue excludes redundant records`() {
+        val io = CapturingIO()
+        val player = HumanPlayer(Role.VILLAGER, "Player", io)
+        player.watchEpilogue(listOf(recallable("kept"), recallable("excluded", redundant = true)))
+        assertEquals("kept", io.messages.last().second)
     }
 }

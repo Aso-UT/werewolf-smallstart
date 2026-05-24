@@ -67,6 +67,7 @@ sealed class GameEvent : Recallable() {
         override val title = "発言（${round}ラウンド目）"
         override fun body() = "$speakerName: ${statement.text()}"
         override val recipients: Notifiable = allPlayers
+        override val isRedundantInChronicle = true
         companion object {
             fun send(round: Int, speakerName: String, statement: Statement, allPlayers: AllPlayers) =
                 StatementMade(round, speakerName, statement, allPlayers).dispatch()
@@ -129,6 +130,7 @@ sealed class GameEvent : Recallable() {
         override val title = "密談（${round}ラウンド目）"
         override fun body() = "$speakerName: $statement"
         override val recipients: Notifiable = wolves
+        override val isRedundantInChronicle = true
         companion object {
             fun send(round: Int, speakerName: String, statement: String, wolves: Wolves) =
                 WerewolfStatementMade(round, speakerName, statement, wolves).dispatch()

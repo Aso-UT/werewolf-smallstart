@@ -5,4 +5,5 @@ abstract class Recallable {
     abstract fun recall(): String
     abstract fun chronicle(): String
     open val intentForChronicle: String? get() = null
+    open val isRedundantInChronicle: Boolean get() = false
 }
