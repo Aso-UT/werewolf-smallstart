@@ -13,8 +13,13 @@ class Epilogue(
     private val signal: GameOverSignal
 ) {
     fun perform() {
-        GameEvent.GameOver.send(signal.winningSide, AllPlayers(playerManager))
-        playerManager.allPlayers.forEach { GameEvent.GameResult.send(oracle.isWinner(it, signal.winningSide), it) }
+        when (signal) {
+            is GameOverSignal.Completed -> {
+                GameEvent.GameOver.send(signal.winningSide, AllPlayers(playerManager))
+                playerManager.allPlayers.forEach { GameEvent.GameResult.send(oracle.isWinner(it, signal.winningSide), it) }
+            }
+            is GameOverSignal.Aborted -> Unit
+        }
         showRecap()
     }
 

@@ -7,6 +7,10 @@ fun fakeCitizenWinSignal(): GameOverSignal = try {
     error("unreachable")
 } catch (s: GameOverSignal) { s }
 
+fun fakeAbortedSignal(): GameOverSignal = try {
+    GameOverSignal.throwAborted(Exception("test"))
+} catch (s: GameOverSignal) { s }
+
 fun openContext(
     players: List<Player> = emptyList(),
     round: Int = 1,

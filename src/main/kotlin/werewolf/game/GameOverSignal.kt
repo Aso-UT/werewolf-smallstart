@@ -1,10 +1,18 @@
 package werewolf.game
 
-class GameOverSignal private constructor(val winningSide: Side) : Throwable() {
+sealed class GameOverSignal : Throwable() {
+    class Completed(val winningSide: Side) : GameOverSignal()
+    object Aborted : GameOverSignal()
+
     companion object {
         fun throwIfGameOver(aliveCounts: AliveCounts) {
             WinConditionChecker.winningSide(aliveCounts)
-                ?.let { throw GameOverSignal(it) }
+                ?.let { throw Completed(it) }
+        }
+
+        fun throwAborted(cause: Exception): Nothing {
+            cause.printStackTrace()
+            throw Aborted
         }
     }
 }

@@ -5,6 +5,7 @@ import werewolf.phase.*
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class EpilogueTest {
@@ -63,6 +64,17 @@ class EpilogueTest {
 
         assertTrue(wolf.watchedEvents.isNotEmpty())
         assertTrue(villager.watchedEvents.isNotEmpty())
+    }
+
+    @Test
+    fun `GameOver and GameResult are not sent when game is aborted`() {
+        val villager = WatchingPlayer(Role.VILLAGER, "Villager")
+        val setup = TestLodge(villager to Role.VILLAGER).create()
+
+        Epilogue(setup.playerManager, setup.oracle, fakeAbortedSignal()).perform()
+
+        assertNull(villager.gameOver)
+        assertNull(villager.gameResult)
     }
 
     @Test
