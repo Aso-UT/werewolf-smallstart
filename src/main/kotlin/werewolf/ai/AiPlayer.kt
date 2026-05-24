@@ -41,8 +41,8 @@ class AiPlayer(
             例：占い師です。Aliceは白でした。[狂人として占い師を偽装し、信用を得るための発言]
         """.trimIndent()
         repeat(2) {
+            val completion = prompt(instruction)
             try {
-                val completion = prompt(instruction)
                 val (text, intent) = parseSpeakResponse(completion.text)
                 val claim = Claim(
                     this, context, Statement.Plain(text),
@@ -52,7 +52,10 @@ class AiPlayer(
                 _myMemories.add(claim)
                 return claim
             } catch (_: InvalidAiInputException) {
-                // AI応答が不正な形式のため、次のイテレーションでリトライする
+                // AI応答が不正な形式のため、記録して次のイテレーションでリトライする
+                val record = InvalidAiInput(completion.text, completion.metadata)
+                memorize(record)
+                _myMemories.add(record)
             }
         }
         return FallbackClaim(this, context)
@@ -77,8 +80,8 @@ class AiPlayer(
             例：${candidates.first().name}：最も怪しいと思うため
         """.trimIndent()
         repeat(2) {
+            val completion = prompt(instruction)
             try {
-                val completion = prompt(instruction)
                 val (target, intent) = parseChoiceResponse(completion.text, candidates)
                 val choice = Choice(
                     this, context, target,
@@ -88,7 +91,10 @@ class AiPlayer(
                 _myMemories.add(choice)
                 return choice
             } catch (_: InvalidAiInputException) {
-                // AI応答が不正な形式のため、次のイテレーションでリトライする
+                // AI応答が不正な形式のため、記録して次のイテレーションでリトライする
+                val record = InvalidAiInput(completion.text, completion.metadata)
+                memorize(record)
+                _myMemories.add(record)
             }
         }
         return FallbackChoice(this, context)
