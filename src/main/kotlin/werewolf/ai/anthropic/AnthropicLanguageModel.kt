@@ -49,7 +49,7 @@ class AnthropicLanguageModel(
     class AnthropicApiException(message: String) : Exception(message)
 
     companion object {
-        private const val DEFAULT_MODEL = "claude-haiku-4-5"
+        private const val DEFAULT_MODEL = "claude-sonnet-4-6"
         private const val MAX_TOKENS = 16000L
     }
 }
