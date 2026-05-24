@@ -8,6 +8,7 @@ import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class AiPlayerTest {
@@ -191,14 +192,18 @@ class AiPlayerTest {
     }
 
     @Test
-    fun `watchEpilogue prompt includes chronicle of events and reflection instruction`() {
-        val lm = FakeLanguageModel("")
+    fun `watchEpilogue does not call languageModel`() {
+        val lm = FakeLanguageModel()
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm)
-        GameEvent.RoleAssigned.send(Role.VILLAGER, villager)
-        val memories = villager.reveal(fakeCitizenWinSignal())
-        villager.watchEpilogue(memories)
-        assertContains(lm.prompts.first(), "Villager")
-        assertContains(lm.prompts.first(), "役職通知")
-        assertContains(lm.prompts.first(), "振り返り")
+        villager.watchEpilogue(emptyList())
+        assertTrue(lm.prompts.isEmpty())
+    }
+
+    @Test
+    @Suppress("TooGenericExceptionThrown")
+    fun `discuss throws GameOverSignal when languageModel throws`() {
+        val lm = LanguageModel { _, _ -> throw Exception("API error") }
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm)
+        assertFailsWith<GameOverSignal> { villager.discuss(openContext()) }
     }
 }

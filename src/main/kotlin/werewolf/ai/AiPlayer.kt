@@ -6,6 +6,7 @@ import werewolf.game.DiscussionContext
 import werewolf.game.FallbackChoice
 import werewolf.game.FallbackClaim
 import werewolf.game.GameEvent
+import werewolf.game.GameOverSignal
 import werewolf.game.Player
 import werewolf.game.Recallable
 import werewolf.game.Role
@@ -103,14 +104,7 @@ class AiPlayer(
 
     private class InvalidAiInputException(message: String) : Exception(message)
 
-    override fun watchEpilogue(chronicles: List<Recallable>) {
-        val instruction = buildString {
-            appendLine("=== エピローグ（プレイヤー $name） ===")
-            chronicles.forEach { appendLine(it.chronicle()) }
-            append("プレイヤーとして200文字以内でゲームの振り返りをしてください。")
-        }
-        prompt(instruction)
-    }
+    override fun watchEpilogue(chronicles: List<Recallable>) = Unit
 
     private fun prompt(instruction: String): Completion {
         val user = buildString {
@@ -121,7 +115,12 @@ class AiPlayer(
             if (_myMemories.isEmpty()) appendLine("（なし）")
             else _myMemories.forEach { appendLine(it.recall()) }
         }
-        return languageModel.ask(gameDescription, user)
+        @Suppress("TooGenericExceptionCaught")
+        return try {
+            languageModel.ask(gameDescription, user)
+        } catch (e: Exception) {
+            GameOverSignal.throwAborted(e)
+        }
     }
 
     private fun withMetadata(intent: String, metadata: ModelMetadata) =
