@@ -13,7 +13,15 @@ class GeminiLanguageModel(
 ) : LanguageModel {
     private val client = Client()
 
-    override fun ask(system: String, user: String): Completion {
+    override fun ask(system: String, history: List<String>, instruction: String): Completion {
+        val user = buildString {
+            if (history.isNotEmpty()) {
+                appendLine("【ここまでのゲームの流れ】")
+                history.forEach { appendLine(it) }
+                appendLine()
+            }
+            append(instruction)
+        }
         val config = GenerateContentConfig.builder()
             .systemInstruction(Content.fromParts(Part.fromText(system)))
             .build()

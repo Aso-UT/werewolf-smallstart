@@ -5,7 +5,15 @@ import werewolf.ai.LanguageModel
 import werewolf.ai.ModelMetadata
 
 class PocConsoleLanguageModel : LanguageModel {
-    override fun ask(system: String, user: String): Completion {
+    override fun ask(system: String, history: List<String>, instruction: String): Completion {
+        val user = buildString {
+            if (history.isNotEmpty()) {
+                appendLine("【ここまでのゲームの流れ】")
+                history.forEach { appendLine(it) }
+                appendLine()
+            }
+            append(instruction)
+        }
         println()
         println("=".repeat(SEPARATOR_WIDTH))
         println("【ゲームの説明】")

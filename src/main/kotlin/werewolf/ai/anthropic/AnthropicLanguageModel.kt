@@ -3,6 +3,7 @@ package werewolf.ai.anthropic
 import com.anthropic.client.AnthropicClient
 import com.anthropic.client.okhttp.AnthropicOkHttpClient
 import com.anthropic.models.messages.CacheControlEphemeral
+import com.anthropic.models.messages.ContentBlockParam
 import com.anthropic.models.messages.MessageCreateParams
 import com.anthropic.models.messages.TextBlockParam
 import werewolf.ai.Completion
@@ -13,7 +14,26 @@ class AnthropicLanguageModel(
 ) : LanguageModel {
     private val client: AnthropicClient = AnthropicOkHttpClient.fromEnv()
 
-    override fun ask(system: String, user: String): Completion {
+    override fun ask(system: String, history: List<String>, instruction: String): Completion {
+        val userBlocks = buildList {
+            if (history.isNotEmpty()) {
+                val historyText = buildString {
+                    appendLine("【ここまでのゲームの流れ】")
+                    history.forEach { appendLine(it) }
+                }.trimEnd()
+                add(ContentBlockParam.ofText(
+                    TextBlockParam.builder()
+                        .text(historyText)
+                        .cacheControl(CacheControlEphemeral.builder().build())
+                        .build()
+                ))
+            }
+            add(ContentBlockParam.ofText(
+                TextBlockParam.builder()
+                    .text(instruction)
+                    .build()
+            ))
+        }
         val params = MessageCreateParams.builder()
             .model(model)
             .maxTokens(MAX_TOKENS)
@@ -23,7 +43,7 @@ class AnthropicLanguageModel(
                     .cacheControl(CacheControlEphemeral.builder().build())
                     .build()
             ))
-            .addUserMessage(user)
+            .addUserMessageOfBlockParams(userBlocks)
             .build()
         // Catch broadly and swallow cause to prevent API key leakage via exception messages or URLs
         @Suppress("TooGenericExceptionCaught", "SwallowedException")
