@@ -20,4 +20,5 @@ open class Conclave(oracle: Oracle, playerManager: PlayerManager, day: Int) :
     override fun sendStatement(round: Int, speakerName: String, statement: Statement, recipients: Wolves) =
         GameEvent.WerewolfStatementMade.send(round, speakerName, statement.text(), recipients)
     override fun buildContext(round: Int) = DiscussionContext.Conclave(round, day, speakers, allPlayers)
+    override fun sendDiscussionStarted() = GameEvent.ConclaveStarted.send(day, recipients)
 }
