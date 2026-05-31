@@ -88,14 +88,15 @@ class HistoryBlockManagerTest {
     }
 
     @Test
-    fun `retry with same history after API failure produces identical blocks`() {
+    fun `retry with same history after parse failure returns identical blocks without extra block`() {
         val manager = HistoryBlockManager()
-        manager.buildBlocks(listOf("A", "B"))
+        // ask()成功・commit()済み → parse失敗 → _myMemoriesは変わらず同じhistoryでリトライ
+        val firstBlocks = manager.buildBlocks(listOf("A", "B"))
         manager.commit()
-        val failedBlocks = manager.buildBlocks(listOf("A", "B", "C", "D")) // API失敗 → commit()せず
 
-        val retryBlocks = manager.buildBlocks(listOf("A", "B", "C", "D"))
+        val retryBlocks = manager.buildBlocks(listOf("A", "B"))
 
-        assertEquals(failedBlocks, retryBlocks)
+        // 空のブロックが増えてcache_controlの枠を浪費しないことを確認
+        assertEquals(firstBlocks, retryBlocks)
     }
 }
