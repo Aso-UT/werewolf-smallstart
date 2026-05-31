@@ -13,32 +13,28 @@ class AnthropicLanguageModel(
     private val model: String = DEFAULT_MODEL,
 ) : LanguageModel {
     private val client: AnthropicClient = AnthropicOkHttpClient.fromEnv()
-    private var cachedCount = 0
+    private val blockManager = HistoryBlockManager()
     private var lastCallTime: Long = -1L
 
     override fun ask(system: String, history: List<String>, instruction: String): Completion {
         val callStartTime = System.currentTimeMillis()
         val diagnostics = CacheDiagnostics(
-            cachedItemCount = cachedCount,
-            newItemCount = history.size - cachedCount,
+            cachedItemCount = blockManager.committedItemCount,
+            newItemCount = history.size - blockManager.committedItemCount,
             timeSinceLastCallMs = if (lastCallTime < 0L) null else callStartTime - lastCallTime,
         )
+        val blocks = blockManager.buildBlocks(history)
         val params = MessageCreateParams.builder()
             .model(model)
             .maxTokens(MAX_TOKENS)
-            .systemOfTextBlockParams(listOf(
-                TextBlockParam.builder()
-                    .text(system)
-                    .cacheControl(CacheControlEphemeral.builder().build())
-                    .build()
-            ))
-            .addUserMessageOfBlockParams(buildUserBlocks(history, instruction))
+            .systemOfTextBlockParams(listOf(TextBlockParam.builder().text(system).build()))
+            .addUserMessageOfBlockParams(buildUserBlocks(blocks, instruction))
             .build()
         // Catch broadly and swallow cause to prevent API key leakage via exception messages or URLs
         @Suppress("TooGenericExceptionCaught", "SwallowedException")
         return try {
             val message = client.messages().create(params)
-            cachedCount = history.size
+            blockManager.commit()
             lastCallTime = System.currentTimeMillis()
             val usage = message.usage()
             val metadata = AnthropicMetadata(
@@ -58,41 +54,16 @@ class AnthropicLanguageModel(
         }
     }
 
-    private fun buildUserBlocks(history: List<String>, instruction: String): List<ContentBlockParam> = buildList {
-        // history[0..cachedCount): キャッシュ済みの範囲。cache_read を狙う
-        if (cachedCount > 0) {
-            val cachedText = buildString {
-                appendLine("【ここまでのゲームの流れ】")
-                history.take(cachedCount).forEach { appendLine(it) }
-            }.trimEnd()
-            add(ContentBlockParam.ofText(
-                TextBlockParam.builder()
-                    .text(cachedText)
-                    .cacheControl(CacheControlEphemeral.builder().build())
-                    .build()
-            ))
+    private fun buildUserBlocks(
+        blocks: List<Pair<String, Boolean>>,
+        instruction: String,
+    ): List<ContentBlockParam> = buildList {
+        blocks.forEach { (text, withCache) ->
+            val builder = TextBlockParam.builder().text(text)
+            if (withCache) builder.cacheControl(CacheControlEphemeral.builder().build())
+            add(ContentBlockParam.ofText(builder.build()))
         }
-        // history[cachedCount..]: 今回の呼び出しで新たに追加された分。
-        // キャッシュマーカーを付けることで、次回呼び出しの cache_read に備える
-        val newItems = history.drop(cachedCount)
-        if (newItems.isNotEmpty()) {
-            val newText = buildString {
-                if (cachedCount == 0) appendLine("【ここまでのゲームの流れ】")
-                newItems.forEach { appendLine(it) }
-            }.trimEnd()
-            add(ContentBlockParam.ofText(
-                TextBlockParam.builder()
-                    .text(newText)
-                    .cacheControl(CacheControlEphemeral.builder().build())
-                    .build()
-            ))
-        }
-        // instruction: 毎回変わるためキャッシュしない
-        add(ContentBlockParam.ofText(
-            TextBlockParam.builder()
-                .text(instruction)
-                .build()
-        ))
+        add(ContentBlockParam.ofText(TextBlockParam.builder().text(instruction).build()))
     }
 
     class AnthropicApiException(message: String) : Exception(message)
