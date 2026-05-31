@@ -32,7 +32,7 @@ class ClaimTest {
         val speaker = NothingPlayer(Role.VILLAGER, "Speaker")
         val context = openContext(listOf(speaker))
         val claim = Claim(speaker, context, Statement.Plain("発言内容"), "真意内容")
-        assertEquals("[議論] 発言内容 [真意内容]", claim.recall())
+        assertEquals("<議論> 発言内容 <真意内容>", claim.recall())
     }
 
     @Test

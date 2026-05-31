@@ -16,6 +16,7 @@ class DiscussionTest {
     ) : NothingPlayer(role, name) {
         private val _log = mutableListOf<String>()
         val log: List<String> get() = _log
+        var receivedStartedDay: Int? = null
         private var statementIndex = 0
 
         override fun speak(context: DiscussionContext): Claim {
@@ -26,6 +27,7 @@ class DiscussionTest {
 
         override fun onReceive(event: GameEvent) {
             when {
+                event is GameEvent.DiscussionStarted -> receivedStartedDay = event.day
                 event is GameEvent.StatementMade -> _log.add("$name:heard:${event.speakerName}:${event.statement.text()}")
                 receivesExecutionEvent && event is GameEvent.PlayerExecuted -> {}
                 else -> error("unexpected event in discussion test: $event")
@@ -37,6 +39,18 @@ class DiscussionTest {
         object : OpenDiscussion(playerManager, 1) {
             override fun speakingOrder(speakers: List<Player>) = speakers
         }
+
+    @Test
+    fun `all players receive discussion started notification`() {
+        val alice = ScriptedPlayer(Role.VILLAGER, "Alice", listOf("a", "b", "c"))
+        val bob = ScriptedPlayer(Role.WEREWOLF, "Bob", listOf("d", "e", "f"))
+        val playerManager = TestLodge(alice to Role.VILLAGER, bob to Role.WEREWOLF).create().playerManager
+
+        fixedOrderDiscussion(playerManager).conduct()
+
+        assertEquals(1, alice.receivedStartedDay)
+        assertEquals(1, bob.receivedStartedDay)
+    }
 
     @Test
     fun `statements are delivered immediately in order`() {

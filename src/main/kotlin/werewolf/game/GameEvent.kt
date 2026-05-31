@@ -7,7 +7,7 @@ sealed class GameEvent : Recallable() {
     abstract val title: String
     abstract fun body(): String
     protected abstract val recipients: Notifiable
-    override fun recall() = "[${title}] ${body()}"
+    override fun recall() = "<${title}> ${body()}"
     override fun chronicle() = "[${recipients.recipientName}] [${title}] ${body()}"
     protected fun dispatch() = recipients.receive(this)
     fun isPublicKnowledge(): Boolean = recipients is AllPlayers
@@ -64,13 +64,33 @@ sealed class GameEvent : Recallable() {
 
     @ConsistentCopyVisibility
     data class StatementMade private constructor(val round: Int, val speakerName: String, val statement: Statement, private val allPlayers: AllPlayers) : GameEvent() {
-        override val title = "発言（${round}ラウンド目）"
+        override val title = "発言"
         override fun body() = "$speakerName: ${statement.text()}"
         override val recipients: Notifiable = allPlayers
         override val isRedundantInChronicle = true
         companion object {
             fun send(round: Int, speakerName: String, statement: Statement, allPlayers: AllPlayers) =
                 StatementMade(round, speakerName, statement, allPlayers).dispatch()
+        }
+    }
+
+    @ConsistentCopyVisibility
+    data class DiscussionStarted private constructor(val day: Int, private val allPlayers: AllPlayers) : GameEvent() {
+        override val title = "議論開始"
+        override fun body() = "${day}日目の議論が始まります。"
+        override val recipients: Notifiable = allPlayers
+        companion object {
+            fun send(day: Int, allPlayers: AllPlayers) = DiscussionStarted(day, allPlayers).dispatch()
+        }
+    }
+
+    @ConsistentCopyVisibility
+    data class ConclaveStarted private constructor(val day: Int, private val wolves: Wolves) : GameEvent() {
+        override val title = "密談開始"
+        override fun body() = "${day}日目の密談が始まります。"
+        override val recipients: Notifiable = wolves
+        companion object {
+            fun send(day: Int, wolves: Wolves) = ConclaveStarted(day, wolves).dispatch()
         }
     }
 
@@ -127,7 +147,7 @@ sealed class GameEvent : Recallable() {
 
     @ConsistentCopyVisibility
     data class WerewolfStatementMade private constructor(val round: Int, val speakerName: String, val statement: String, private val wolves: Wolves) : GameEvent() {
-        override val title = "密談（${round}ラウンド目）"
+        override val title = "密談"
         override fun body() = "$speakerName: $statement"
         override val recipients: Notifiable = wolves
         override val isRedundantInChronicle = true

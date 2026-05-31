@@ -10,7 +10,7 @@ import werewolf.game.Statement
 
 abstract class Discussion<R : Notifiable>(
     protected val speakers: List<Player>,
-    private val recipients: R,
+    protected val recipients: R,
     protected val day: Int,
     protected val allPlayers: List<Player>,
 ) {
@@ -18,9 +18,11 @@ abstract class Discussion<R : Notifiable>(
     protected abstract fun speakingOrder(speakers: List<Player>): List<Player>
     protected abstract fun sendStatement(round: Int, speakerName: String, statement: Statement, recipients: R)
     protected abstract fun buildContext(round: Int): DiscussionContext
+    protected abstract fun sendDiscussionStarted()
 
     fun conduct() {
         if (speakers.size <= 1) return
+        sendDiscussionStarted()
         val order = speakingOrder(speakers)
         repeat(rounds) { index ->
             order.forEach { speaker ->
@@ -43,4 +45,5 @@ open class OpenDiscussion(playerManager: PlayerManager, day: Int) :
     override fun sendStatement(round: Int, speakerName: String, statement: Statement, recipients: AllPlayers) =
         GameEvent.StatementMade.send(round, speakerName, statement, recipients)
     override fun buildContext(round: Int) = DiscussionContext.Open(round, day, speakers, allPlayers)
+    override fun sendDiscussionStarted() = GameEvent.DiscussionStarted.send(day, recipients)
 }

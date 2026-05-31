@@ -5,6 +5,7 @@ import werewolf.phase.*
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class ConclaveTest {
 
@@ -16,6 +17,7 @@ class ConclaveTest {
     ) : NothingPlayer(role, name) {
         private val _log = mutableListOf<String>()
         val log: List<String> get() = _log
+        var receivedStartedDay: Int? = null
         private var statementIndex = 0
 
         override fun speak(context: DiscussionContext): Claim {
@@ -26,6 +28,7 @@ class ConclaveTest {
 
         override fun onReceive(event: GameEvent) {
             when {
+                event is GameEvent.ConclaveStarted -> receivedStartedDay = event.day
                 event is GameEvent.WerewolfStatementMade -> _log.add("$name:heard:${event.speakerName}:${event.statement}")
                 event is GameEvent.PlayerExecuted && receivesExecutionEvent -> {}
                 else -> error("unexpected event in conclave test: $event")
@@ -37,6 +40,19 @@ class ConclaveTest {
         object : Conclave(oracle, playerManager, 1) {
             override fun speakingOrder(speakers: List<Player>) = speakers
         }
+
+    @Test
+    fun `werewolves receive conclave started notification`() {
+        val wolf1 = ScriptedPlayer(Role.WEREWOLF, "Wolf1", listOf("a", "b", "c"))
+        val wolf2 = ScriptedPlayer(Role.WEREWOLF, "Wolf2", listOf("d", "e", "f"))
+        val villager = NothingPlayer(Role.VILLAGER, "Villager")
+        val setup = TestLodge(wolf1 to Role.WEREWOLF, wolf2 to Role.WEREWOLF, villager to Role.VILLAGER).create()
+
+        fixedOrderConclave(setup.oracle, setup.playerManager).conduct()
+
+        assertEquals(1, wolf1.receivedStartedDay)
+        assertEquals(1, wolf2.receivedStartedDay)
+    }
 
     @Test
     fun `non-werewolf neither speaks nor listens`() {
@@ -81,6 +97,7 @@ class ConclaveTest {
         fixedOrderConclave(setup.oracle, setup.playerManager).conduct()
 
         assertEquals(emptyList(), wolf1.log)
+        assertNull(wolf1.receivedStartedDay)
     }
 
     @Test
