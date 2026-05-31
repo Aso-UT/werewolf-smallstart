@@ -112,17 +112,14 @@ class AiPlayer(
     override fun watchEpilogue(chronicles: List<Recallable>) = Unit
 
     private fun prompt(instruction: String): Completion {
-        val user = buildString {
+        val history = _myMemories.map { it.recall() }
+        val instructionText = buildString {
             appendLine("【指示】")
-            appendLine(instruction)
-            appendLine()
-            appendLine("【ここまでのゲームの流れ】")
-            if (_myMemories.isEmpty()) appendLine("（なし）")
-            else _myMemories.forEach { appendLine(it.recall()) }
+            append(instruction)
         }
         @Suppress("TooGenericExceptionCaught")
         return try {
-            languageModel.ask(gameDescription, user)
+            languageModel.ask(gameDescription, history, instructionText)
         } catch (e: Exception) {
             GameOverSignal.throwAborted(e)
         }

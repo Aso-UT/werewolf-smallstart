@@ -26,14 +26,16 @@ tasks.test {
 
 tasks.jacocoTestReport {
     dependsOn(tasks.test)
-    // サブパッケージ配下は外部APIやコンソール入力に直結する実装のため、カバレッジ計測対象外とする
     classDirectories.setFrom(
         files(classDirectories.files.map {
             fileTree(it) {
                 exclude(
+                    // 外部APIやコンソール入力に直結する実装のため、カバレッジ計測対象外とする
                     "werewolf/ai/anthropic/**",
                     "werewolf/ai/gemini/**",
                     "werewolf/ai/poc/**",
+                    // プレイヤーと役職の組み合わせを定義する配線コードのため、カバレッジ計測対象外とする
+                    "werewolf/lodge/**",
                 )
             }
         })
@@ -75,6 +77,6 @@ sonar {
         property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml")
         // JaCoCo除外と合わせて、SonarCloud側でもソースファイルとして計測対象外にする
         property("sonar.coverage.exclusions",
-            "**/ai/anthropic/**,**/ai/gemini/**,**/ai/poc/**")
+            "**/ai/anthropic/**,**/ai/gemini/**,**/ai/poc/**,**/lodge/**")
     }
 }

@@ -82,7 +82,7 @@ class AiPlayerTest {
     @Test
     @Suppress("TooGenericExceptionThrown")
     fun `discuss throws GameOverSignal when languageModel throws`() {
-        val lm = LanguageModel { _, _ -> throw Exception("API error") }
+        val lm = LanguageModel { _, _, _ -> throw Exception("API error") }
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm)
         assertFailsWith<GameOverSignal> { villager.discuss(openContext()) }
     }
