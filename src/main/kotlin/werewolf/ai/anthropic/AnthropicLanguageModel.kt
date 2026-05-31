@@ -34,7 +34,6 @@ class AnthropicLanguageModel(
         @Suppress("TooGenericExceptionCaught", "SwallowedException")
         return try {
             val message = client.messages().create(params)
-            blockManager.commit()
             lastCallTime = System.currentTimeMillis()
             val usage = message.usage()
             val metadata = AnthropicMetadata(

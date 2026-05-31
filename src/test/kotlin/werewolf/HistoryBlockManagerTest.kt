@@ -20,12 +20,10 @@ class HistoryBlockManagerTest {
     }
 
     @Test
-    fun `commit advances committedItemCount`() {
+    fun `buildBlocks updates committedItemCount`() {
         val manager = HistoryBlockManager()
-        manager.buildBlocks(listOf("A", "B"))
-        assertEquals(0, manager.committedItemCount)
 
-        manager.commit()
+        manager.buildBlocks(listOf("A", "B"))
 
         assertEquals(2, manager.committedItemCount)
     }
@@ -34,7 +32,6 @@ class HistoryBlockManagerTest {
     fun `second call preserves first block text exactly for cache key stability`() {
         val manager = HistoryBlockManager()
         val firstBlocks = manager.buildBlocks(listOf("A", "B"))
-        manager.commit()
 
         val secondBlocks = manager.buildBlocks(listOf("A", "B", "C", "D"))
 
@@ -45,7 +42,6 @@ class HistoryBlockManagerTest {
     fun `second block has no header`() {
         val manager = HistoryBlockManager()
         manager.buildBlocks(listOf("A", "B"))
-        manager.commit()
 
         val blocks = manager.buildBlocks(listOf("A", "B", "C", "D"))
 
@@ -56,11 +52,8 @@ class HistoryBlockManagerTest {
     fun `all blocks get cache control when count is 4 or fewer`() {
         val manager = HistoryBlockManager()
         manager.buildBlocks(listOf("A", "B"))
-        manager.commit()
         manager.buildBlocks(listOf("A", "B", "C", "D"))
-        manager.commit()
         manager.buildBlocks(listOf("A", "B", "C", "D", "E", "F"))
-        manager.commit()
 
         val blocks = manager.buildBlocks(listOf("A", "B", "C", "D", "E", "F", "G", "H"))
 
@@ -72,13 +65,9 @@ class HistoryBlockManagerTest {
     fun `oldest block loses cache control when count exceeds 4`() {
         val manager = HistoryBlockManager()
         manager.buildBlocks(listOf("A", "B"))
-        manager.commit()
         manager.buildBlocks(listOf("A", "B", "C", "D"))
-        manager.commit()
         manager.buildBlocks(listOf("A", "B", "C", "D", "E", "F"))
-        manager.commit()
         manager.buildBlocks(listOf("A", "B", "C", "D", "E", "F", "G", "H"))
-        manager.commit()
 
         val blocks = manager.buildBlocks(listOf("A", "B", "C", "D", "E", "F", "G", "H", "I", "J"))
 
@@ -88,11 +77,10 @@ class HistoryBlockManagerTest {
     }
 
     @Test
-    fun `retry with same history after parse failure returns identical blocks without extra block`() {
+    fun `retry with same history returns identical blocks without extra block`() {
         val manager = HistoryBlockManager()
-        // ask()成功・commit()済み → parse失敗 → _myMemoriesは変わらず同じhistoryでリトライ
+        // parse失敗 → _myMemoriesは変わらず同じhistoryでリトライ
         val firstBlocks = manager.buildBlocks(listOf("A", "B"))
-        manager.commit()
 
         val retryBlocks = manager.buildBlocks(listOf("A", "B"))
 
