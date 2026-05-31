@@ -11,7 +11,7 @@ sealed class Choice(
         require(selected in context.candidates()) { "${selected.name} is not in candidates" }
     }
 
-    override fun recall() = "[${context.title}] ${selected.name} [$intentForRecall]"
+    override fun recall() = "<${context.title}> ${selected.name} <$intentForRecall>"
     override fun chronicle() = "[${chooser.name}] [${context.title}] ${selected.name}"
 
     companion object {

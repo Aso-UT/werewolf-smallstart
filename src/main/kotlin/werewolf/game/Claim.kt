@@ -11,7 +11,7 @@ sealed class Claim(
         require(statement.type in context.availableTypes) { "${statement.type} is not available in ${context.title}" }
     }
 
-    override fun recall() = "[${context.title}] ${statement.text()} [$intentForRecall]"
+    override fun recall() = "<${context.title}> ${statement.text()} <$intentForRecall>"
     override fun chronicle() = "[${speaker.name}] [${context.title}] ${statement.text()}"
 
     companion object {

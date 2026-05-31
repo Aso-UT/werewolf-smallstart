@@ -7,7 +7,7 @@ sealed class GameEvent : Recallable() {
     abstract val title: String
     abstract fun body(): String
     protected abstract val recipients: Notifiable
-    override fun recall() = "[${title}] ${body()}"
+    override fun recall() = "<${title}> ${body()}"
     override fun chronicle() = "[${recipients.recipientName}] [${title}] ${body()}"
     protected fun dispatch() = recipients.receive(this)
     fun isPublicKnowledge(): Boolean = recipients is AllPlayers
@@ -64,7 +64,7 @@ sealed class GameEvent : Recallable() {
 
     @ConsistentCopyVisibility
     data class StatementMade private constructor(val round: Int, val speakerName: String, val statement: Statement, private val allPlayers: AllPlayers) : GameEvent() {
-        override val title = "発言（${round}ラウンド目）"
+        override val title = "発言"
         override fun body() = "$speakerName: ${statement.text()}"
         override val recipients: Notifiable = allPlayers
         override val isRedundantInChronicle = true
@@ -127,7 +127,7 @@ sealed class GameEvent : Recallable() {
 
     @ConsistentCopyVisibility
     data class WerewolfStatementMade private constructor(val round: Int, val speakerName: String, val statement: String, private val wolves: Wolves) : GameEvent() {
-        override val title = "密談（${round}ラウンド目）"
+        override val title = "密談"
         override fun body() = "$speakerName: $statement"
         override val recipients: Notifiable = wolves
         override val isRedundantInChronicle = true
