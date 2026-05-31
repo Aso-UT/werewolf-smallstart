@@ -14,5 +14,7 @@ sealed class GameOverSignal : Throwable() {
             cause.printStackTrace()
             throw Aborted
         }
+
+        fun throwManualAbort(): Nothing = throw Aborted
     }
 }
