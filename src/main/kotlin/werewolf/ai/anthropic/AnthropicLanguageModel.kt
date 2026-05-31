@@ -14,14 +14,14 @@ class AnthropicLanguageModel(
 ) : LanguageModel {
     private val client: AnthropicClient = AnthropicOkHttpClient.fromEnv()
     private val blockManager = HistoryBlockManager()
-    private var lastCallTime: Long = -1L
+    private var lastCallTime: Long? = null
 
     override fun ask(system: String, history: List<String>, instruction: String): Completion {
         val callStartTime = System.currentTimeMillis()
         val diagnostics = CacheDiagnostics(
             cachedItemCount = blockManager.committedItemCount,
             newItemCount = history.size - blockManager.committedItemCount,
-            timeSinceLastCallMs = if (lastCallTime < 0L) null else callStartTime - lastCallTime,
+            timeSinceLastCallMs = lastCallTime?.let { callStartTime - it },
         )
         val blocks = blockManager.buildBlocks(history)
         val params = MessageCreateParams.builder()
