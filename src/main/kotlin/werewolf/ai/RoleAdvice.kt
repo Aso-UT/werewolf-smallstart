@@ -3,12 +3,12 @@ package werewolf.ai
 import werewolf.game.Recallable
 import werewolf.game.Role
 
-class RoleAdvice(private val recipientName: String, private val text: String) : Recallable() {
+class RoleAdvice(private val recipientName: String, private val role: Role, private val text: String) : Recallable() {
     override fun recall() = "<戦略アドバイス> $text"
-    override fun chronicle() = "[$recipientName] [戦略アドバイス] $text"
+    override fun chronicle() = "[$recipientName] [${role.displayName}の戦略アドバイス] $text"
 
     companion object {
-        fun random(role: Role, name: String) = RoleAdvice(name, pool.getValue(role).random())
+        fun random(role: Role, name: String) = RoleAdvice(name, role, pool.getValue(role).random())
 
         private val pool: Map<Role, List<String>> = mapOf(
             Role.VILLAGER to listOf(
