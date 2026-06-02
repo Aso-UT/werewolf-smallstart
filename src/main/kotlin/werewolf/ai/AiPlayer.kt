@@ -17,15 +17,12 @@ class AiPlayer(
     role: Role,
     override val name: String,
     private val languageModel: LanguageModel,
-    vararg instructions: Instruction,
+    instruction: Instruction,
 ) : Player(role) {
-    private val _myMemories = mutableListOf<Recallable>()
+    private val _myMemories = mutableListOf<Recallable>(instruction)
 
     init {
-        instructions.forEach {
-            memorize(it)
-            _myMemories.add(it)
-        }
+        memorize(instruction)
     }
 
     override fun onReceive(event: GameEvent) {
