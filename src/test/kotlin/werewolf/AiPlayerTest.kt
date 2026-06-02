@@ -18,7 +18,7 @@ class AiPlayerTest {
     @Test
     fun `prompt includes received events`() {
         val lm = FakeLanguageModel("[真意]")
-        val villager = AiPlayer(Role.VILLAGER, "Villager", lm)
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())
         GameEvent.RoleAssigned.send(Role.VILLAGER, villager)
         villager.discuss(openContext())
         assertContains(lm.prompts.first(), "役職通知")
@@ -27,7 +27,7 @@ class AiPlayerTest {
     @Test
     fun `choice recorded in memories appears in next prompt`() {
         val lm = FakeLanguageModel("怪しいから：Wolf", "hello[真意]")
-        val villager = AiPlayer(Role.VILLAGER, "Villager", lm)
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())
         val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
         villager.selectTarget(SelectionContext.Vote(villager, listOf(villager, wolf)))
         villager.discuss(openContext())
@@ -38,7 +38,7 @@ class AiPlayerTest {
     @Test
     fun `claim recorded in memories appears in next prompt`() {
         val lm = FakeLanguageModel("hello[真意内容]", "怪しいから：Wolf")
-        val villager = AiPlayer(Role.VILLAGER, "Villager", lm)
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())
         val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
         villager.discuss(openContext())
         villager.selectTarget(SelectionContext.Vote(villager, listOf(villager, wolf)))
@@ -74,7 +74,7 @@ class AiPlayerTest {
     @Test
     fun `watchEpilogue does not call languageModel`() {
         val lm = FakeLanguageModel()
-        val villager = AiPlayer(Role.VILLAGER, "Villager", lm)
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())
         villager.watchEpilogue(emptyList())
         assertTrue(lm.prompts.isEmpty())
     }
@@ -83,7 +83,7 @@ class AiPlayerTest {
     @Suppress("TooGenericExceptionThrown")
     fun `discuss throws GameOverSignal when languageModel throws`() {
         val lm = LanguageModel { _, _, _ -> throw Exception("API error") }
-        val villager = AiPlayer(Role.VILLAGER, "Villager", lm)
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())
         assertFailsWith<GameOverSignal> { villager.discuss(openContext()) }
     }
 }

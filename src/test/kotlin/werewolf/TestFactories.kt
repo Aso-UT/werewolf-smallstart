@@ -1,5 +1,6 @@
 package werewolf
 
+import werewolf.ai.Instruction
 import werewolf.game.*
 
 fun fakeCitizenWinSignal(): GameOverSignal = try {
@@ -10,6 +11,8 @@ fun fakeCitizenWinSignal(): GameOverSignal = try {
 fun fakeAbortedSignal(): GameOverSignal = try {
     GameOverSignal.throwAborted(Exception("test"))
 } catch (s: GameOverSignal) { s }
+
+fun testInstruction(name: String = "Villager") = Instruction(name, "テスト用指示")
 
 fun openContext(
     players: List<Player> = emptyList(),
