@@ -19,10 +19,12 @@ class AiPlayer(
     private val languageModel: LanguageModel,
     instruction: Instruction,
 ) : Player(role) {
-    private val _myMemories = mutableListOf<Recallable>(instruction)
+    private val roleAdvice = RoleAdvice.random(role, name)
+    private val _myMemories = mutableListOf<Recallable>(instruction, roleAdvice)
 
     init {
         memorize(instruction)
+        memorize(roleAdvice)
     }
 
     override fun onReceive(event: GameEvent) {
