@@ -48,7 +48,7 @@ class AiPlayerSpeakTest {
         val lm = FakeLanguageModel("hello[真意]")
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())
         villager.discuss(openContext())
-        assertContains(lm.prompts.first(), "ゲーム上の発言（100文字以内）[発言の真意（100文字以内）]")
+        assertContains(lm.prompts.first(), "ゲーム上の発言（50文字以内）[発言の真意（50文字以内）]")
     }
 
     @Test
