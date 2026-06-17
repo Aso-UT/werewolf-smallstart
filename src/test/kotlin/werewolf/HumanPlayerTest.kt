@@ -1,6 +1,5 @@
 package werewolf
 
-import werewolf.game.Player
 import werewolf.game.Recallable
 import werewolf.game.Role
 import werewolf.human.HumanPlayer
@@ -11,12 +10,12 @@ import kotlin.test.assertEquals
 
 class HumanPlayerTest {
 
-    private class CapturingIO : PlayerIO {
+    private class CapturingIO : PlayerIO() {
         val messages = mutableListOf<Pair<String, String>>()
         override fun sendMessage(title: String, content: String) { messages += title to content }
-        override fun promptPlayer(title: String, content: String, candidates: List<Player>): Player = error("not used")
-        override fun promptFreeText(title: String, content: String): String = error("not used")
-        override fun promptChoice(title: String, content: String, options: List<String>): Int = error("not used")
+        override fun readFreeText(): String = error("not used")
+        override fun readChoice(): String = error("not used")
+        override fun readPlayer(): String = error("not used")
     }
 
     private fun recallable(chronicleText: String, intent: String? = null, redundant: Boolean = false) = object : Recallable() {
