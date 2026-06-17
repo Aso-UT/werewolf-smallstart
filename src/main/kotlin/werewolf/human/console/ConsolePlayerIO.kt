@@ -1,4 +1,6 @@
-package werewolf.human
+package werewolf.human.console
+
+import werewolf.human.PlayerIO
 
 class ConsolePlayerIO : PlayerIO() {
     override fun sendMessage(title: String, content: String) {
