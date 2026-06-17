@@ -13,12 +13,12 @@ import kotlin.test.assertTrue
 
 class HumanPlayerEpilogueTest {
 
-    private class SpeakingIO : PlayerIO {
+    private class SpeakingIO : PlayerIO() {
         val messages = mutableListOf<Pair<String, String>>()
         override fun sendMessage(title: String, content: String) { messages += title to content }
-        override fun promptPlayer(title: String, content: String, candidates: List<Player>): Player = error("not used")
-        override fun promptFreeText(title: String, content: String): String = "human speaks"
-        override fun promptChoice(title: String, content: String, options: List<String>): Int = 0
+        override fun readFreeText(): String = "human speaks"
+        override fun readChoice(): String = "1"
+        override fun readPlayer(): String = error("not used")
     }
 
     private class SpeakingPlayer(role: Role, name: String) : NothingPlayer(role, name) {

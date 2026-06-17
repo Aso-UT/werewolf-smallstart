@@ -6,7 +6,7 @@ import werewolf.ai.Instruction
 import werewolf.ai.gemini.GeminiLanguageModel
 import werewolf.game.Player
 import werewolf.game.Role
-import werewolf.human.ConsolePlayerIO
+import werewolf.human.console.ConsolePlayerIO
 import werewolf.human.HumanPlayer
 
 object GeminiLodge : Lodge() {

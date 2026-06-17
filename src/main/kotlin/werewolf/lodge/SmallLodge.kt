@@ -1,7 +1,7 @@
 package werewolf.lodge
 
 import werewolf.game.Role
-import werewolf.human.ConsolePlayerIO
+import werewolf.human.console.ConsolePlayerIO
 import werewolf.human.HumanPlayer
 
 object SmallLodge : Lodge() {
