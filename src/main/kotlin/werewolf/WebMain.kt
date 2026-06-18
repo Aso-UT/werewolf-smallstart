@@ -62,7 +62,7 @@ fun main() {
     server.stop(SERVER_STOP_GRACE_MS, SERVER_STOP_TIMEOUT_MS)
 }
 
-private suspend fun DefaultWebSocketSession.receiveAbortRequests(webPlayer: WebPlayer) {
+private fun DefaultWebSocketSession.receiveAbortRequests(webPlayer: WebPlayer) {
     launch {
         for (frame in incoming) {
             if (frame is Frame.Text && frame.readText() == "abort") {
