@@ -9,7 +9,7 @@ import werewolf.game.Role
 import werewolf.human.console.ConsolePlayerIO
 import werewolf.human.HumanPlayer
 
-object AnthropicLodge : Lodge() {
+object AnthropicLodge : LocalLodge() {
     private val aiNames = listOf("Alice", "Bob", "Charlie", "Dave", "Eve", "Frank", "Grace", "Heidi")
 
     override fun assignments(): List<Pair<Player, Role>> {

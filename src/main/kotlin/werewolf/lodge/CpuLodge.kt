@@ -5,7 +5,7 @@ import werewolf.game.Role
 import werewolf.human.console.ConsolePlayerIO
 import werewolf.human.HumanPlayer
 
-abstract class CpuLodge : Lodge() {
+abstract class CpuLodge : LocalLodge() {
     protected abstract fun createCpuPlayer(role: Role, name: String): Player
 
     override fun assignments(): List<Pair<Player, Role>> {

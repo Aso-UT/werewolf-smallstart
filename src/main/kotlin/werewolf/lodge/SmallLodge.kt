@@ -4,7 +4,7 @@ import werewolf.game.Role
 import werewolf.human.console.ConsolePlayerIO
 import werewolf.human.HumanPlayer
 
-object SmallLodge : Lodge() {
+object SmallLodge : LocalLodge() {
     override fun assignments() = listOf(
         HumanPlayer(Role.HUNTER,   "1", ConsolePlayerIO()) to Role.HUNTER,
         HumanPlayer(Role.VILLAGER, "2", ConsolePlayerIO()) to Role.VILLAGER,

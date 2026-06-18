@@ -8,6 +8,8 @@ import werewolf.game.Role
 
 abstract class Lodge {
     abstract fun assignments(): List<Pair<Player, Role>>
+    abstract fun setup()
+    abstract fun teardown()
 
     fun create(): GameSetup {
         val assignments = assignments()

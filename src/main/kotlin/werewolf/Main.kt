@@ -1,9 +1,6 @@
 package werewolf
 
 import werewolf.game.GameOverSignal
-import werewolf.phase.Epilogue
-import werewolf.phase.InitialPhase
-import werewolf.phase.Phase
 import werewolf.lodge.AnthropicLodge
 import werewolf.lodge.GeminiLodge
 import werewolf.lodge.HonestCpuLodge
@@ -13,19 +10,26 @@ import werewolf.lodge.RandomCpuLodge
 import werewolf.lodge.RoleAwareCpuLodge
 import werewolf.lodge.RollerCpuLodge
 import werewolf.lodge.SmallLodge
+import werewolf.lodge.WebLodge
+import werewolf.phase.Epilogue
+import werewolf.phase.InitialPhase
+import werewolf.phase.Phase
 
 fun main() {
-    val setup = getLodge().create()
-    var phase: Phase = InitialPhase(setup.playerManager, setup.oracle)
+    val lodge = getLodge()
+    val setup = lodge.create()
+    lodge.setup()
     try {
+        var phase: Phase = InitialPhase(setup.playerManager, setup.oracle)
         while (true) { phase = phase.proceed() }
     } catch (signal: GameOverSignal) {
         Epilogue(setup.playerManager, setup.oracle, signal).perform()
     }
+    lodge.teardown()
 }
 
 private fun getLodge(): Lodge {
-    println("Lodgeを選択してください: AllHuman / RollerCPU / RandomCPU / HonestCPU / RoleAwareCPU / PocAI / Gemini / Anthropic")
+    println("Lodgeを選択してください: AllHuman / RollerCPU / RandomCPU / HonestCPU / RoleAwareCPU / PocAI / Gemini / Anthropic / Web")
     return when (readLine()?.trim()) {
         "RollerCPU"    -> RollerCpuLodge
         "RandomCPU"    -> RandomCpuLodge
@@ -34,6 +38,7 @@ private fun getLodge(): Lodge {
         "PocAI"        -> PocAiLodge
         "Gemini"       -> GeminiLodge
         "Anthropic"    -> AnthropicLodge
+        "Web"          -> WebLodge()
         else           -> SmallLodge
     }
 }

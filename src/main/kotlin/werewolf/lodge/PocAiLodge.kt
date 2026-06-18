@@ -7,7 +7,7 @@ import werewolf.ai.AiPlayer
 import werewolf.ai.Instruction
 import werewolf.ai.poc.PocConsoleLanguageModel
 
-object PocAiLodge : Lodge() {
+object PocAiLodge : LocalLodge() {
     private val names = listOf("Alice", "Bob", "Charlie", "Dave", "Eve", "Frank", "Grace", "Heidi", "Ivan")
 
     override fun assignments(): List<Pair<Player, Role>> {
