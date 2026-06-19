@@ -58,8 +58,8 @@ class WebLodge : Lodge() {
                 staticResources("/", "static") { default("index.html") }
                 webSocket("/game") {
                     observer.notifyConnection()
-                    receiveAbortRequests(webPlayer)
-                    for (message in webPlayer.outgoing) send(message)
+                    relayToPlayer(webPlayer)
+                    relayToClient(webPlayer)
                 }
             }
         }
@@ -69,7 +69,7 @@ class WebLodge : Lodge() {
         server.stop(SERVER_STOP_GRACE_MS, SERVER_STOP_TIMEOUT_MS)
     }
 
-    private fun DefaultWebSocketSession.receiveAbortRequests(webPlayer: WebPlayer) {
+    private fun DefaultWebSocketSession.relayToPlayer(webPlayer: WebPlayer) {
         launch {
             for (frame in incoming) {
                 if (frame is Frame.Text && frame.readText() == "abort") {
@@ -77,6 +77,10 @@ class WebLodge : Lodge() {
                 }
             }
         }
+    }
+
+    private suspend fun DefaultWebSocketSession.relayToClient(webPlayer: WebPlayer) {
+        for (message in webPlayer.outgoing) send(message)
     }
 
     companion object {
