@@ -43,27 +43,26 @@ class WebLodge : Lodge() {
     }
 
     override fun setup() {
-        val clientConnected = CountDownLatch(1)
-        server = embeddedServer(Netty, port = PORT) {
+        val observer = ConnectionObserver()
+        server = createServer(observer)
+        server.start(wait = false)
+        println("http://localhost:$PORT をブラウザで開いてください")
+        observer.waitForConnectionEstablished()
+        println("接続を確認しました。ゲームを開始します。")
+    }
+
+    private fun createServer(observer: ConnectionObserver): EmbeddedServer<*, *> =
+        embeddedServer(Netty, port = PORT) {
             install(WebSockets)
             routing {
-                staticResources("/", "static") {
-                    default("index.html")
-                }
+                staticResources("/", "static") { default("index.html") }
                 webSocket("/game") {
-                    clientConnected.countDown()
+                    observer.notifyConnection()
                     receiveAbortRequests(webPlayer)
-                    for (message in webPlayer.outgoing) {
-                        send(message)
-                    }
+                    for (message in webPlayer.outgoing) send(message)
                 }
             }
         }
-        server.start(wait = false)
-        println("http://localhost:$PORT をブラウザで開いてください")
-        clientConnected.await()
-        println("接続を確認しました。ゲームを開始します。")
-    }
 
     override fun teardown() {
         Thread.sleep(EPILOGUE_DRAIN_DELAY_MS)
@@ -87,4 +86,11 @@ class WebLodge : Lodge() {
         private const val SERVER_STOP_TIMEOUT_MS = 1000L
         private const val HAIKU_MODEL = "claude-haiku-4-5-20251001"
     }
+}
+
+private class ConnectionObserver {
+    private val latch = CountDownLatch(1)
+
+    fun notifyConnection() = latch.countDown()
+    fun waitForConnectionEstablished() = latch.await()
 }
