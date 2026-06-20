@@ -12,9 +12,14 @@ repositories {
     mavenCentral()
 }
 
+val ktorVersion = "3.1.3"
+
 dependencies {
     implementation("com.google.genai:google-genai:1.53.0")
     implementation("com.anthropic:anthropic-java:2.27.0")
+    implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-netty:$ktorVersion")
+    implementation("io.ktor:ktor-server-websockets-jvm:$ktorVersion")
     testImplementation(kotlin("test"))
     testImplementation("com.tngtech.archunit:archunit-junit5:1.3.0")
 }

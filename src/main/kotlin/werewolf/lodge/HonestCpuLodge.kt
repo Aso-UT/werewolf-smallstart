@@ -3,6 +3,6 @@ package werewolf.lodge
 import werewolf.game.Role
 import werewolf.cpu.HonestCpuPlayer
 
-object HonestCpuLodge : CpuLodge() {
+class HonestCpuLodge(humanConnection: HumanConnection) : CpuLodge(humanConnection) {
     override fun createCpuPlayer(role: Role, name: String) = HonestCpuPlayer(role, name)
 }
