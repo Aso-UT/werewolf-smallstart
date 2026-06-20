@@ -6,10 +6,13 @@ import werewolf.game.Player
 import werewolf.game.PlayerManager
 import werewolf.game.Role
 
-abstract class Lodge {
+abstract class Lodge(private val humanConnection: HumanConnection) {
     abstract fun assignments(): List<Pair<Player, Role>>
-    abstract fun setup()
-    abstract fun teardown()
+
+    fun setup() = humanConnection.setup()
+    fun teardown() = humanConnection.teardown()
+
+    protected fun createPlayer(role: Role, name: String) = humanConnection.createPlayer(role, name)
 
     fun create(): GameSetup {
         val assignments = assignments()
