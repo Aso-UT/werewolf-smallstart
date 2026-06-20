@@ -49,7 +49,7 @@ class WebHumanConnection : HumanConnection {
                 webSocket("/game") {
                     observer.notifyConnection()
                     relayToPlayer(webPlayer)
-                    relayToClient(webPlayer)
+                    relayToClient(this, webPlayer)
                 }
             }
         }
@@ -64,8 +64,8 @@ class WebHumanConnection : HumanConnection {
         }
     }
 
-    private suspend fun DefaultWebSocketSession.relayToClient(webPlayer: WebPlayer) {
-        for (message in webPlayer.outgoing) send(message)
+    private suspend fun relayToClient(session: DefaultWebSocketSession, webPlayer: WebPlayer) {
+        for (message in webPlayer.outgoing) session.send(message)
     }
 
     companion object {

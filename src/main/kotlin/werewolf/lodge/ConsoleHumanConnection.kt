@@ -7,6 +7,6 @@ import werewolf.human.console.ConsolePlayerIO
 
 class ConsoleHumanConnection : HumanConnection {
     override fun createPlayer(role: Role, name: String): Player = HumanPlayer(role, name, ConsolePlayerIO())
-    override fun setup() {}
-    override fun teardown() {}
+    override fun setup() { /* Console I/O is managed by the JVM and requires no setup */ }
+    override fun teardown() { /* Console I/O is managed by the JVM and requires no teardown */ }
 }
