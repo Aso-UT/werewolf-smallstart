@@ -32,7 +32,7 @@ class WebPlayer(role: Role, override val name: String) : Player(role) {
 
     override fun onReceive(event: GameEvent) {
         checkAbort()
-        enqueue("""{"type":"message","title":${event.title.jsonEncode()},"body":${event.body().jsonEncode()}}""")
+        enqueue("""{"type":"event","title":${event.title.jsonEncode()},"body":${event.body().jsonEncode()}}""")
     }
 
     override fun choose(context: SelectionContext): Choice {
