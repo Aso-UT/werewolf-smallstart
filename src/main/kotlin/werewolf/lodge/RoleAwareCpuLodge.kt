@@ -3,6 +3,6 @@ package werewolf.lodge
 import werewolf.game.Role
 import werewolf.cpu.RoleAwareCpuPlayer
 
-class RoleAwareCpuLodge(humanConnection: HumanConnection) : CpuLodge(humanConnection) {
+object RoleAwareCpuLodge : CpuLodge() {
     override fun createCpuPlayer(role: Role, name: String) = RoleAwareCpuPlayer(role, name)
 }
