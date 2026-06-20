@@ -46,27 +46,30 @@
         ws.onclose = () => { status.textContent = '切断'; hideInput(); };
         ws.onerror = () => { status.textContent = 'エラー'; };
 
+        const handlers = {
+            message:  (msg) => appendLog('message', `<span class="title">[${esc(msg.title)}]</span> ${esc(msg.body)}`),
+            epilogue: (msg) => showEpilogue(msg.content),
+            choose:   (msg) => showChoose(msg.title, msg.description, msg.candidates),
+            speak:    (msg) => showSpeak(msg.title, msg.description),
+        };
+
         ws.onmessage = (event) => {
             const msg = JSON.parse(event.data);
-            if (msg.type === 'message') {
-                appendLog('message', `<span class="title">[${esc(msg.title)}]</span> ${esc(msg.body)}`);
-            } else if (msg.type === 'epilogue') {
-                const div = document.createElement('div');
-                div.className = 'epilogue';
-                div.textContent = msg.content;
-                log.appendChild(div);
-                log.scrollTop = log.scrollHeight;
-            } else if (msg.type === 'choose') {
-                showChoose(msg.title, msg.description, msg.candidates);
-            } else if (msg.type === 'speak') {
-                showSpeak(msg.title, msg.description);
-            }
+            handlers[msg.type]?.(msg);
         };
 
         function appendLog(className, html) {
             const div = document.createElement('div');
             div.className = className;
             div.innerHTML = html;
+            log.appendChild(div);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function showEpilogue(content) {
+            const div = document.createElement('div');
+            div.className = 'epilogue';
+            div.textContent = content;
             log.appendChild(div);
             log.scrollTop = log.scrollHeight;
         }
