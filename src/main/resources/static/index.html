@@ -47,7 +47,7 @@
         ws.onerror = () => { status.textContent = 'エラー'; };
 
         const handlers = {
-            message:  (msg) => appendLog('message', `<span class="title">[${esc(msg.title)}]</span> ${esc(msg.body)}`),
+            message:  (msg) => showMessage(msg.title, msg.body),
             epilogue: (msg) => showEpilogue(msg.content),
             choose:   (msg) => showChoose(msg.title, msg.description, msg.candidates),
             speak:    (msg) => showSpeak(msg.title, msg.description),
@@ -64,6 +64,10 @@
             div.innerHTML = html;
             log.appendChild(div);
             log.scrollTop = log.scrollHeight;
+        }
+
+        function showMessage(title, body) {
+            appendLog('message', `<span class="title">[${esc(title)}]</span> ${esc(body)}`);
         }
 
         function showEpilogue(content) {
