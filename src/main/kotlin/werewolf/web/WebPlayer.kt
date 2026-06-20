@@ -1,6 +1,7 @@
 package werewolf.web
 
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.runBlocking
 import werewolf.game.Choice
 import werewolf.game.Claim
 import werewolf.game.DiscussionContext
@@ -14,6 +15,7 @@ import werewolf.game.Statement
 
 class WebPlayer(role: Role, override val name: String) : Player(role) {
     val outgoing = Channel<String>(Channel.UNLIMITED)
+    val incoming = Channel<String>(Channel.UNLIMITED)
     @Volatile private var abortRequested = false
 
     fun requestAbort() {
@@ -35,12 +37,24 @@ class WebPlayer(role: Role, override val name: String) : Player(role) {
 
     override fun choose(context: SelectionContext): Choice {
         checkAbort()
-        return Choice(this, context, context.candidates().first(), "自動選択")
+        val candidatesJson = context.candidates().joinToString(",") { it.name.jsonEncode() }
+        val prompt = """{"type":"choose","title":${context.title.jsonEncode()},"description":${context.description.jsonEncode()},"candidates":[$candidatesJson]}"""
+        enqueue(prompt)
+        while (true) {
+            val selected = runBlocking { incoming.receive() }
+            checkAbort()
+            val player = context.candidates().find { it.name == selected }
+            if (player != null) return Choice(this, context, player, "ブラウザ選択")
+            enqueue(prompt)
+        }
     }
 
     override fun speak(context: DiscussionContext): Claim {
         checkAbort()
-        return Claim(this, context, Statement.Plain("..."), "自動発言")
+        enqueue("""{"type":"speak","title":${context.title.jsonEncode()},"description":${context.description.jsonEncode()}}""")
+        val text = runBlocking { incoming.receive() }
+        checkAbort()
+        return Claim(this, context, Statement.Plain(text), "ブラウザ発言")
     }
 
     override fun watchEpilogue(chronicles: List<Recallable>) {

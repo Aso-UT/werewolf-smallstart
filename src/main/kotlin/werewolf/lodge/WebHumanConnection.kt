@@ -57,8 +57,14 @@ class WebHumanConnection : HumanConnection {
     private fun DefaultWebSocketSession.relayToPlayer(webPlayer: WebPlayer) {
         launch {
             for (frame in incoming) {
-                if (frame is Frame.Text && frame.readText() == "abort") {
-                    webPlayer.requestAbort()
+                if (frame is Frame.Text) {
+                    val text = frame.readText()
+                    if (text == "abort") {
+                        webPlayer.requestAbort()
+                        webPlayer.incoming.trySend("")
+                    } else {
+                        webPlayer.incoming.trySend(text)
+                    }
                 }
             }
         }
