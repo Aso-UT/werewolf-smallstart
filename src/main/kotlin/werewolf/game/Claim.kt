@@ -42,6 +42,6 @@ private class NormalClaim(
 
 class FallbackClaim(speaker: Player, context: DiscussionContext) : Claim(
     speaker, context, Statement.Plain(""),
-    intentForRecall = "",
+    intentForRecall = "回答取得に失敗したため空文字を返却",
     intentForChronicle = "回答取得に失敗したため空文字を返却",
 )

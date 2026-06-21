@@ -42,6 +42,6 @@ private class NormalChoice(
 
 class FallbackChoice(chooser: Player, context: SelectionContext) : Choice(
     chooser, context, context.candidates().random(),
-    intentForRecall = "",
+    intentForRecall = "回答取得に失敗したためランダム選択",
     intentForChronicle = "回答取得に失敗したためランダム選択",
 )
