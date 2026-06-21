@@ -56,7 +56,7 @@ class AiPlayer(
                 memorize(InvalidAiInput(completion.text, completion.metadata))
             }
         }
-        return FallbackClaim(this, context)
+        return FallbackClaim(this, context).also { _myMemories.add(it) }
     }
 
     private fun parseSpeakResponse(input: String): Pair<String, String> {
@@ -93,7 +93,7 @@ class AiPlayer(
                 memorize(InvalidAiInput(completion.text, completion.metadata))
             }
         }
-        return FallbackChoice(this, context)
+        return FallbackChoice(this, context).also { _myMemories.add(it) }
     }
 
     private fun parseChoiceResponse(input: String, candidates: List<Player>): Pair<Player, String> {

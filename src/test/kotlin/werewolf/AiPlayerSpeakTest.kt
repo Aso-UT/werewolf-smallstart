@@ -63,6 +63,15 @@ class AiPlayerSpeakTest {
     }
 
     @Test
+    fun `discuss records FallbackClaim in recall memory for subsequent prompts`() {
+        val lm = FakeLanguageModel("no bracket", "no bracket", "hello[真意]")
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())
+        villager.discuss(openContext())
+        villager.discuss(openContext())
+        assertTrue(lm.histories[2].any { it.contains("回答取得に失敗したため空文字を返却") })
+    }
+
+    @Test
     fun `speak records InvalidAiInput with raw response when format is invalid`() {
         val lm = FakeLanguageModel("bad response", "[valid]", metadata = ModelMetadata { "model=test" })
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())

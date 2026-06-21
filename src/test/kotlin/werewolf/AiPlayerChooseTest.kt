@@ -89,6 +89,17 @@ class AiPlayerChooseTest {
     }
 
     @Test
+    fun `selectTarget records FallbackChoice in recall memory for subsequent prompts`() {
+        val lm = FakeLanguageModel("理由：Unknown", "理由：AlsoUnknown", "怪しいから：Wolf")
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())
+        val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
+        val context = SelectionContext.Vote(villager, listOf(villager, wolf))
+        villager.selectTarget(context)
+        villager.selectTarget(context)
+        assertTrue(lm.histories[2].any { it.contains("回答取得に失敗したためランダム選択") })
+    }
+
+    @Test
     fun `choose records InvalidAiInput with raw response when format is invalid`() {
         val lm = FakeLanguageModel("bad response", "怪しいから：Wolf", metadata = ModelMetadata { "model=test" })
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())
