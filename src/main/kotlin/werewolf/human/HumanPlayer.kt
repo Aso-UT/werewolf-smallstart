@@ -56,11 +56,11 @@ class HumanPlayer(role: Role, override val name: String, private val io: PlayerI
     }
 
     override fun watchEpilogue(chronicles: List<ChronicleView>) {
-        io.sendMessage("ゲーム振り返り", chronicles.joinToString("\n") { it.format() })
+        io.sendMessage("ゲーム振り返り", chronicles.joinToString("\n") { it.formatForConsole() })
     }
 }
 
-private fun ChronicleView.format(): String = when (this) {
+private fun ChronicleView.formatForConsole(): String = when (this) {
     is ChronicleView.Observation -> "[$recipient] [$category] $content"
     is ChronicleView.Action -> {
         val line = "[$actor] [$category] $content"

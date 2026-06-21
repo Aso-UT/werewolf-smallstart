@@ -114,7 +114,7 @@ class AiPlayer(
     override fun watchEpilogue(chronicles: List<ChronicleView>) = Unit
 
     private fun prompt(instruction: String): Completion {
-        val history = _myMemories.map { it.toRecallView().formatForRecall() }
+        val history = _myMemories.map { it.toRecallView().toHistoryEntry() }
         val instructionText = buildString {
             appendLine("【指示】")
             append(instruction)
@@ -158,7 +158,8 @@ class AiPlayer(
     """.trimIndent()
 }
 
-private fun RecallView.formatForRecall(): String = when (this) {
+// Uses <> to avoid collision with AI response delimiters (: and [])
+private fun RecallView.toHistoryEntry(): String = when (this) {
     is RecallView.Observation -> "<$category> $content"
     is RecallView.Action -> "<$category> $content <$intent>"
 }
