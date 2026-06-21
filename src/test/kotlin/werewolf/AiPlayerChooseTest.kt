@@ -3,6 +3,7 @@ package werewolf
 import werewolf.ai.AiPlayer
 import werewolf.ai.InvalidAiInput
 import werewolf.ai.ModelMetadata
+import werewolf.game.ChronicleView
 import werewolf.game.Choice
 import werewolf.game.Role
 import werewolf.game.SelectionContext
@@ -11,6 +12,7 @@ import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class AiPlayerChooseTest {
@@ -84,7 +86,9 @@ class AiPlayerChooseTest {
         villager.selectTarget(context)
         villager.discuss(openContext())
         val memories = villager.reveal(fakeCitizenWinSignal())
-        assertTrue(memories.filterIsInstance<Choice>().any { it.intentForChronicle?.contains("model=test") == true })
+        val choiceChronicle = memories.filterIsInstance<Choice>().first().toChronicleView()
+        assertIs<ChronicleView.Action>(choiceChronicle)
+        assertTrue(choiceChronicle.intent.contains("model=test"))
         assertFalse(lm.prompts[1].contains("model=test"))
     }
 
@@ -107,8 +111,9 @@ class AiPlayerChooseTest {
         val context = SelectionContext.Vote(villager, listOf(villager, wolf))
         villager.selectTarget(context)
         val memories = villager.reveal(fakeCitizenWinSignal())
-        val record = memories.filterIsInstance<InvalidAiInput>().first()
-        assertTrue(record.chronicle().contains("bad response"))
-        assertEquals("model=test", record.intentForChronicle)
+        val invalidInputChronicle = memories.filterIsInstance<InvalidAiInput>().first().toChronicleView()
+        assertIs<ChronicleView.Action>(invalidInputChronicle)
+        assertTrue(invalidInputChronicle.content.contains("bad response"))
+        assertEquals("model=test", invalidInputChronicle.intent)
     }
 }

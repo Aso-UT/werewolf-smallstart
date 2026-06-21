@@ -17,7 +17,7 @@ class EpilogueTest {
     private open class WatchingPlayer(role: Role, name: String) : ReceivingPlayer(role, name) {
         var gameOver: GameEvent.GameOver? = null
         var gameResult: GameEvent.GameResult? = null
-        val watchedEvents: MutableList<Recallable> = mutableListOf()
+        val watchedEvents: MutableList<ChronicleView> = mutableListOf()
 
         override fun onReceive(event: GameEvent) {
             when (event) {
@@ -27,7 +27,7 @@ class EpilogueTest {
             }
         }
 
-        override fun watchEpilogue(chronicles: List<Recallable>) {
+        override fun watchEpilogue(chronicles: List<ChronicleView>) {
             watchedEvents.addAll(chronicles)
         }
     }
@@ -88,6 +88,6 @@ class EpilogueTest {
 
         Epilogue(setup.playerManager, setup.oracle, signal).perform()
 
-        assertTrue(chooser.watchedEvents.any { it is Choice })
+        assertTrue(chooser.watchedEvents.any { it is ChronicleView.Action })
     }
 }

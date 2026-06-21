@@ -1,6 +1,6 @@
 package werewolf
 
-import werewolf.game.Recallable
+import werewolf.game.ChronicleView
 import werewolf.game.Role
 import werewolf.human.HumanPlayer
 import werewolf.human.PlayerIO
@@ -18,34 +18,32 @@ class HumanPlayerTest {
         override fun readPlayer(): String = error("not used")
     }
 
-    private fun recallable(chronicleText: String, intent: String? = null, redundant: Boolean = false) = object : Recallable() {
-        override fun recall() = chronicleText
-        override fun chronicle() = chronicleText
-        override val intentForChronicle get() = intent
-        override val isRedundantInChronicle get() = redundant
+    @Test
+    fun `watchEpilogue formats observation as bracket blocks`() {
+        val io = CapturingIO()
+        val player = HumanPlayer(Role.VILLAGER, "Player", io)
+        player.watchEpilogue(listOf(ChronicleView.Observation("Player", "カテゴリ", "内容")))
+        assertEquals("[Player] [カテゴリ] 内容", io.messages.last().second)
     }
 
     @Test
-    fun `watchEpilogue shows chronicle when intentForChronicle is null`() {
+    fun `watchEpilogue formats action with intent on next line`() {
         val io = CapturingIO()
         val player = HumanPlayer(Role.VILLAGER, "Player", io)
-        player.watchEpilogue(listOf(recallable("some chronicle")))
-        assertEquals("some chronicle", io.messages.last().second)
+        player.watchEpilogue(listOf(ChronicleView.Action("Player", "カテゴリ", "内容", "真意")))
+        assertEquals("[Player] [カテゴリ] 内容\n  [真意]", io.messages.last().second)
     }
 
     @Test
-    fun `watchEpilogue appends intent on next line when intentForChronicle is present`() {
+    fun `watchEpilogue joins multiple chronicles with newline`() {
         val io = CapturingIO()
         val player = HumanPlayer(Role.VILLAGER, "Player", io)
-        player.watchEpilogue(listOf(recallable("some chronicle", "some intent")))
-        assertEquals("some chronicle\n  [some intent]", io.messages.last().second)
-    }
-
-    @Test
-    fun `watchEpilogue excludes redundant records`() {
-        val io = CapturingIO()
-        val player = HumanPlayer(Role.VILLAGER, "Player", io)
-        player.watchEpilogue(listOf(recallable("kept"), recallable("excluded", redundant = true)))
-        assertEquals("kept", io.messages.last().second)
+        player.watchEpilogue(
+            listOf(
+                ChronicleView.Observation("Player", "カテゴリ", "1件目"),
+                ChronicleView.Observation("Player", "カテゴリ", "2件目"),
+            )
+        )
+        assertEquals("[Player] [カテゴリ] 1件目\n[Player] [カテゴリ] 2件目", io.messages.last().second)
     }
 }

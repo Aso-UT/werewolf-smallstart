@@ -2,12 +2,12 @@ package werewolf.human
 
 import werewolf.game.Choice
 import werewolf.game.Claim
+import werewolf.game.ChronicleView
 import werewolf.game.DiscussionContext
 import werewolf.game.DivineResult
 import werewolf.game.GameEvent
 import werewolf.game.MediumResult
 import werewolf.game.Player
-import werewolf.game.Recallable
 import werewolf.game.Role
 import werewolf.game.SelectionContext
 import werewolf.game.Statement
@@ -55,13 +55,15 @@ class HumanPlayer(role: Role, override val name: String, private val io: PlayerI
         return Statement.MediumReport(this, target, results[resultIdx])
     }
 
-    override fun watchEpilogue(chronicles: List<Recallable>) {
-        val content = chronicles
-            .filter { !it.isRedundantInChronicle }
-            .joinToString("\n") {
-                val intent = it.intentForChronicle
-                if (intent != null) "${it.chronicle()}\n  [$intent]" else it.chronicle()
-            }
-        io.sendMessage("ゲーム振り返り", content)
+    override fun watchEpilogue(chronicles: List<ChronicleView>) {
+        io.sendMessage("ゲーム振り返り", chronicles.joinToString("\n") { it.format() })
+    }
+}
+
+private fun ChronicleView.format(): String = when (this) {
+    is ChronicleView.Observation -> "[$recipient] [$category] $content"
+    is ChronicleView.Action -> {
+        val line = "[$actor] [$category] $content"
+        if (intent.isNotEmpty()) "$line\n  [$intent]" else line
     }
 }

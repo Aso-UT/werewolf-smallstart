@@ -23,7 +23,7 @@ class HumanPlayerEpilogueTest {
 
     private class SpeakingPlayer(role: Role, name: String) : NothingPlayer(role, name) {
         override fun onReceive(event: GameEvent) {}
-        override fun watchEpilogue(chronicles: List<Recallable>) {}
+        override fun watchEpilogue(chronicles: List<ChronicleView>) {}
         override fun speak(context: DiscussionContext): Claim =
             Claim(this, context, Statement.Plain("$name speaks"), "intent")
     }

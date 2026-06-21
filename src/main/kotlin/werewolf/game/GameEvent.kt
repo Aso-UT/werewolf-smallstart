@@ -7,8 +7,8 @@ sealed class GameEvent : Recallable() {
     abstract val title: String
     abstract fun body(): String
     protected abstract val recipients: Notifiable
-    override fun recall() = "<${title}> ${body()}"
-    override fun chronicle() = "[${recipients.recipientName}] [${title}] ${body()}"
+    final override fun toRecallView() = RecallView.Observation(title, body())
+    final override fun toChronicleView() = ChronicleView.Observation(recipients.recipientName, title, body())
     protected fun dispatch() = recipients.receive(this)
     fun isPublicKnowledge(): Boolean = recipients is AllPlayers
 
@@ -67,7 +67,6 @@ sealed class GameEvent : Recallable() {
         override val title = "発言"
         override fun body() = "$speakerName: ${statement.text()}"
         override val recipients: Notifiable = allPlayers
-        override val isRedundantInChronicle = true
         companion object {
             fun send(round: Int, speakerName: String, statement: Statement, allPlayers: AllPlayers) =
                 StatementMade(round, speakerName, statement, allPlayers).dispatch()
@@ -150,7 +149,6 @@ sealed class GameEvent : Recallable() {
         override val title = "密談"
         override fun body() = "$speakerName: $statement"
         override val recipients: Notifiable = wolves
-        override val isRedundantInChronicle = true
         companion object {
             fun send(round: Int, speakerName: String, statement: String, wolves: Wolves) =
                 WerewolfStatementMade(round, speakerName, statement, wolves).dispatch()

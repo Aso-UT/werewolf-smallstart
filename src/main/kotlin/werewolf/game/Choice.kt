@@ -5,14 +5,14 @@ sealed class Choice(
     val context: SelectionContext,
     val selected: Player,
     private val intentForRecall: String,
-    override val intentForChronicle: String,
+    private val intentForChronicle: String,
 ) : Recallable() {
     init {
         require(selected in context.candidates()) { "${selected.name} is not in candidates" }
     }
 
-    override fun recall() = "<${context.title}> ${selected.name} <$intentForRecall>"
-    override fun chronicle() = "[${chooser.name}] [${context.title}] ${selected.name}"
+    override fun toRecallView() = RecallView.Action(context.title, selected.name, intentForRecall)
+    override fun toChronicleView() = ChronicleView.Action(chooser.name, context.title, selected.name, intentForChronicle)
 
     companion object {
         operator fun invoke(
