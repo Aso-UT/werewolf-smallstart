@@ -28,7 +28,7 @@ abstract class Player(private val role: Role) : Notifiable {
         return claim.statement
     }
     protected abstract fun speak(context: DiscussionContext): Claim
-    abstract fun watchEpilogue(chronicles: List<Recallable>)
+    abstract fun watchEpilogue(chronicles: List<ChronicleView>)
 
     protected fun memorize(recallable: Recallable) {
         _memories.add(recallable)

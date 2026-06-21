@@ -1,11 +1,13 @@
 package werewolf.ai
 
+import werewolf.game.ChronicleView
 import werewolf.game.Recallable
+import werewolf.game.RecallView
 import werewolf.game.Role
 
 class RoleAdvice(private val recipientName: String, private val role: Role, private val text: String) : Recallable() {
-    override fun recall() = "<戦略アドバイス> $text"
-    override fun chronicle() = "[$recipientName] [${role.displayName}の戦略アドバイス] $text"
+    override fun toRecallView() = RecallView.Observation("戦略アドバイス", text)
+    override fun toChronicleView() = ChronicleView.Observation(recipientName, "${role.displayName}の戦略アドバイス", text)
 
     companion object {
         fun random(role: Role, name: String) = RoleAdvice(name, role, pool.getValue(role).random())

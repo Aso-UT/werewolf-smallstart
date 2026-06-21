@@ -5,14 +5,14 @@ sealed class Claim(
     val context: DiscussionContext,
     val statement: Statement,
     private val intentForRecall: String,
-    override val intentForChronicle: String,
+    private val intentForChronicle: String,
 ) : Recallable() {
     init {
         require(statement.type in context.availableTypes) { "${statement.type} is not available in ${context.title}" }
     }
 
-    override fun recall() = "<${context.title}> ${statement.text()} <$intentForRecall>"
-    override fun chronicle() = "[${speaker.name}] [${context.title}] ${statement.text()}"
+    override fun toRecallView() = RecallView.Action(context.title, statement.text(), intentForRecall)
+    override fun toChronicleView() = ChronicleView.Action(speaker.name, context.title, statement.text(), intentForChronicle)
 
     companion object {
         operator fun invoke(

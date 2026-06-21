@@ -3,7 +3,7 @@ package werewolf
 import werewolf.game.*
 
 import kotlin.test.Test
-import kotlin.test.assertContains
+import kotlin.test.assertIs
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -60,8 +60,12 @@ class GameRecapTest {
 
         val events = GameRecap(pm, anySignal()).events()
         assertEquals(3, events.size)
-        assertContains(events[0].chronicle(), "V1")
-        assertContains(events[1].chronicle(), "V2")
+        val v1Chronicle = events[0].toChronicleView()
+        assertIs<ChronicleView.Observation>(v1Chronicle)
+        assertEquals("V1", v1Chronicle.recipient)
+        val v2Chronicle = events[1].toChronicleView()
+        assertIs<ChronicleView.Observation>(v2Chronicle)
+        assertEquals("V2", v2Chronicle.recipient)
         assertTrue(events[2] is GameEvent.TimeChanged)
     }
 }

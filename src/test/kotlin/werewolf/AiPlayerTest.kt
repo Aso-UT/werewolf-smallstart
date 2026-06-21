@@ -3,6 +3,7 @@ package werewolf
 import werewolf.ai.AiPlayer
 import werewolf.ai.Instruction
 import werewolf.ai.LanguageModel
+import werewolf.game.ChronicleView
 import werewolf.game.GameEvent
 import werewolf.game.GameOverSignal
 import werewolf.game.Role
@@ -11,6 +12,7 @@ import werewolf.game.SelectionContext
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class AiPlayerTest {
@@ -60,7 +62,9 @@ class AiPlayerTest {
         val lm = FakeLanguageModel()
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, Instruction("Villager", "慎重に行動してください。"))
         val memories = villager.reveal(fakeCitizenWinSignal())
-        assertTrue(memories.any { it.chronicle().contains("慎重に行動してください。") })
+        assertTrue(memories.filterIsInstance<Instruction>().any {
+            (it.toChronicleView() as ChronicleView.Observation).content.contains("慎重に行動してください。")
+        })
     }
 
     @Test
@@ -68,7 +72,11 @@ class AiPlayerTest {
         val lm = FakeLanguageModel()
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, Instruction("Villager", "慎重に行動してください。"))
         val memories = villager.reveal(fakeCitizenWinSignal())
-        assertTrue(memories.any { it.chronicle().contains("Villager") && it.chronicle().contains("慎重に行動してください。") })
+        assertTrue(memories.filterIsInstance<Instruction>().any {
+            (it.toChronicleView() as ChronicleView.Observation).let { v ->
+                v.recipient == "Villager" && v.content.contains("慎重に行動してください。")
+            }
+        })
     }
 
     @Test

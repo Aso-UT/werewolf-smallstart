@@ -1,6 +1,7 @@
 package werewolf.ai
 
 import werewolf.game.Choice
+import werewolf.game.ChronicleView
 import werewolf.game.Claim
 import werewolf.game.DiscussionContext
 import werewolf.game.FallbackChoice
@@ -9,6 +10,7 @@ import werewolf.game.GameEvent
 import werewolf.game.GameOverSignal
 import werewolf.game.Player
 import werewolf.game.Recallable
+import werewolf.game.RecallView
 import werewolf.game.Role
 import werewolf.game.SelectionContext
 import werewolf.game.Statement
@@ -53,7 +55,7 @@ class AiPlayer(
                 return claim
             } catch (_: InvalidAiInputException) {
                 // AI応答が不正な形式のため、記録して次のイテレーションでリトライする
-                memorize(InvalidAiInput(completion.text, completion.metadata))
+                memorize(InvalidAiInput(this, completion.text, completion.metadata))
             }
         }
         return FallbackClaim(this, context).also { _myMemories.add(it) }
@@ -90,7 +92,7 @@ class AiPlayer(
                 return choice
             } catch (_: InvalidAiInputException) {
                 // AI応答が不正な形式のため、記録して次のイテレーションでリトライする
-                memorize(InvalidAiInput(completion.text, completion.metadata))
+                memorize(InvalidAiInput(this, completion.text, completion.metadata))
             }
         }
         return FallbackChoice(this, context).also { _myMemories.add(it) }
@@ -109,10 +111,10 @@ class AiPlayer(
 
     private class InvalidAiInputException(message: String) : Exception(message)
 
-    override fun watchEpilogue(chronicles: List<Recallable>) = Unit
+    override fun watchEpilogue(chronicles: List<ChronicleView>) = Unit
 
     private fun prompt(instruction: String): Completion {
-        val history = _myMemories.map { it.recall() }
+        val history = _myMemories.map { it.toRecallView().toHistoryEntry() }
         val instructionText = buildString {
             appendLine("【指示】")
             append(instruction)
@@ -155,3 +157,10 @@ class AiPlayer(
 ・投票：投票先は他のプレイヤーに開示されません。最多票のプレイヤーが処刑されます
     """.trimIndent()
 }
+
+// Uses <> to avoid collision with AI response delimiters (: and [])
+private fun RecallView.toHistoryEntry(): String = when (this) {
+    is RecallView.Observation -> "<$category> $content"
+    is RecallView.Action -> "<$category> $content <$intent>"
+}
+

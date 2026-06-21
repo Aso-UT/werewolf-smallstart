@@ -4,13 +4,13 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import werewolf.game.Choice
 import werewolf.game.Claim
+import werewolf.game.ChronicleView
 import werewolf.game.DiscussionContext
 import werewolf.game.DivineResult
 import werewolf.game.GameEvent
 import werewolf.game.GameOverSignal
 import werewolf.game.MediumResult
 import werewolf.game.Player
-import werewolf.game.Recallable
 import werewolf.game.Role
 import werewolf.game.SelectionContext
 import werewolf.game.Statement
@@ -100,17 +100,22 @@ class WebPlayer(role: Role, override val name: String) : Player(role) {
         }
     }
 
-    override fun watchEpilogue(chronicles: List<Recallable>) {
-        val content = chronicles
-            .filter { !it.isRedundantInChronicle }
-            .joinToString("\n") {
-                val intent = it.intentForChronicle
-                if (intent != null) "${it.chronicle()}\n  [$intent]" else it.chronicle()
-            }
-        enqueue("""{"type":"epilogue","content":${content.jsonEncode()}}""")
+    override fun watchEpilogue(chronicles: List<ChronicleView>) {
+        val json = chronicles.joinToString(",", "[", "]") { it.toJson() }
+        enqueue("""{"type":"epilogue","chronicles":$json}""")
         outgoing.close()
     }
-
-    private fun String.jsonEncode(): String =
-        "\"${replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "").replace("\t", " ")}\""
 }
+
+private fun ChronicleView.toJson(): String = when (this) {
+    is ChronicleView.Observation ->
+        """{"type":"observation","recipient":${recipient.jsonEncode()}""" +
+        ""","category":${category.jsonEncode()},"content":${content.jsonEncode()}}"""
+    is ChronicleView.Action ->
+        """{"type":"action","actor":${actor.jsonEncode()}""" +
+        ""","category":${category.jsonEncode()},"content":${content.jsonEncode()}""" +
+        ""","intent":${intent.jsonEncode()}}"""
+}
+
+private fun String.jsonEncode(): String =
+    "\"${replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "").replace("\t", " ")}\""

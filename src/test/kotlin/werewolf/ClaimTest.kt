@@ -4,9 +4,10 @@ import werewolf.game.*
 
 import kotlin.test.Test
 import kotlin.test.assertContains
-import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
+import kotlin.test.assertEquals
 
 class ClaimTest {
 
@@ -28,27 +29,19 @@ class ClaimTest {
     }
 
     @Test
-    fun `recall returns context title, statement text, and intent in brackets`() {
+    fun `toRecallView returns action with context title, content and intent`() {
         val speaker = NothingPlayer(Role.VILLAGER, "Speaker")
         val context = openContext(listOf(speaker))
         val claim = Claim(speaker, context, Statement.Plain("発言内容"), "真意内容")
-        assertEquals("<議論> 発言内容 <真意内容>", claim.recall())
+        assertEquals(RecallView.Action("議論", "発言内容", "真意内容"), claim.toRecallView())
     }
 
     @Test
-    fun `chronicle returns speaker name, context title, and statement text`() {
+    fun `toChronicleView returns action with speaker, context title, content and intent`() {
         val speaker = NothingPlayer(Role.VILLAGER, "Speaker")
         val context = openContext(listOf(speaker))
         val claim = Claim(speaker, context, Statement.Plain("発言内容"), "真意内容")
-        assertEquals("[Speaker] [議論] 発言内容", claim.chronicle())
-    }
-
-    @Test
-    fun `intentForChronicle returns the chronicle intent`() {
-        val speaker = NothingPlayer(Role.VILLAGER, "Speaker")
-        val context = openContext(listOf(speaker))
-        val claim = Claim(speaker, context, Statement.Plain("発言内容"), "真意内容")
-        assertEquals("真意内容", claim.intentForChronicle)
+        assertEquals(ChronicleView.Action("Speaker", "議論", "発言内容", "真意内容"), claim.toChronicleView())
     }
 
     @Test
@@ -57,6 +50,8 @@ class ClaimTest {
         val context = openContext(listOf(speaker))
         val claim = FallbackClaim(speaker, context)
         assertEquals("", claim.statement.text())
-        assertContains(claim.intentForChronicle, "失敗")
+        val fallbackClaimChronicle = claim.toChronicleView()
+        assertIs<ChronicleView.Action>(fallbackClaimChronicle)
+        assertContains(fallbackClaimChronicle.intent, "失敗")
     }
 }

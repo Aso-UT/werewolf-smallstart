@@ -3,6 +3,7 @@ package werewolf
 import werewolf.ai.AiPlayer
 import werewolf.ai.InvalidAiInput
 import werewolf.ai.ModelMetadata
+import werewolf.game.ChronicleView
 import werewolf.game.Claim
 import werewolf.game.Role
 import werewolf.game.Statement
@@ -58,7 +59,9 @@ class AiPlayerSpeakTest {
         villager.discuss(openContext())
         villager.discuss(openContext())
         val memories = villager.reveal(fakeCitizenWinSignal())
-        assertTrue(memories.filterIsInstance<Claim>().any { it.intentForChronicle?.contains("model=test") == true })
+        val claimChronicle = memories.filterIsInstance<Claim>().first().toChronicleView()
+        assertIs<ChronicleView.Action>(claimChronicle)
+        assertTrue(claimChronicle.intent.contains("model=test"))
         assertFalse(lm.prompts[1].contains("model=test"))
     }
 
@@ -77,8 +80,9 @@ class AiPlayerSpeakTest {
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())
         villager.discuss(openContext())
         val memories = villager.reveal(fakeCitizenWinSignal())
-        val record = memories.filterIsInstance<InvalidAiInput>().first()
-        assertTrue(record.chronicle().contains("bad response"))
-        assertEquals("model=test", record.intentForChronicle)
+        val invalidInputChronicle = memories.filterIsInstance<InvalidAiInput>().first().toChronicleView()
+        assertIs<ChronicleView.Action>(invalidInputChronicle)
+        assertTrue(invalidInputChronicle.content.contains("bad response"))
+        assertEquals("model=test", invalidInputChronicle.intent)
     }
 }
