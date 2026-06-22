@@ -14,21 +14,17 @@ import werewolf.game.Statement
 import werewolf.game.StatementType
 
 class WebPlayer(role: Role, override val name: String, private val webHumanIO: WebHumanIO) : Player(role) {
-    private fun checkAbort() = webHumanIO.checkAbort()
-
     override fun onReceive(event: GameEvent) {
         webHumanIO.sendMessage(event.title, event.body())
     }
 
     override fun choose(context: SelectionContext): Choice {
-        checkAbort()
         val candidates = context.candidates()
         val selected = webHumanIO.promptChoice(context.title, context.description, candidates.map { it.name })
         return Choice(this, context, candidates.first { it.name == selected }, "ブラウザ選択")
     }
 
     override fun speak(context: DiscussionContext): Claim {
-        checkAbort()
         val type = selectStatementType(context)
         val statement = when (type) {
             StatementType.PLAIN -> buildPlain(context)

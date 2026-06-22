@@ -24,6 +24,7 @@ class WebHumanIO {
     }
 
     fun promptChoice(title: String, description: String, options: List<String>): String {
+        checkAbort()
         val optionsJson = options.joinToString(",") { it.jsonEncode() }
         val prompt = """{"type":"choose","title":${title.jsonEncode()},"description":${description.jsonEncode()},"candidates":[$optionsJson]}"""
         enqueue(prompt)
@@ -36,6 +37,7 @@ class WebHumanIO {
     }
 
     fun promptFreeText(title: String, description: String): String {
+        checkAbort()
         enqueue("""{"type":"speak","title":${title.jsonEncode()},"description":${description.jsonEncode()}}""")
         val text = runBlocking { incoming.receive() }
         checkAbort()
