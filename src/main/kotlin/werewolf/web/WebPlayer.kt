@@ -13,13 +13,7 @@ import werewolf.game.SelectionContext
 import werewolf.game.Statement
 import werewolf.game.StatementType
 
-class WebPlayer(role: Role, override val name: String) : Player(role) {
-    val webHumanIO = WebHumanIO()
-    val outgoing get() = webHumanIO.outgoing
-    val incoming get() = webHumanIO.incoming
-
-    fun requestAbort() = webHumanIO.requestAbort()
-
+class WebPlayer(role: Role, override val name: String, private val webHumanIO: WebHumanIO) : Player(role) {
     private fun checkAbort() = webHumanIO.checkAbort()
 
     override fun onReceive(event: GameEvent) {

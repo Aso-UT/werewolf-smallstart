@@ -16,15 +16,16 @@ import java.util.concurrent.CountDownLatch
 import kotlinx.coroutines.launch
 import werewolf.game.Player
 import werewolf.game.Role
+import werewolf.web.WebHumanIO
 import werewolf.web.WebPlayer
 
 class WebHumanConnection : HumanConnection {
-    private lateinit var webPlayer: WebPlayer
+    private lateinit var webHumanIO: WebHumanIO
     private lateinit var server: EmbeddedServer<*, *>
 
     override fun createPlayer(role: Role, name: String): Player {
-        webPlayer = WebPlayer(role, name)
-        return webPlayer
+        webHumanIO = WebHumanIO()
+        return WebPlayer(role, name, webHumanIO)
     }
 
     override fun setup() {
@@ -48,30 +49,30 @@ class WebHumanConnection : HumanConnection {
                 staticResources("/", "static") { default("index.html") }
                 webSocket("/game") {
                     observer.notifyConnection()
-                    relayToPlayer(webPlayer)
-                    relayToClient(this, webPlayer)
+                    relayToPlayer()
+                    relayToClient(this)
                 }
             }
         }
 
-    private fun DefaultWebSocketSession.relayToPlayer(webPlayer: WebPlayer) {
+    private fun DefaultWebSocketSession.relayToPlayer() {
         launch {
             for (frame in incoming) {
                 if (frame is Frame.Text) {
                     val text = frame.readText()
                     if (text == "abort") {
-                        webPlayer.requestAbort()
-                        webPlayer.incoming.trySend("")
+                        webHumanIO.requestAbort()
+                        webHumanIO.incoming.trySend("")
                     } else {
-                        webPlayer.incoming.trySend(text)
+                        webHumanIO.incoming.trySend(text)
                     }
                 }
             }
         }
     }
 
-    private suspend fun relayToClient(session: DefaultWebSocketSession, webPlayer: WebPlayer) {
-        for (message in webPlayer.outgoing) session.send(message)
+    private suspend fun relayToClient(session: DefaultWebSocketSession) {
+        for (message in webHumanIO.outgoing) session.send(message)
     }
 
     companion object {
