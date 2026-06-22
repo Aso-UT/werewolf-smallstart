@@ -1,6 +1,7 @@
 package werewolf
 
 import werewolf.game.GameOverSignal
+import werewolf.game.RecallView
 import werewolf.game.Role
 import werewolf.human.PlayerIO
 import kotlin.test.Test
@@ -15,6 +16,7 @@ class PlayerIOTest {
         private val freeTextInputs: ArrayDeque<String> = ArrayDeque(),
     ) : PlayerIO() {
         val messages = mutableListOf<Pair<String, String>>()
+        override fun display(view: RecallView) = error("display not expected")
         override fun sendMessage(title: String, content: String) { messages += title to content }
         override fun readFreeText(): String = freeTextInputs.removeFirst()
         override fun readChoice(): String = choiceInputs.removeFirst()

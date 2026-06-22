@@ -15,7 +15,7 @@ import werewolf.game.StatementType
 
 class WebPlayer(role: Role, override val name: String, private val webHumanIO: WebHumanIO) : Player(role) {
     override fun onReceive(event: GameEvent) {
-        webHumanIO.sendMessage(event.title, event.body())
+        webHumanIO.display(event.toRecallView())
     }
 
     override fun choose(context: SelectionContext): Choice {

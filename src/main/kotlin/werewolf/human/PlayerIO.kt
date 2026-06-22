@@ -2,12 +2,14 @@ package werewolf.human
 
 import werewolf.game.GameOverSignal
 import werewolf.game.Player
+import werewolf.game.RecallView
 
 abstract class PlayerIO {
     companion object {
         private const val ABORT_PASSWORD = 4423
     }
 
+    abstract fun display(view: RecallView)
     abstract fun sendMessage(title: String, content: String)
     protected abstract fun readFreeText(): String
     protected abstract fun readChoice(): String

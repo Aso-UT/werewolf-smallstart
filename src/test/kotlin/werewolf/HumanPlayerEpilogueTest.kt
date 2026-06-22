@@ -3,6 +3,7 @@ package werewolf
 import werewolf.game.*
 import werewolf.human.HumanPlayer
 import werewolf.human.PlayerIO
+import werewolf.game.RecallView
 import werewolf.phase.Conclave
 import werewolf.phase.Epilogue
 import werewolf.phase.OpenDiscussion
@@ -15,6 +16,7 @@ class HumanPlayerEpilogueTest {
 
     private class SpeakingIO : PlayerIO() {
         val messages = mutableListOf<Pair<String, String>>()
+        override fun display(view: RecallView) {}
         override fun sendMessage(title: String, content: String) { messages += title to content }
         override fun readFreeText(): String = "human speaks"
         override fun readChoice(): String = "1"

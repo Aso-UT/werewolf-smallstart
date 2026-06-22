@@ -4,6 +4,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import werewolf.game.ChronicleView
 import werewolf.game.GameOverSignal
+import werewolf.game.RecallView
 
 class WebHumanIO {
     val outgoing = Channel<String>(Channel.UNLIMITED)
@@ -18,9 +19,9 @@ class WebHumanIO {
         if (abortRequested) GameOverSignal.throwManualAbort()
     }
 
-    fun sendMessage(title: String, content: String) {
+    fun display(view: RecallView) {
         checkAbort()
-        enqueue("""{"type":"event","title":${title.jsonEncode()},"body":${content.jsonEncode()}}""")
+        enqueue(view.toJson())
     }
 
     fun promptChoice(title: String, description: String, options: List<String>): String {
@@ -53,6 +54,13 @@ class WebHumanIO {
     private fun enqueue(message: String) {
         check(outgoing.trySend(message).isSuccess) { "Failed to queue message" }
     }
+}
+
+private fun RecallView.toJson(): String = when (this) {
+    is RecallView.Observation ->
+        """{"type":"event","title":${category.jsonEncode()},"body":${content.jsonEncode()}}"""
+    is RecallView.Action ->
+        """{"type":"event","title":${category.jsonEncode()},"body":${content.jsonEncode()},"intent":${intent.jsonEncode()}}"""
 }
 
 private fun ChronicleView.toJson(): String = when (this) {

@@ -1,6 +1,7 @@
 package werewolf
 
 import werewolf.game.ChronicleView
+import werewolf.game.RecallView
 import werewolf.game.Role
 import werewolf.human.HumanPlayer
 import werewolf.human.PlayerIO
@@ -12,6 +13,7 @@ class HumanPlayerTest {
 
     private class CapturingIO : PlayerIO() {
         val messages = mutableListOf<Pair<String, String>>()
+        override fun display(view: RecallView) = error("display not expected")
         override fun sendMessage(title: String, content: String) { messages += title to content }
         override fun readFreeText(): String = error("not used")
         override fun readChoice(): String = error("not used")

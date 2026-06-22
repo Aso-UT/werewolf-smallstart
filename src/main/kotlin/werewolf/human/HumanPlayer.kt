@@ -18,7 +18,7 @@ class HumanPlayer(role: Role, override val name: String, private val io: PlayerI
         Choice(this, context, io.promptPlayer(context.title, context.description, context.candidates()), "プレイヤーが選択")
 
     override fun onReceive(event: GameEvent) {
-        io.sendMessage(event.title, event.body())
+        io.display(event.toRecallView())
     }
 
     override fun speak(context: DiscussionContext): Claim {
