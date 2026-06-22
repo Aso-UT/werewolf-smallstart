@@ -1,6 +1,5 @@
 package werewolf.web
 
-import kotlinx.coroutines.channels.Channel
 import werewolf.game.Choice
 import werewolf.game.Claim
 import werewolf.game.ChronicleView
@@ -22,10 +21,6 @@ class WebPlayer(role: Role, override val name: String) : Player(role) {
     fun requestAbort() = webHumanIO.requestAbort()
 
     private fun checkAbort() = webHumanIO.checkAbort()
-
-    private fun enqueue(message: String) {
-        check(outgoing.trySend(message).isSuccess) { "Failed to queue message" }
-    }
 
     override fun onReceive(event: GameEvent) {
         checkAbort()
@@ -78,22 +73,5 @@ class WebPlayer(role: Role, override val name: String) : Player(role) {
         return Statement.MediumReport(this, target, results.first { it.displayName == resultName })
     }
 
-    override fun watchEpilogue(chronicles: List<ChronicleView>) {
-        val json = chronicles.joinToString(",", "[", "]") { it.toJson() }
-        enqueue("""{"type":"epilogue","chronicles":$json}""")
-        outgoing.close()
-    }
+    override fun watchEpilogue(chronicles: List<ChronicleView>) = webHumanIO.watchEpilogue(chronicles)
 }
-
-private fun ChronicleView.toJson(): String = when (this) {
-    is ChronicleView.Observation ->
-        """{"type":"observation","recipient":${recipient.jsonEncode()}""" +
-        ""","category":${category.jsonEncode()},"content":${content.jsonEncode()}}"""
-    is ChronicleView.Action ->
-        """{"type":"action","actor":${actor.jsonEncode()}""" +
-        ""","category":${category.jsonEncode()},"content":${content.jsonEncode()}""" +
-        ""","intent":${intent.jsonEncode()}}"""
-}
-
-private fun String.jsonEncode(): String =
-    "\"${replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "").replace("\t", " ")}\""

@@ -2,6 +2,7 @@ package werewolf.web
 
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
+import werewolf.game.ChronicleView
 import werewolf.game.GameOverSignal
 
 class WebHumanIO {
@@ -40,9 +41,25 @@ class WebHumanIO {
         return text
     }
 
+    fun watchEpilogue(chronicles: List<ChronicleView>) {
+        val json = chronicles.joinToString(",", "[", "]") { it.toJson() }
+        enqueue("""{"type":"epilogue","chronicles":$json}""")
+        outgoing.close()
+    }
+
     private fun enqueue(message: String) {
         check(outgoing.trySend(message).isSuccess) { "Failed to queue message" }
     }
+}
+
+private fun ChronicleView.toJson(): String = when (this) {
+    is ChronicleView.Observation ->
+        """{"type":"observation","recipient":${recipient.jsonEncode()}""" +
+        ""","category":${category.jsonEncode()},"content":${content.jsonEncode()}}"""
+    is ChronicleView.Action ->
+        """{"type":"action","actor":${actor.jsonEncode()}""" +
+        ""","category":${category.jsonEncode()},"content":${content.jsonEncode()}""" +
+        ""","intent":${intent.jsonEncode()}}"""
 }
 
 private fun String.jsonEncode(): String =
