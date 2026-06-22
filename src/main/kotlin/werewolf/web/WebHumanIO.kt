@@ -19,6 +19,7 @@ class WebHumanIO {
     }
 
     fun sendMessage(title: String, content: String) {
+        checkAbort()
         enqueue("""{"type":"event","title":${title.jsonEncode()},"body":${content.jsonEncode()}}""")
     }
 

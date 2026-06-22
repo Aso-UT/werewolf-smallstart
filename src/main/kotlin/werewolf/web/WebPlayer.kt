@@ -17,7 +17,6 @@ class WebPlayer(role: Role, override val name: String, private val webHumanIO: W
     private fun checkAbort() = webHumanIO.checkAbort()
 
     override fun onReceive(event: GameEvent) {
-        checkAbort()
         webHumanIO.sendMessage(event.title, event.body())
     }
 
