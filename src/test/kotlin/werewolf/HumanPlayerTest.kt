@@ -15,9 +15,7 @@ class HumanPlayerTest {
         val messages = mutableListOf<Pair<String, String>>()
         override fun display(view: RecallView) = error("display not expected")
         override fun sendMessage(title: String, content: String) { messages += title to content }
-        override fun readFreeText(): String = error("not used")
-        override fun readChoice(): String = error("not used")
-        override fun readPlayer(): String = error("not used")
+        override fun readInput(): String = error("not used")
     }
 
     @Test

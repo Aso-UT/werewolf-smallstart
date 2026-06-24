@@ -1,8 +1,8 @@
 package werewolf.human
 
 import werewolf.game.GameOverSignal
-import werewolf.game.Player
 import werewolf.game.RecallView
+import werewolf.view.ChoiceView
 
 abstract class PlayerIO {
     companion object {
@@ -11,33 +11,21 @@ abstract class PlayerIO {
 
     abstract fun display(view: RecallView)
     abstract fun sendMessage(title: String, content: String)
-    protected abstract fun readFreeText(): String
-    protected abstract fun readChoice(): String
-    protected abstract fun readPlayer(): String
+    protected abstract fun readInput(): String
 
     fun promptFreeText(title: String, content: String): String {
         sendMessage(title, content)
-        return readFreeText()
+        return readInput()
     }
 
-    fun promptPlayer(title: String, content: String, candidates: List<Player>): Player {
+    fun promptChoice(view: ChoiceView): String {
+        val optionsText = view.options.mapIndexed { i, option -> "${i + 1}: $option" }.joinToString("\n")
         while (true) {
-            sendMessage(title, "$content: ${candidates.joinToString(", ") { it.name }}")
-            val input = readPlayer()
-            val player = candidates.firstOrNull { it.name == input }
-            if (player != null) return player
-            sendMessage(title, "「$input」は候補にいません。もう一度入力してください。")
-        }
-    }
-
-    fun promptChoice(title: String, content: String, options: List<String>): Int {
-        val optionsText = options.mapIndexed { i, option -> "${i + 1}: $option" }.joinToString("\n")
-        while (true) {
-            sendMessage(title, "$content\n$optionsText")
-            val input = readChoice().toIntOrNull()
-            if (input == ABORT_PASSWORD) GameOverSignal.throwManualAbort()
-            if (input != null && input in 1..options.size) return input - 1
-            sendMessage(title, "1〜${options.size}の数字を入力してください。")
+            sendMessage(view.title, "${view.description}\n$optionsText")
+            val number = readInput().toIntOrNull()
+            if (number == ABORT_PASSWORD) GameOverSignal.throwManualAbort()
+            if (number != null && number in 1..view.options.size) return view.options[number - 1]
+            sendMessage(view.title, "1〜${view.options.size}の数字を入力してください。")
         }
     }
 }

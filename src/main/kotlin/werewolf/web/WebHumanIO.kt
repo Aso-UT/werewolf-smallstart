@@ -5,6 +5,7 @@ import kotlinx.coroutines.runBlocking
 import werewolf.game.ChronicleView
 import werewolf.game.GameOverSignal
 import werewolf.game.RecallView
+import werewolf.view.ChoiceView
 
 class WebHumanIO {
     val outgoing = Channel<String>(Channel.UNLIMITED)
@@ -24,15 +25,15 @@ class WebHumanIO {
         enqueue(view.toJson())
     }
 
-    fun promptChoice(title: String, description: String, options: List<String>): String {
+    fun promptChoice(view: ChoiceView): String {
         checkAbort()
-        val optionsJson = options.joinToString(",") { it.jsonEncode() }
-        val prompt = """{"type":"choose","title":${title.jsonEncode()},"description":${description.jsonEncode()},"candidates":[$optionsJson]}"""
+        val optionsJson = view.options.joinToString(",") { it.jsonEncode() }
+        val prompt = """{"type":"choose","title":${view.title.jsonEncode()},"description":${view.description.jsonEncode()},"candidates":[$optionsJson]}"""
         enqueue(prompt)
         while (true) {
             val selected = runBlocking { incoming.receive() }
             checkAbort()
-            if (selected in options) return selected
+            if (selected in view.options) return selected
             enqueue(prompt)
         }
     }

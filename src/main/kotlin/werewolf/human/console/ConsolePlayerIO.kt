@@ -13,7 +13,5 @@ class ConsolePlayerIO : PlayerIO() {
         println("[$title] $content")
     }
 
-    override fun readFreeText(): String = readLine() ?: ""
-    override fun readChoice(): String = readLine() ?: ""
-    override fun readPlayer(): String = readLine() ?: ""
+    override fun readInput(): String = readLine() ?: ""
 }

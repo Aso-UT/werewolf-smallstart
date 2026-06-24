@@ -18,9 +18,7 @@ class HumanPlayerEpilogueTest {
         val messages = mutableListOf<Pair<String, String>>()
         override fun display(view: RecallView) {}
         override fun sendMessage(title: String, content: String) { messages += title to content }
-        override fun readFreeText(): String = "human speaks"
-        override fun readChoice(): String = "1"
-        override fun readPlayer(): String = error("not used")
+        override fun readInput(): String = "1"
     }
 
     private class SpeakingPlayer(role: Role, name: String) : NothingPlayer(role, name) {

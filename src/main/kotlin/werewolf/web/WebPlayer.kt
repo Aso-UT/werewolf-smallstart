@@ -12,6 +12,7 @@ import werewolf.game.Role
 import werewolf.game.SelectionContext
 import werewolf.game.Statement
 import werewolf.game.StatementType
+import werewolf.view.ChoiceView
 
 class WebPlayer(role: Role, override val name: String, private val webHumanIO: WebHumanIO) : Player(role) {
     override fun onReceive(event: GameEvent) {
@@ -20,7 +21,7 @@ class WebPlayer(role: Role, override val name: String, private val webHumanIO: W
 
     override fun choose(context: SelectionContext): Choice {
         val candidates = context.candidates()
-        val selected = webHumanIO.promptChoice(context.title, context.description, candidates.map { it.name })
+        val selected = webHumanIO.promptChoice(ChoiceView(context.title, context.description, candidates.map { it.name }))
         return Choice(this, context, candidates.first { it.name == selected }, "ブラウザ選択")
     }
 
@@ -37,7 +38,7 @@ class WebPlayer(role: Role, override val name: String, private val webHumanIO: W
     private fun selectStatementType(context: DiscussionContext): StatementType {
         val types = StatementType.entries.filter { it in context.availableTypes }
         if (types.size == 1) return types.first()
-        val selected = webHumanIO.promptChoice(context.title, context.description, types.map { it.displayName })
+        val selected = webHumanIO.promptChoice(ChoiceView(context.title, context.description, types.map { it.displayName }))
         return types.first { it.displayName == selected }
     }
 
@@ -46,19 +47,19 @@ class WebPlayer(role: Role, override val name: String, private val webHumanIO: W
 
     private fun buildDivinationReport(context: DiscussionContext): Statement {
         val candidates = context.allPlayers.filter { it !== this }
-        val targetName = webHumanIO.promptChoice("占い報告 - 対象", "誰の占い結果を報告しますか？", candidates.map { it.name })
+        val targetName = webHumanIO.promptChoice(ChoiceView("占い報告 - 対象", "誰の占い結果を報告しますか？", candidates.map { it.name }))
         val target = candidates.first { it.name == targetName }
         val results = DivineResult.entries
-        val resultName = webHumanIO.promptChoice("占い報告 - 結果", "占い結果を選んでください", results.map { it.displayName })
+        val resultName = webHumanIO.promptChoice(ChoiceView("占い報告 - 結果", "占い結果を選んでください", results.map { it.displayName }))
         return Statement.DivinationReport(this, target, results.first { it.displayName == resultName })
     }
 
     private fun buildMediumReport(context: DiscussionContext): Statement {
         val candidates = context.allPlayers.filter { it !== this }
-        val targetName = webHumanIO.promptChoice("霊媒報告 - 対象", "誰の霊媒結果を報告しますか？", candidates.map { it.name })
+        val targetName = webHumanIO.promptChoice(ChoiceView("霊媒報告 - 対象", "誰の霊媒結果を報告しますか？", candidates.map { it.name }))
         val target = candidates.first { it.name == targetName }
         val results = MediumResult.entries
-        val resultName = webHumanIO.promptChoice("霊媒報告 - 結果", "霊媒結果を選んでください", results.map { it.displayName })
+        val resultName = webHumanIO.promptChoice(ChoiceView("霊媒報告 - 結果", "霊媒結果を選んでください", results.map { it.displayName }))
         return Statement.MediumReport(this, target, results.first { it.displayName == resultName })
     }
 
