@@ -18,7 +18,7 @@ class HumanPlayer(role: Role, override val name: String, private val io: PlayerI
     override fun choose(context: SelectionContext): Choice {
         val candidates = context.candidates()
         val selected = io.promptChoice(ChoiceView(context.title, context.description, candidates.map { it.name }))
-        return Choice(this, context, candidates.first { it.name == selected }, "プレイヤーが選択")
+        return Choice(this, context, candidates.single { it.name == selected }, "プレイヤーが選択")
     }
 
     override fun onReceive(event: GameEvent) {
@@ -39,7 +39,7 @@ class HumanPlayer(role: Role, override val name: String, private val io: PlayerI
         val types = StatementType.entries.filter { it in context.availableTypes }
         if (types.size == 1) return types.first()
         val selected = io.promptChoice(ChoiceView(context.title, context.description, types.map { it.displayName }))
-        return types.first { it.displayName == selected }
+        return types.single { it.displayName == selected }
     }
 
     private fun buildPlain(context: DiscussionContext): Statement =
@@ -48,19 +48,19 @@ class HumanPlayer(role: Role, override val name: String, private val io: PlayerI
     private fun buildDivinationReport(context: DiscussionContext): Statement {
         val candidates = context.allPlayers.filter { it !== this }
         val targetName = io.promptChoice(ChoiceView("占い報告 - 対象", "誰の占い結果を報告しますか？", candidates.map { it.name }))
-        val target = candidates.first { it.name == targetName }
+        val target = candidates.single { it.name == targetName }
         val results = DivineResult.entries
         val resultName = io.promptChoice(ChoiceView("占い報告 - 結果", "占い結果を選んでください", results.map { it.displayName }))
-        return Statement.DivinationReport(this, target, results.first { it.displayName == resultName })
+        return Statement.DivinationReport(this, target, results.single { it.displayName == resultName })
     }
 
     private fun buildMediumReport(context: DiscussionContext): Statement {
         val candidates = context.allPlayers.filter { it !== this }
         val targetName = io.promptChoice(ChoiceView("霊媒報告 - 対象", "誰の霊媒結果を報告しますか？", candidates.map { it.name }))
-        val target = candidates.first { it.name == targetName }
+        val target = candidates.single { it.name == targetName }
         val results = MediumResult.entries
         val resultName = io.promptChoice(ChoiceView("霊媒報告 - 結果", "霊媒結果を選んでください", results.map { it.displayName }))
-        return Statement.MediumReport(this, target, results.first { it.displayName == resultName })
+        return Statement.MediumReport(this, target, results.single { it.displayName == resultName })
     }
 
     override fun watchEpilogue(chronicles: List<ChronicleView>) {
