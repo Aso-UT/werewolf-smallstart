@@ -28,14 +28,11 @@ class WebHumanIO {
     fun promptChoice(view: ChoiceView): String {
         checkAbort()
         val optionsJson = view.options.joinToString(",") { it.jsonEncode() }
-        val prompt = """{"type":"choose","title":${view.title.jsonEncode()},"description":${view.description.jsonEncode()},"candidates":[$optionsJson]}"""
-        enqueue(prompt)
-        while (true) {
-            val selected = runBlocking { incoming.receive() }
-            checkAbort()
-            if (selected in view.options) return selected
-            enqueue(prompt)
-        }
+        enqueue("""{"type":"choose","title":${view.title.jsonEncode()},"description":${view.description.jsonEncode()},"candidates":[$optionsJson]}""")
+        val selected = runBlocking { incoming.receive() }
+        checkAbort()
+        check(selected in view.options) { "Unexpected choice from web client: $selected" }
+        return selected
     }
 
     fun promptFreeText(title: String, description: String): String {

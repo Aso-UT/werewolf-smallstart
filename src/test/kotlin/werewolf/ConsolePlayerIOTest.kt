@@ -3,12 +3,13 @@ package werewolf
 import werewolf.game.GameOverSignal
 import werewolf.game.RecallView
 import werewolf.human.PlayerIO
+import werewolf.human.console.ConsolePlayerIO
 import werewolf.view.ChoiceView
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class PlayerIOTest {
+class ConsolePlayerIOTest {
 
     private class TestPlayerIO(
         private val inputs: ArrayDeque<String> = ArrayDeque(),
@@ -17,13 +18,17 @@ class PlayerIOTest {
         override fun display(view: RecallView) = error("display not expected")
         override fun sendMessage(title: String, content: String) { messages += title to content }
         override fun readInput(): String = inputs.removeFirst()
+        override fun promptChoice(view: ChoiceView): String = error("not used")
     }
 
-    private fun inputIO(vararg inputs: String) = TestPlayerIO(ArrayDeque(inputs.toList()))
+    private fun consoleIO(vararg inputs: String): ConsolePlayerIO {
+        val queue = ArrayDeque(inputs.toList())
+        return ConsolePlayerIO { queue.removeFirst() }
+    }
 
     @Test
     fun `promptFreeText sends message and returns input`() {
-        val io = inputIO("hello")
+        val io = TestPlayerIO(ArrayDeque(listOf("hello")))
         val result = io.promptFreeText("title", "content")
         assertEquals("hello", result)
         assertEquals("title" to "content", io.messages.single())
@@ -31,25 +36,25 @@ class PlayerIOTest {
 
     @Test
     fun `promptChoice returns option name for valid numeric input`() {
-        val io = inputIO("2")
+        val io = consoleIO("2")
         assertEquals("B", io.promptChoice(ChoiceView("title", "content", listOf("A", "B", "C"))))
     }
 
     @Test
     fun `promptChoice retries on out-of-range input then succeeds`() {
-        val io = inputIO("0", "4", "2")
+        val io = consoleIO("0", "4", "2")
         assertEquals("B", io.promptChoice(ChoiceView("title", "content", listOf("A", "B", "C"))))
     }
 
     @Test
     fun `promptChoice retries on non-numeric input then succeeds`() {
-        val io = inputIO("abc", "1")
+        val io = consoleIO("abc", "1")
         assertEquals("A", io.promptChoice(ChoiceView("title", "content", listOf("A"))))
     }
 
     @Test
     fun `promptChoice throws GameOverSignal on abort password`() {
-        val io = inputIO("4423")
+        val io = consoleIO("4423")
         assertFailsWith<GameOverSignal> {
             io.promptChoice(ChoiceView("title", "content", listOf("A")))
         }
