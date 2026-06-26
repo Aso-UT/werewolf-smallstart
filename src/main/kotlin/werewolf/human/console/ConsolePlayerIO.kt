@@ -5,10 +5,7 @@ import werewolf.game.RecallView
 import werewolf.human.PlayerIO
 import werewolf.view.ChoiceView
 
-class ConsolePlayerIO internal constructor(
-    private val reader: () -> String,
-) : PlayerIO() {
-    constructor() : this({ readLine() ?: "" })
+class ConsolePlayerIO : PlayerIO() {
 
     companion object {
         private const val ABORT_PASSWORD = 4423
@@ -23,7 +20,7 @@ class ConsolePlayerIO internal constructor(
         println("[$title] $content")
     }
 
-    override fun readInput(): String = reader()
+    override fun readInput(): String = readLine() ?: ""
 
     override fun promptChoice(view: ChoiceView): String {
         val optionsText = view.options.mapIndexed { i, option -> "${i + 1}: $option" }.joinToString("\n")
