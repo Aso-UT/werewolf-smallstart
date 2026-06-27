@@ -14,7 +14,7 @@ import kotlin.test.assertTrue
 
 class HumanPlayerEpilogueTest {
 
-    private class SpeakingIO : HumanIO() {
+    private class SpeakingIO : HumanIO {
         var capturedChronicles: List<ChronicleView> = emptyList()
         override fun display(view: RecallView) {}
         override fun promptFreeText(title: String, description: String): String = "human speaks"

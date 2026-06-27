@@ -14,18 +14,16 @@ import io.ktor.websocket.readText
 import io.ktor.websocket.send
 import java.util.concurrent.CountDownLatch
 import kotlinx.coroutines.launch
-import werewolf.game.Player
-import werewolf.game.Role
-import werewolf.human.HumanPlayer
+import werewolf.human.HumanIO
 import werewolf.human.web.WebHumanIO
 
 class WebHumanConnection : HumanConnection {
     private lateinit var webHumanIO: WebHumanIO
     private lateinit var server: EmbeddedServer<*, *>
 
-    override fun createPlayer(role: Role, name: String): Player {
+    override fun createIO(): HumanIO {
         webHumanIO = WebHumanIO()
-        return HumanPlayer(role, name, webHumanIO)
+        return webHumanIO
     }
 
     override fun setup() {

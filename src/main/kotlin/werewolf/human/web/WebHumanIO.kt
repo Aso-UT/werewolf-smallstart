@@ -8,7 +8,7 @@ import werewolf.game.RecallView
 import werewolf.human.HumanIO
 import werewolf.view.ChoiceView
 
-class WebHumanIO : HumanIO() {
+class WebHumanIO : HumanIO {
     val outgoing = Channel<String>(Channel.UNLIMITED)
     val incoming = Channel<String>(Channel.UNLIMITED)
     @Volatile private var abortRequested = false

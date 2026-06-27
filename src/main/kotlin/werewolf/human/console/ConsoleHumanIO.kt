@@ -6,7 +6,7 @@ import werewolf.game.RecallView
 import werewolf.human.HumanIO
 import werewolf.view.ChoiceView
 
-class ConsoleHumanIO : HumanIO() {
+class ConsoleHumanIO : HumanIO {
 
     companion object {
         private const val ABORT_PASSWORD = 4423
