@@ -6,14 +6,14 @@
 
 ## テストしないもの
 
-以下はテストを書かない。
+以下はテストを書かない。`build.gradle.kts` の JaCoCo および SonarCloud のカバレッジ計測からも除外している。
 
-- **`ConsoleHumanIO`**: stdin/stdout を直接扱うため自動テストが難しい。
+- **`ConsoleHumanIO`** (`werewolf/human/console/**`): stdin/stdout を直接扱うため自動テストが難しい。
   設計上ここにロジックを置かないことでテストの必要性を最小化している。
-- **`werewolf.human.web` / `werewolf.lodge.WebHumanConnection`**:
-  Ktor サーバーや WebSocket チャネルなどインフラに依存しており、
+- **`WebHumanIO`** (`werewolf/human/web/**`): Ktor WebSocket チャネルなどインフラに依存しており、
   ユニットテストの対象としてなじまない。
   設計上ここにロジックを置かないことでテストの必要性を最小化している。
+- **`werewolf/lodge/**`**: 役職・プレイヤーの組み合わせを定義する配線コードのため。
 
 それ以外のコードは、テスト実装（後述）を使えば基本的にテスト可能。
 
