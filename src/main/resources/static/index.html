@@ -9,6 +9,7 @@
         #log { border: 1px solid #ccc; height: 500px; overflow-y: auto; padding: 8px; background: #fafafa; }
         .event { margin: 4px 0; line-height: 1.4; }
         .title { font-weight: bold; color: #444; }
+        .intent { color: #888; font-size: 0.9em; }
         .epilogue { margin-top: 16px; padding: 12px; background: #eef; white-space: pre-wrap; border-left: 4px solid #88a; }
         #controls { margin-top: 8px; margin-bottom: 8px; }
         #input-area { margin-bottom: 8px; padding: 12px; border: 2px solid #88a; background: #f0f0fa; display: none; }
@@ -47,10 +48,11 @@
         ws.onerror = () => { status.textContent = 'エラー'; };
 
         const handlers = {
-            event:    (msg) => showEvent(msg.title, msg.body),
-            epilogue: (msg) => showEpilogue(msg.chronicles),
-            choose:   (msg) => showChoose(msg.title, msg.description, msg.candidates),
-            speak:    (msg) => showSpeak(msg.title, msg.description),
+            observation: (msg) => showEvent(msg.title, msg.body),
+            action:      (msg) => showAction(msg.title, msg.body, msg.intent),
+            epilogue:    (msg) => showEpilogue(msg.chronicles),
+            choose:      (msg) => showChoose(msg.title, msg.description, msg.candidates),
+            speak:       (msg) => showSpeak(msg.title, msg.description),
         };
 
         ws.onmessage = (event) => {
@@ -68,6 +70,11 @@
 
         function showEvent(title, body) {
             appendLog('event', `<span class="title">[${esc(title)}]</span> ${esc(body)}`);
+        }
+
+        function showAction(title, body, intent) {
+            const intentHtml = intent ? `<br><span class="intent">  [${esc(intent)}]</span>` : '';
+            appendLog('event', `<span class="title">[${esc(title)}]</span> ${esc(body)}${intentHtml}`);
         }
 
         function showEpilogue(chronicles) {

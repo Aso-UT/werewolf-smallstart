@@ -57,9 +57,9 @@ class WebHumanIO : HumanIO {
 
 private fun RecallView.toJson(): String = when (this) {
     is RecallView.Observation ->
-        """{"type":"event","title":${category.jsonEncode()},"body":${content.jsonEncode()}}"""
+        """{"type":"observation","title":${category.jsonEncode()},"body":${content.jsonEncode()}}"""
     is RecallView.Action ->
-        """{"type":"event","title":${category.jsonEncode()},"body":${content.jsonEncode()},"intent":${intent.jsonEncode()}}"""
+        """{"type":"action","title":${category.jsonEncode()},"body":${content.jsonEncode()},"intent":${intent.jsonEncode()}}"""
 }
 
 private fun ChronicleView.toJson(): String = when (this) {
