@@ -16,11 +16,31 @@ git config core.hooksPath .githooks
 ```
 
 pre-commit フックが有効になり、コミット前に `./gradlew check`（静的解析＋テスト）が自動実行されます。
+フロントエンドファイルを変更した場合は `./gradlew npmBuild`（脆弱性チェック＋型チェック＋ビルド）も実行されます。
 
 ## 実行
 
 ```bash
-./gradlew run
+./gradlew npmBuild   # フロントエンドをビルド（初回および変更時）
+./gradlew run        # サーバー起動 → http://localhost:8080
+```
+
+> **Note:** `npmBuild` は内部で `npm ci`（lockfile 通りの厳密インストール）・脆弱性チェック・型チェックを自動実行します。Node.js が必要です。
+
+### 依存パッケージの更新（メンテナンス時のみ）
+
+```bash
+./gradlew npmUpdateDeps   # package-lock.json を更新し脆弱性チェックを実行
+git diff frontend/svelte/package-lock.json   # 変更内容を確認してからコミット
+```
+
+### Web UI 開発時（Svelte ファイルを編集しながら確認する場合）
+
+```bash
+./gradlew run                              # ターミナル1：Kotlin サーバー起動
+cd frontend/svelte && npm run dev          # ターミナル2：Vite dev server 起動
+# http://localhost:5173 をブラウザで開く
+# .svelte を編集・保存するたびブラウザが自動更新される
 ```
 
 ## テスト・静的解析

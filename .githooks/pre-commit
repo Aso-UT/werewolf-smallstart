@@ -14,3 +14,7 @@ if git diff --cached --name-only | grep -qE "(^|/)\.env"; then
 fi
 
 ./gradlew check
+
+if git diff --cached --name-only | grep -q "^frontend/"; then
+    ./gradlew npmBuild
+fi
