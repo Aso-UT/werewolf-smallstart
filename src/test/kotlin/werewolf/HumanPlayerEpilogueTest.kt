@@ -2,7 +2,7 @@ package werewolf
 
 import werewolf.game.*
 import werewolf.human.HumanPlayer
-import werewolf.human.PlayerIO
+import werewolf.human.HumanIO
 import werewolf.view.ChoiceView
 import werewolf.phase.Conclave
 import werewolf.phase.Epilogue
@@ -14,7 +14,7 @@ import kotlin.test.assertTrue
 
 class HumanPlayerEpilogueTest {
 
-    private class SpeakingIO : PlayerIO() {
+    private class SpeakingIO : HumanIO() {
         var capturedChronicles: List<ChronicleView> = emptyList()
         override fun display(view: RecallView) {}
         override fun promptFreeText(title: String, description: String): String = "human speaks"

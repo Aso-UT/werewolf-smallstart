@@ -14,7 +14,7 @@ import werewolf.game.Statement
 import werewolf.game.StatementType
 import werewolf.view.ChoiceView
 
-class HumanPlayer(role: Role, override val name: String, private val io: PlayerIO) : Player(role) {
+class HumanPlayer(role: Role, override val name: String, private val io: HumanIO) : Player(role) {
     override fun choose(context: SelectionContext): Choice {
         val candidates = context.candidates()
         val selected = io.promptChoice(ChoiceView(context.title, context.description, candidates.map { it.name }))

@@ -3,10 +3,10 @@ package werewolf.human.console
 import werewolf.game.ChronicleView
 import werewolf.game.GameOverSignal
 import werewolf.game.RecallView
-import werewolf.human.PlayerIO
+import werewolf.human.HumanIO
 import werewolf.view.ChoiceView
 
-class ConsolePlayerIO : PlayerIO() {
+class ConsolePlayerIO : HumanIO() {
 
     companion object {
         private const val ABORT_PASSWORD = 4423
