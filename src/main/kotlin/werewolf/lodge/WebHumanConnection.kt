@@ -16,8 +16,8 @@ import java.util.concurrent.CountDownLatch
 import kotlinx.coroutines.launch
 import werewolf.game.Player
 import werewolf.game.Role
-import werewolf.web.WebHumanIO
-import werewolf.web.WebPlayer
+import werewolf.human.HumanPlayer
+import werewolf.human.web.WebHumanIO
 
 class WebHumanConnection : HumanConnection {
     private lateinit var webHumanIO: WebHumanIO
@@ -25,7 +25,7 @@ class WebHumanConnection : HumanConnection {
 
     override fun createPlayer(role: Role, name: String): Player {
         webHumanIO = WebHumanIO()
-        return WebPlayer(role, name, webHumanIO)
+        return HumanPlayer(role, name, webHumanIO)
     }
 
     override fun setup() {

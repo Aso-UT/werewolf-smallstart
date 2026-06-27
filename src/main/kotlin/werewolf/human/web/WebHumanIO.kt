@@ -1,13 +1,14 @@
-package werewolf.web
+package werewolf.human.web
 
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import werewolf.game.ChronicleView
 import werewolf.game.GameOverSignal
 import werewolf.game.RecallView
+import werewolf.human.HumanIO
 import werewolf.view.ChoiceView
 
-class WebHumanIO {
+class WebHumanIO : HumanIO() {
     val outgoing = Channel<String>(Channel.UNLIMITED)
     val incoming = Channel<String>(Channel.UNLIMITED)
     @Volatile private var abortRequested = false
@@ -20,12 +21,12 @@ class WebHumanIO {
         if (abortRequested) GameOverSignal.throwManualAbort()
     }
 
-    fun display(view: RecallView) {
+    override fun display(view: RecallView) {
         checkAbort()
         enqueue(view.toJson())
     }
 
-    fun promptChoice(view: ChoiceView): String {
+    override fun promptChoice(view: ChoiceView): String {
         checkAbort()
         val optionsJson = view.options.joinToString(",") { it.jsonEncode() }
         enqueue("""{"type":"choose","title":${view.title.jsonEncode()},"description":${view.description.jsonEncode()},"candidates":[$optionsJson]}""")
@@ -35,7 +36,7 @@ class WebHumanIO {
         return selected
     }
 
-    fun promptFreeText(title: String, description: String): String {
+    override fun promptFreeText(title: String, description: String): String {
         checkAbort()
         enqueue("""{"type":"speak","title":${title.jsonEncode()},"description":${description.jsonEncode()}}""")
         val text = runBlocking { incoming.receive() }
@@ -43,7 +44,7 @@ class WebHumanIO {
         return text
     }
 
-    fun watchEpilogue(chronicles: List<ChronicleView>) {
+    override fun watchEpilogue(chronicles: List<ChronicleView>) {
         val json = chronicles.joinToString(",", "[", "]") { it.toJson() }
         enqueue("""{"type":"epilogue","chronicles":$json}""")
         outgoing.close()

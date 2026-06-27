@@ -38,17 +38,10 @@ class ArchitectureTest {
             )
 
     @ArchTest
-    val humanMustNotDependOnPhaseCpuAiLodgeOrWeb: ArchRule =
+    val humanMustNotDependOnPhaseCpuAiOrLodge: ArchRule =
         noClasses().that().resideInAPackage("werewolf.human..")
             .should().dependOnClassesThat().resideInAnyPackage(
-                "werewolf.phase..", "werewolf.cpu..", "werewolf.ai..", "werewolf.lodge..", "werewolf.web.."
-            )
-
-    @ArchTest
-    val webMustNotDependOnPhaseCpuAiLodgeOrHuman: ArchRule =
-        noClasses().that().resideInAPackage("werewolf.web..")
-            .should().dependOnClassesThat().resideInAnyPackage(
-                "werewolf.phase..", "werewolf.cpu..", "werewolf.ai..", "werewolf.lodge..", "werewolf.human.."
+                "werewolf.phase..", "werewolf.cpu..", "werewolf.ai..", "werewolf.lodge.."
             )
 
     @ArchTest
