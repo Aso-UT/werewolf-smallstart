@@ -17,11 +17,16 @@ class ConsolePlayerIO : PlayerIO() {
         is RecallView.Action -> println("[${view.category}] ${view.content}\n  [${view.intent}]")
     }
 
-    override fun sendMessage(title: String, content: String) {
+    private fun sendMessage(title: String, content: String) {
         println("[$title] $content")
     }
 
-    override fun readInput(): String = readLine() ?: ""
+    private fun readInput(): String = readLine() ?: ""
+
+    override fun promptFreeText(title: String, description: String): String {
+        sendMessage(title, description)
+        return readInput()
+    }
 
     override fun promptChoice(view: ChoiceView): String {
         val optionsText = view.options.mapIndexed { i, option -> "${i + 1}: $option" }.joinToString("\n")

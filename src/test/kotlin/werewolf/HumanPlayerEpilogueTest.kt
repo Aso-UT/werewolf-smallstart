@@ -17,8 +17,7 @@ class HumanPlayerEpilogueTest {
     private class SpeakingIO : PlayerIO() {
         var capturedChronicles: List<ChronicleView> = emptyList()
         override fun display(view: RecallView) {}
-        override fun sendMessage(title: String, content: String) {}
-        override fun readInput(): String = "human speaks"
+        override fun promptFreeText(title: String, description: String): String = "human speaks"
         override fun promptChoice(view: ChoiceView): String = view.options.first()
         override fun watchEpilogue(chronicles: List<ChronicleView>) { capturedChronicles = chronicles }
     }
