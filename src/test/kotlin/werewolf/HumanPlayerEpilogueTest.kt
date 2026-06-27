@@ -3,7 +3,6 @@ package werewolf
 import werewolf.game.*
 import werewolf.human.HumanPlayer
 import werewolf.human.PlayerIO
-import werewolf.game.RecallView
 import werewolf.view.ChoiceView
 import werewolf.phase.Conclave
 import werewolf.phase.Epilogue
@@ -16,11 +15,12 @@ import kotlin.test.assertTrue
 class HumanPlayerEpilogueTest {
 
     private class SpeakingIO : PlayerIO() {
-        val messages = mutableListOf<Pair<String, String>>()
+        var capturedChronicles: List<ChronicleView> = emptyList()
         override fun display(view: RecallView) {}
-        override fun sendMessage(title: String, content: String) { messages += title to content }
+        override fun sendMessage(title: String, content: String) {}
         override fun readInput(): String = "human speaks"
         override fun promptChoice(view: ChoiceView): String = view.options.first()
+        override fun watchEpilogue(chronicles: List<ChronicleView>) { capturedChronicles = chronicles }
     }
 
     private class SpeakingPlayer(role: Role, name: String) : NothingPlayer(role, name) {
@@ -40,9 +40,8 @@ class HumanPlayerEpilogueTest {
         OpenDiscussion(setup.playerManager, day = 1).conduct()
         Epilogue(setup.playerManager, setup.oracle, fakeCitizenWinSignal()).perform()
 
-        val content = io.messages.last().second
-        assertTrue(content.contains("[Speaker] [議論]"))
-        assertFalse(content.contains("発言（"))  // StatementMade のタイトルパターン
+        assertTrue(io.capturedChronicles.any { it is ChronicleView.Action && it.actor == "Speaker" && it.category == "議論" })
+        assertFalse(io.capturedChronicles.any { it is ChronicleView.Observation && it.category == "発言" })
     }
 
     @Test
@@ -55,8 +54,7 @@ class HumanPlayerEpilogueTest {
         Conclave(setup.oracle, setup.playerManager, day = 1).conduct()
         Epilogue(setup.playerManager, setup.oracle, fakeCitizenWinSignal()).perform()
 
-        val content = io.messages.last().second
-        assertTrue(content.contains("[Wolf] [密談]"))
-        assertFalse(content.contains("密談（"))  // WerewolfStatementMade のタイトルパターン
+        assertTrue(io.capturedChronicles.any { it is ChronicleView.Action && it.actor == "Wolf" && it.category == "密談" })
+        assertFalse(io.capturedChronicles.any { it is ChronicleView.Observation && it.category == "密談" })
     }
 }

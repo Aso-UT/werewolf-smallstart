@@ -1,5 +1,6 @@
 package werewolf.human.console
 
+import werewolf.game.ChronicleView
 import werewolf.game.GameOverSignal
 import werewolf.game.RecallView
 import werewolf.human.PlayerIO
@@ -31,5 +32,17 @@ class ConsolePlayerIO : PlayerIO() {
             if (number != null && number in 1..view.options.size) return view.options[number - 1]
             sendMessage(view.title, "1〜${view.options.size}の数字を入力してください。")
         }
+    }
+
+    override fun watchEpilogue(chronicles: List<ChronicleView>) {
+        sendMessage("ゲーム振り返り", chronicles.joinToString("\n") { it.formatForConsole() })
+    }
+}
+
+private fun ChronicleView.formatForConsole(): String = when (this) {
+    is ChronicleView.Observation -> "[$recipient] [$category] $content"
+    is ChronicleView.Action -> {
+        val line = "[$actor] [$category] $content"
+        if (intent.isNotEmpty()) "$line\n  [$intent]" else line
     }
 }
