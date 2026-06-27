@@ -49,3 +49,7 @@ bin/
 
 ### Secrets ###
 .env*
+
+### Frontend ###
+frontend/svelte/node_modules/
+frontend/svelte/dist/

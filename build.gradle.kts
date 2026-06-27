@@ -56,6 +56,51 @@ kotlin {
     jvmToolchain(17)
 }
 
+val npm = if (System.getProperty("os.name").startsWith("Win")) "npm.cmd" else "npm"
+
+val npmInstall by tasks.registering(Exec::class) {
+    workingDir = file("frontend/svelte")
+    commandLine(npm, "ci")
+    inputs.files("frontend/svelte/package.json", "frontend/svelte/package-lock.json")
+}
+
+val npmAudit by tasks.registering(Exec::class) {
+    dependsOn(npmInstall)
+    workingDir = file("frontend/svelte")
+    commandLine(npm, "audit")
+}
+
+val npmCheck by tasks.registering(Exec::class) {
+    dependsOn(npmInstall)
+    workingDir = file("frontend/svelte")
+    commandLine(npm, "run", "check")
+}
+
+val npmBuild by tasks.registering(Exec::class) {
+    dependsOn(npmAudit, npmCheck)
+    workingDir = file("frontend/svelte")
+    commandLine(npm, "run", "build")
+    inputs.dir("frontend/svelte/src")
+    inputs.files(
+        "frontend/svelte/index.html",
+        "frontend/svelte/vite.config.ts",
+        "frontend/svelte/svelte.config.js",
+    )
+    outputs.dir("frontend/svelte/dist")
+}
+
+val npmUpdateDeps by tasks.registering(Exec::class) {
+    workingDir = file("frontend/svelte")
+    commandLine(npm, "install")
+    finalizedBy(npmAudit)
+}
+
+tasks.processResources {
+    from("frontend/svelte/dist") {
+        into("static/svelte")
+    }
+}
+
 detekt {
     buildUponDefaultConfig = true
     config.setFrom(files("config/detekt/detekt.yml"))

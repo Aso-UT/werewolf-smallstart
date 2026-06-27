@@ -44,7 +44,7 @@ class WebHumanConnection : HumanConnection {
         embeddedServer(Netty, port = PORT) {
             install(WebSockets)
             routing {
-                staticResources("/", "static") { default("index.html") }
+                staticResources("/", "static/svelte") { default("index.html") }
                 webSocket("/game") {
                     observer.notifyConnection()
                     relayToPlayer()
