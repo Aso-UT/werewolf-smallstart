@@ -40,6 +40,7 @@ tasks.jacocoTestReport {
                     "werewolf/ai/gemini/**",
                     "werewolf/ai/poc/**",
                     "werewolf/human/console/**",
+                    "werewolf/human/web/**",
                     // プレイヤーと役職の組み合わせを定義する配線コードのため、カバレッジ計測対象外とする
                     "werewolf/lodge/**",
                 )
@@ -83,6 +84,6 @@ sonar {
         property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml")
         // JaCoCo除外と合わせて、SonarCloud側でもソースファイルとして計測対象外にする
         property("sonar.coverage.exclusions",
-            "**/ai/anthropic/**,**/ai/gemini/**,**/ai/poc/**,**/human/console/**,**/lodge/**")
+            "**/ai/anthropic/**,**/ai/gemini/**,**/ai/poc/**,**/human/console/**,**/human/web/**,**/lodge/**")
     }
 }

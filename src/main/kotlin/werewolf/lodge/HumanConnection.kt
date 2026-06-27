@@ -1,10 +1,9 @@
 package werewolf.lodge
 
-import werewolf.game.Player
-import werewolf.game.Role
+import werewolf.human.HumanIO
 
 interface HumanConnection {
-    fun createPlayer(role: Role, name: String): Player
+    fun createIO(): HumanIO
     fun setup()
     fun teardown()
 }
