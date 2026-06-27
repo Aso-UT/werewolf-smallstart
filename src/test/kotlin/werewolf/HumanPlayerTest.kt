@@ -24,9 +24,10 @@ class HumanPlayerTest {
     ) : HumanIO {
         private val queue = ArrayDeque(choiceAnswers.toList())
         val promptedChoices = mutableListOf<ChoiceView>()
+        val displayedViews = mutableListOf<RecallView>()
         var capturedChronicles: List<ChronicleView> = emptyList()
 
-        override fun display(view: RecallView) {}
+        override fun display(view: RecallView) { displayedViews += view }
         override fun promptChoice(view: ChoiceView): String {
             promptedChoices += view
             return queue.removeFirst()
@@ -46,6 +47,21 @@ class HumanPlayerTest {
 
         assertEquals(alice, selected)
         assertEquals(listOf("Alice"), io.promptedChoices.single().options)
+    }
+
+    @Test
+    fun `choose displays the selected player via io`() {
+        val alice = NothingPlayer(Role.VILLAGER, "Alice")
+        val io = CapturingIO("Alice")
+        val human = HumanPlayer(Role.VILLAGER, "Human", io)
+        val context = SelectionContext.Vote(human, listOf(human, alice))
+
+        human.selectTarget(context)
+
+        assertEquals(
+            listOf<RecallView>(RecallView.Action("投票", "Alice", "プレイヤーが選択")),
+            io.displayedViews,
+        )
     }
 
     @Test
