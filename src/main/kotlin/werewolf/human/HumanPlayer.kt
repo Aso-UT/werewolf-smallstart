@@ -18,7 +18,9 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
     override fun choose(context: SelectionContext): Choice {
         val candidates = context.candidates()
         val selected = io.promptChoice(ChoiceView(context.title, context.description, candidates.map { it.name }))
-        return Choice(this, context, candidates.single { it.name == selected }, "プレイヤーが選択")
+        val choice = Choice(this, context, candidates.single { it.name == selected }, "プレイヤーが選択")
+        io.display(choice.toRecallView())
+        return choice
     }
 
     override fun onReceive(event: GameEvent) {
