@@ -63,6 +63,23 @@ class InitialPhaseTest {
     }
 
     @Test
+    fun `all players receive PlayersAnnounced with full player list`() {
+        val villager = RecordingPlayer(Role.VILLAGER, "Villager")
+        val wolf = RecordingPlayer(Role.WEREWOLF, "Wolf")
+        val setup = TestLodge(villager to Role.VILLAGER, wolf to Role.WEREWOLF).create()
+
+        InitialPhase(setup.playerManager, setup.oracle).proceed()
+
+        val announcedNames = villager.received
+            .filterIsInstance<GameEvent.PlayersAnnounced>()
+            .single()
+            .players
+            .map { it.name }
+        assertTrue(announcedNames.containsAll(listOf("Villager", "Wolf")))
+        assertEquals(announcedNames, wolf.received.filterIsInstance<GameEvent.PlayersAnnounced>().single().players.map { it.name })
+    }
+
+    @Test
     fun `returns NightPhase`() {
         val setup = TestLodge(
             RecordingPlayer(Role.WEREWOLF, "Wolf") to Role.WEREWOLF,

@@ -5,11 +5,16 @@ import werewolf.game.GameOverSignal
 import werewolf.game.RecallView
 import werewolf.human.HumanIO
 import werewolf.view.ChoiceView
+import werewolf.view.SurvivalView
 
 class ConsoleHumanIO : HumanIO {
 
     companion object {
         private const val ABORT_PASSWORD = 4423
+    }
+
+    override fun updatePanel(view: SurvivalView) {
+        // Console has no persistent panel; survival info is visible in the event log
     }
 
     override fun display(view: RecallView) = when (view) {

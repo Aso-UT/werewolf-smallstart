@@ -13,8 +13,12 @@ import werewolf.game.SelectionContext
 import werewolf.game.Statement
 import werewolf.game.StatementType
 import werewolf.view.ChoiceView
+import werewolf.view.SurvivalView
 
 class HumanPlayer(role: Role, override val name: String, private val io: HumanIO) : Player(role) {
+    private val gameNote = GameNote()
+    private var lastSummary: SurvivalView? = null
+
     override fun choose(context: SelectionContext): Choice {
         val candidates = context.candidates()
         val selected = io.promptChoice(ChoiceView(context.title, context.description, candidates.map { it.name }))
@@ -25,6 +29,12 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
 
     override fun onReceive(event: GameEvent) {
         io.display(event.toRecallView())
+        gameNote.post(event)
+        val current = gameNote.summary()
+        if (current != lastSummary) {
+            lastSummary = current
+            io.updatePanel(current)
+        }
     }
 
     override fun speak(context: DiscussionContext): Claim {

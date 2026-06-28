@@ -7,6 +7,8 @@ import werewolf.game.GameOverSignal
 import werewolf.game.RecallView
 import werewolf.human.HumanIO
 import werewolf.view.ChoiceView
+import werewolf.view.PlayerStatus
+import werewolf.view.SurvivalView
 
 class WebHumanIO : HumanIO {
     val outgoing = Channel<String>(Channel.UNLIMITED)
@@ -19,6 +21,13 @@ class WebHumanIO : HumanIO {
 
     fun checkAbort() {
         if (abortRequested) GameOverSignal.throwManualAbort()
+    }
+
+    override fun updatePanel(view: SurvivalView) {
+        val playersJson = view.players.entries.joinToString(",") {
+            """{"name":${it.key.jsonEncode()},"status":${it.value.toJson()}}"""
+        }
+        enqueue("""{"type":"survival","players":[$playersJson]}""")
     }
 
     override fun display(view: RecallView) {
@@ -53,6 +62,12 @@ class WebHumanIO : HumanIO {
     private fun enqueue(message: String) {
         check(outgoing.trySend(message).isSuccess) { "Failed to queue message" }
     }
+}
+
+private fun PlayerStatus.toJson(): String = when (this) {
+    PlayerStatus.ALIVE -> "\"alive\""
+    PlayerStatus.EXECUTED -> "\"executed\""
+    PlayerStatus.ATTACKED -> "\"attacked\""
 }
 
 private fun RecallView.toJson(): String = when (this) {
