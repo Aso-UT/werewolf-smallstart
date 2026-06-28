@@ -13,8 +13,12 @@ import werewolf.game.SelectionContext
 import werewolf.game.Statement
 import werewolf.game.StatementType
 import werewolf.view.ChoiceView
+import werewolf.view.PlayerStatus
+import werewolf.view.SurvivalView
 
 class HumanPlayer(role: Role, override val name: String, private val io: HumanIO) : Player(role) {
+    private val playerStatuses = mutableMapOf<String, PlayerStatus>()
+
     override fun choose(context: SelectionContext): Choice {
         val candidates = context.candidates()
         val selected = io.promptChoice(ChoiceView(context.title, context.description, candidates.map { it.name }))
@@ -25,6 +29,21 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
 
     override fun onReceive(event: GameEvent) {
         io.display(event.toRecallView())
+        when (event) {
+            is GameEvent.PlayersAnnounced -> {
+                event.players.forEach { playerStatuses[it.name] = PlayerStatus.ALIVE }
+                io.updatePanel(SurvivalView(playerStatuses.toMap()))
+            }
+            is GameEvent.PlayerExecuted -> {
+                playerStatuses[event.executed.name] = PlayerStatus.EXECUTED
+                io.updatePanel(SurvivalView(playerStatuses.toMap()))
+            }
+            is GameEvent.PlayerAttacked -> {
+                playerStatuses[event.attacked.name] = PlayerStatus.ATTACKED
+                io.updatePanel(SurvivalView(playerStatuses.toMap()))
+            }
+            else -> Unit
+        }
     }
 
     override fun speak(context: DiscussionContext): Claim {

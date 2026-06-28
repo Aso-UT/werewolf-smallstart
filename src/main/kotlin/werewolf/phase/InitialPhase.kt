@@ -1,11 +1,13 @@
 package werewolf.phase
 
+import werewolf.game.AllPlayers
 import werewolf.game.GameEvent
 import werewolf.game.Oracle
 import werewolf.game.PlayerManager
 
 class InitialPhase(private val playerManager: PlayerManager, private val oracle: Oracle) : Phase {
     override fun proceed(): Phase {
+        GameEvent.PlayersAnnounced.send(playerManager.allPlayers, AllPlayers(playerManager))
         playerManager.allPlayers.forEach { oracle.revealRole(it) }
         val wolves = oracle.werewolves(playerManager.players)
         wolves.forEach { self ->

@@ -13,6 +13,16 @@ sealed class GameEvent : Recallable() {
     fun isPublicKnowledge(): Boolean = recipients is AllPlayers
 
     @ConsistentCopyVisibility
+    data class PlayersAnnounced private constructor(val players: List<Player>, private val allPlayers: AllPlayers) : GameEvent() {
+        override val title = "参加者一覧"
+        override fun body() = players.joinToString("、") { it.name }
+        override val recipients: Notifiable = allPlayers
+        companion object {
+            fun send(players: List<Player>, allPlayers: AllPlayers) = PlayersAnnounced(players, allPlayers).dispatch()
+        }
+    }
+
+    @ConsistentCopyVisibility
     data class RoleAssigned private constructor(val role: Role, private val recipient: Player) : GameEvent() {
         override val title = "役職通知"
         override fun body() = "あなたの役職は「${role.displayName}」です。"
