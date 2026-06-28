@@ -91,7 +91,8 @@
   function statusLabel(s: PlayerStatus): string {
     if (s === 'alive') return '生存'
     if (s === 'executed') return '処刑'
-    return '襲撃'
+    if (s === 'attacked') return '襲撃'
+    throw new Error(`Unknown player status: ${s}`)
   }
 </script>
 
