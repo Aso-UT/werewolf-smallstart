@@ -11,6 +11,7 @@ import werewolf.game.RecallView
 import werewolf.game.Role
 import werewolf.human.HumanIO
 import werewolf.human.HumanPlayer
+import werewolf.phase.InitialPhase
 import werewolf.view.ChoiceView
 import werewolf.view.PlayerStatus
 import werewolf.view.SurvivalView
@@ -30,19 +31,18 @@ class GameNoteTest {
         override fun onReceive(event: GameEvent) {}
     }
 
-    private fun setup(io: CapturingIO, vararg others: Pair<String, Role>): GameSetup {
-        val human = HumanPlayer(Role.VILLAGER, "Human", io)
+    private fun createGameWithHuman(io: CapturingIO, vararg others: Pair<String, Role>): GameSetup {
+        val human = HumanPlayer(Role.VILLAGER, "V1", io)
         val otherPlayers = others.map { (name, role) -> SilentPlayer(role, name) to role }
         return TestLodge(*otherPlayers.toTypedArray(), human to Role.VILLAGER).create()
     }
 
     @Test
-    fun `PlayersAnnounced triggers panel with all players as alive`() {
+    fun `all players appear as alive at game start`() {
         val io = CapturingIO()
-        val gameSetup = setup(io, "Alice" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
-        val allPlayers = AllPlayers(gameSetup.playerManager)
+        val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
 
-        GameEvent.PlayersAnnounced.send(gameSetup.playerManager.allPlayers, allPlayers)
+        InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
 
         val summary = io.panels.last()
         assertTrue(summary.players.values.all { it == PlayerStatus.ALIVE })
@@ -50,43 +50,41 @@ class GameNoteTest {
     }
 
     @Test
-    fun `PlayerExecuted marks player as executed`() {
+    fun `player is marked as executed after execution`() {
         val io = CapturingIO()
-        val gameSetup = setup(io, "Alice" to Role.VILLAGER)
-        val allPlayers = AllPlayers(gameSetup.playerManager)
-        val alice = gameSetup.playerManager.allPlayers.single { it.name == "Alice" }
+        // V2 + V3 to avoid game-over when V2 is executed (wolf would equal citizens)
+        val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "V3" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
+        InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
+        val v2 = gameSetup.playerManager.allPlayers.single { it.name == "V2" }
 
-        GameEvent.PlayersAnnounced.send(gameSetup.playerManager.allPlayers, allPlayers)
-        GameEvent.PlayerExecuted.send(alice, allPlayers)
+        gameSetup.playerManager.execute(v2)
 
-        assertEquals(PlayerStatus.EXECUTED, io.panels.last().players["Alice"])
-        assertEquals(PlayerStatus.ALIVE, io.panels.last().players["Human"])
+        assertEquals(PlayerStatus.EXECUTED, io.panels.last().players["V2"])
+        assertEquals(PlayerStatus.ALIVE, io.panels.last().players["V1"])
     }
 
     @Test
-    fun `PlayerAttacked marks player as attacked`() {
+    fun `player is marked as attacked after night kill`() {
         val io = CapturingIO()
-        val gameSetup = setup(io, "Alice" to Role.VILLAGER)
-        val allPlayers = AllPlayers(gameSetup.playerManager)
-        val alice = gameSetup.playerManager.allPlayers.single { it.name == "Alice" }
+        // V2 + V3 to avoid game-over when V2 is attacked (wolf would equal citizens)
+        val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "V3" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
+        InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
+        val v2 = gameSetup.playerManager.allPlayers.single { it.name == "V2" }
 
-        GameEvent.PlayersAnnounced.send(gameSetup.playerManager.allPlayers, allPlayers)
-        GameEvent.PlayerAttacked.send(alice, allPlayers)
+        gameSetup.playerManager.kill(v2)
 
-        assertEquals(PlayerStatus.ATTACKED, io.panels.last().players["Alice"])
+        assertEquals(PlayerStatus.ATTACKED, io.panels.last().players["V2"])
     }
 
     @Test
-    fun `irrelevant events do not trigger panel update`() {
+    fun `panel is not updated for unrelated events`() {
         val io = CapturingIO()
-        val gameSetup = setup(io, "Alice" to Role.VILLAGER)
-        val allPlayers = AllPlayers(gameSetup.playerManager)
+        val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
+        InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
+        val countAfterStart = io.panels.size
 
-        GameEvent.PlayersAnnounced.send(gameSetup.playerManager.allPlayers, allPlayers)
-        val countAfterAnnounce = io.panels.size
+        GameEvent.DiscussionStarted.send(1, AllPlayers(gameSetup.playerManager))
 
-        GameEvent.DiscussionStarted.send(1, allPlayers)
-
-        assertEquals(countAfterAnnounce, io.panels.size)
+        assertEquals(countAfterStart, io.panels.size)
     }
 }
