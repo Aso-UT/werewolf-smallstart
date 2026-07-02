@@ -18,8 +18,14 @@
   type PlayerStatus = 'alive' | 'executed' | 'attacked'
   type SurvivalEntry = { name: string; status: PlayerStatus }
 
-  type ReportEntry = { source: string; targetName: string; result: string; trusted: boolean }
-  type DivinationData = { playerNames: string[]; divineReports: ReportEntry[]; mediumReports: ReportEntry[] }
+  type ReportEntry = { source: string; targetName: string; result: string }
+  type DivinationData = {
+    playerNames: string[]
+    divineResults: { targetName: string; result: string }[]
+    mediumResults: { targetName: string; result: string }[]
+    divineReports: ReportEntry[]
+    mediumReports: ReportEntry[]
+  }
 
   let status = '接続中...'
   let entries: LogEntry[] = []
@@ -28,7 +34,13 @@
   let logEl: HTMLElement
   let ws: WebSocket
   let survivalPlayers: SurvivalEntry[] = []
-  let divination: DivinationData = { playerNames: [], divineReports: [], mediumReports: [] }
+  let divination: DivinationData = {
+    playerNames: [],
+    divineResults: [],
+    mediumResults: [],
+    divineReports: [],
+    mediumReports: [],
+  }
 
   onMount(() => {
     ws = new WebSocket(`ws://${location.host}/game`)
@@ -114,7 +126,7 @@
     }, [])
   }
 
-  function resultOf(reports: ReportEntry[], player: string, source: string): ReportEntry | undefined {
+  function reportOf(reports: ReportEntry[], player: string, source: string): ReportEntry | undefined {
     return reports.find(r => r.targetName === player && r.source === source)
   }
 </script>
@@ -185,9 +197,33 @@
       </ul>
     {/if}
 
+    {#if divination.divineResults.length > 0}
+      <h2 class="panel-section">占い結果（確定）</h2>
+      <ul class="result-list">
+        {#each divination.divineResults as r}
+          <li class="result-entry">
+            <span class="result-name">{r.targetName}</span>
+            <span class="badge {isWerewolf(r.result) ? 'black' : 'white'}">{isWerewolf(r.result) ? '黒' : '白'}</span>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+
+    {#if divination.mediumResults.length > 0}
+      <h2 class="panel-section">霊媒結果（確定）</h2>
+      <ul class="result-list">
+        {#each divination.mediumResults as r}
+          <li class="result-entry">
+            <span class="result-name">{r.targetName}</span>
+            <span class="badge {isWerewolf(r.result) ? 'black' : 'white'}">{isWerewolf(r.result) ? '黒' : '白'}</span>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+
     {#if divination.divineReports.length > 0}
       {@const sources = uniqueSources(divination.divineReports)}
-      <h2 class="panel-section">占い結果</h2>
+      <h2 class="panel-section">占い申告</h2>
       <div class="report-scroll">
         <table class="report-table">
           <thead>
@@ -201,12 +237,10 @@
               <tr>
                 <td class="row-label">{player}</td>
                 {#each sources as src}
-                  {@const entry = resultOf(divination.divineReports, player, src)}
+                  {@const entry = reportOf(divination.divineReports, player, src)}
                   <td>
                     {#if entry}
-                      <span class="badge {isWerewolf(entry.result) ? 'black' : 'white'} {entry.trusted ? 'trusted' : ''}">
-                        {isWerewolf(entry.result) ? '黒' : '白'}
-                      </span>
+                      <span class="badge {isWerewolf(entry.result) ? 'black' : 'white'}">{isWerewolf(entry.result) ? '黒' : '白'}</span>
                     {/if}
                   </td>
                 {/each}
@@ -219,7 +253,7 @@
 
     {#if divination.mediumReports.length > 0}
       {@const sources = uniqueSources(divination.mediumReports)}
-      <h2 class="panel-section">霊媒結果</h2>
+      <h2 class="panel-section">霊媒申告</h2>
       <div class="report-scroll">
         <table class="report-table">
           <thead>
@@ -233,12 +267,10 @@
               <tr>
                 <td class="row-label">{player}</td>
                 {#each sources as src}
-                  {@const entry = resultOf(divination.mediumReports, player, src)}
+                  {@const entry = reportOf(divination.mediumReports, player, src)}
                   <td>
                     {#if entry}
-                      <span class="badge {isWerewolf(entry.result) ? 'black' : 'white'} {entry.trusted ? 'trusted' : ''}">
-                        {isWerewolf(entry.result) ? '黒' : '白'}
-                      </span>
+                      <span class="badge {isWerewolf(entry.result) ? 'black' : 'white'}">{isWerewolf(entry.result) ? '黒' : '白'}</span>
                     {/if}
                   </td>
                 {/each}
@@ -281,6 +313,10 @@
   .executed .player-status { background: #f7d4d4; color: #6e2a2a; }
   .attacked .player-status { background: #f7ead4; color: #6e4a2a; }
 
+  .result-list { list-style: none; margin: 0; padding: 0; }
+  .result-entry { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; font-size: 0.9em; }
+  .result-name { flex: 1; }
+
   .report-scroll { overflow-x: auto; }
   .report-table { border-collapse: collapse; font-size: 0.8em; width: 100%; }
   .report-table th { font-weight: normal; color: #666; padding: 2px 4px; text-align: center; white-space: nowrap; }
@@ -289,5 +325,4 @@
   .badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 0.85em; }
   .badge.black { background: #333; color: #fff; }
   .badge.white { background: #eee; color: #333; border: 1px solid #ccc; }
-  .badge.trusted { font-weight: bold; box-shadow: 0 0 0 1px #666; }
 </style>

@@ -27,9 +27,11 @@ class WebHumanIO : HumanIO {
 
     override fun updateDivinationPanel(view: DivinationView) {
         val playerNamesJson = view.playerNames.joinToString(",") { it.jsonEncode() }
-        val divineJson = view.divineReports.joinToString(",") { it.toJson() }
-        val mediumJson = view.mediumReports.joinToString(",") { it.toJson() }
-        enqueue("""{"type":"divination","playerNames":[$playerNamesJson],"divineReports":[$divineJson],"mediumReports":[$mediumJson]}""")
+        val divineResultsJson = view.divineResults.entries.joinToString(",") { (k, v) -> """{"targetName":${k.jsonEncode()},"result":${v.jsonEncode()}}""" }
+        val mediumResultsJson = view.mediumResults.entries.joinToString(",") { (k, v) -> """{"targetName":${k.jsonEncode()},"result":${v.jsonEncode()}}""" }
+        val divineReportsJson = view.divineReports.joinToString(",") { it.toJson() }
+        val mediumReportsJson = view.mediumReports.joinToString(",") { it.toJson() }
+        enqueue("""{"type":"divination","playerNames":[$playerNamesJson],"divineResults":[$divineResultsJson],"mediumResults":[$mediumResultsJson],"divineReports":[$divineReportsJson],"mediumReports":[$mediumReportsJson]}""")
     }
 
     override fun updatePanel(view: SurvivalView) {
@@ -74,7 +76,7 @@ class WebHumanIO : HumanIO {
 }
 
 private fun ReportEntry.toJson(): String =
-    """{"source":${source.jsonEncode()},"targetName":${targetName.jsonEncode()},"result":${result.jsonEncode()},"trusted":$trusted}"""
+    """{"source":${source.jsonEncode()},"targetName":${targetName.jsonEncode()},"result":${result.jsonEncode()}}"""
 
 private fun PlayerStatus.toJson(): String = when (this) {
     PlayerStatus.ALIVE -> "\"alive\""

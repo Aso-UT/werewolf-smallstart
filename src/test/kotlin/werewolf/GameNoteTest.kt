@@ -96,7 +96,7 @@ class GameNoteTest {
     }
 
     @Test
-    fun `divined result appears as trusted in divination panel`() {
+    fun `divined result appears in divine results of divination panel`() {
         val io = CapturingIO()
         val gameSetup = createGameWithHuman(io, "Wolf" to Role.WEREWOLF)
         InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
@@ -105,14 +105,11 @@ class GameNoteTest {
 
         GameEvent.Divined.send(wolf, DivineResult.WEREWOLF, human)
 
-        assertEquals(
-            listOf(ReportEntry("V1", "Wolf", "人狼", trusted = true)),
-            io.divinationPanels.last().divineReports,
-        )
+        assertEquals(mapOf("Wolf" to "人狼"), io.divinationPanels.last().divineResults)
     }
 
     @Test
-    fun `medium result appears as trusted in divination panel`() {
+    fun `medium result appears in medium results of divination panel`() {
         val io = CapturingIO()
         val gameSetup = createGameWithHuman(io, "Wolf" to Role.WEREWOLF)
         InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
@@ -121,14 +118,11 @@ class GameNoteTest {
 
         GameEvent.MediumRevealed.send(wolf, MediumResult.WEREWOLF, human)
 
-        assertEquals(
-            listOf(ReportEntry("V1", "Wolf", "人狼である", trusted = true)),
-            io.divinationPanels.last().mediumReports,
-        )
+        assertEquals(mapOf("Wolf" to "人狼である"), io.divinationPanels.last().mediumResults)
     }
 
     @Test
-    fun `claimed divine result appears as untrusted in divination panel`() {
+    fun `claimed divine result appears in divine reports of divination panel`() {
         val io = CapturingIO()
         val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
         InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
@@ -139,7 +133,7 @@ class GameNoteTest {
         GameEvent.StatementMade.send(1, "V2", Statement.DivinationReport(v2, wolf, DivineResult.WEREWOLF), allPlayers)
 
         assertEquals(
-            listOf(ReportEntry("V2", "Wolf", "人狼", trusted = false)),
+            listOf(ReportEntry("V2", "Wolf", "人狼")),
             io.divinationPanels.last().divineReports,
         )
     }
