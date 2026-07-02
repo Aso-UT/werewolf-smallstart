@@ -7,7 +7,9 @@ import werewolf.game.GameOverSignal
 import werewolf.game.RecallView
 import werewolf.human.HumanIO
 import werewolf.view.ChoiceView
+import werewolf.view.DivinationView
 import werewolf.view.PlayerStatus
+import werewolf.view.ReportEntry
 import werewolf.view.SurvivalView
 
 class WebHumanIO : HumanIO {
@@ -21,6 +23,13 @@ class WebHumanIO : HumanIO {
 
     fun checkAbort() {
         if (abortRequested) GameOverSignal.throwManualAbort()
+    }
+
+    override fun updateDivinationPanel(view: DivinationView) {
+        val playerNamesJson = view.playerNames.joinToString(",") { it.jsonEncode() }
+        val divineJson = view.divineReports.joinToString(",") { it.toJson() }
+        val mediumJson = view.mediumReports.joinToString(",") { it.toJson() }
+        enqueue("""{"type":"divination","playerNames":[$playerNamesJson],"divineReports":[$divineJson],"mediumReports":[$mediumJson]}""")
     }
 
     override fun updatePanel(view: SurvivalView) {
@@ -63,6 +72,9 @@ class WebHumanIO : HumanIO {
         check(outgoing.trySend(message).isSuccess) { "Failed to queue message" }
     }
 }
+
+private fun ReportEntry.toJson(): String =
+    """{"source":${source.jsonEncode()},"targetName":${targetName.jsonEncode()},"result":${result.jsonEncode()},"trusted":$trusted}"""
 
 private fun PlayerStatus.toJson(): String = when (this) {
     PlayerStatus.ALIVE -> "\"alive\""

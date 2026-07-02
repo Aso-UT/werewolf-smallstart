@@ -15,6 +15,7 @@ import werewolf.game.StatementType
 import werewolf.human.HumanIO
 import werewolf.human.HumanPlayer
 import werewolf.view.ChoiceView
+import werewolf.view.DivinationView
 import werewolf.view.SurvivalView
 
 class HumanPlayerTest {
@@ -30,6 +31,7 @@ class HumanPlayerTest {
 
         override fun display(view: RecallView) { displayedViews += view }
         override fun updatePanel(view: SurvivalView) {}
+        override fun updateDivinationPanel(view: DivinationView) {}
         override fun promptChoice(view: ChoiceView): String {
             promptedChoices += view
             return queue.removeFirst()
