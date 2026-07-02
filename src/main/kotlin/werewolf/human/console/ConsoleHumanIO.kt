@@ -5,6 +5,7 @@ import werewolf.game.GameOverSignal
 import werewolf.game.RecallView
 import werewolf.human.HumanIO
 import werewolf.view.ChoiceView
+import werewolf.view.DivinationView
 import werewolf.view.SurvivalView
 
 class ConsoleHumanIO : HumanIO {
@@ -15,6 +16,10 @@ class ConsoleHumanIO : HumanIO {
 
     override fun updatePanel(view: SurvivalView) {
         // Console has no persistent panel; survival info is visible in the event log
+    }
+
+    override fun updateDivinationPanel(view: DivinationView) {
+        // Console has no persistent panel; divination info is visible in the event log
     }
 
     override fun display(view: RecallView) = when (view) {

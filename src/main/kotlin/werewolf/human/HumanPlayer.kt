@@ -13,11 +13,13 @@ import werewolf.game.SelectionContext
 import werewolf.game.Statement
 import werewolf.game.StatementType
 import werewolf.view.ChoiceView
+import werewolf.view.DivinationView
 import werewolf.view.SurvivalView
 
 class HumanPlayer(role: Role, override val name: String, private val io: HumanIO) : Player(role) {
     private val gameNote = GameNote()
     private var lastSummary: SurvivalView? = null
+    private var lastDivinationSummary: DivinationView? = null
 
     override fun choose(context: SelectionContext): Choice {
         val candidates = context.candidates()
@@ -34,6 +36,11 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
         if (current != lastSummary) {
             lastSummary = current
             io.updatePanel(current)
+        }
+        val currentDivination = gameNote.divinationSummary()
+        if (currentDivination != lastDivinationSummary) {
+            lastDivinationSummary = currentDivination
+            io.updateDivinationPanel(currentDivination)
         }
     }
 

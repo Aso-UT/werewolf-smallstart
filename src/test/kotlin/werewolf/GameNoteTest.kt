@@ -5,23 +5,30 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import werewolf.game.AllPlayers
 import werewolf.game.ChronicleView
+import werewolf.game.DivineResult
 import werewolf.game.GameEvent
 import werewolf.game.GameSetup
+import werewolf.game.MediumResult
 import werewolf.game.RecallView
 import werewolf.game.Role
+import werewolf.game.Statement
 import werewolf.human.HumanIO
 import werewolf.human.HumanPlayer
 import werewolf.phase.InitialPhase
 import werewolf.view.ChoiceView
+import werewolf.view.DivinationView
 import werewolf.view.PlayerStatus
+import werewolf.view.ReportEntry
 import werewolf.view.SurvivalView
 
 class GameNoteTest {
 
     private class CapturingIO : HumanIO {
         val panels = mutableListOf<SurvivalView>()
+        val divinationPanels = mutableListOf<DivinationView>()
         override fun display(view: RecallView) {}
         override fun updatePanel(view: SurvivalView) { panels += view }
+        override fun updateDivinationPanel(view: DivinationView) { divinationPanels += view }
         override fun promptChoice(view: ChoiceView): String = error("not expected")
         override fun promptFreeText(title: String, description: String): String = error("not expected")
         override fun watchEpilogue(chronicles: List<ChronicleView>) {}
@@ -86,5 +93,60 @@ class GameNoteTest {
         GameEvent.DiscussionStarted.send(1, AllPlayers(gameSetup.playerManager))
 
         assertEquals(countAfterStart, io.panels.size)
+    }
+
+    @Test
+    fun `divined result appears in divine results of divination panel`() {
+        val io = CapturingIO()
+        val gameSetup = createGameWithHuman(io, "Wolf" to Role.WEREWOLF)
+        InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
+        val human = gameSetup.playerManager.allPlayers.single { it.name == "V1" }
+        val wolf = gameSetup.playerManager.allPlayers.single { it.name == "Wolf" }
+
+        GameEvent.Divined.send(wolf, DivineResult.WEREWOLF, human)
+
+        assertEquals(mapOf("Wolf" to true), io.divinationPanels.last().divineResults)
+    }
+
+    @Test
+    fun `medium result appears in medium results of divination panel`() {
+        val io = CapturingIO()
+        val gameSetup = createGameWithHuman(io, "Wolf" to Role.WEREWOLF)
+        InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
+        val human = gameSetup.playerManager.allPlayers.single { it.name == "V1" }
+        val wolf = gameSetup.playerManager.allPlayers.single { it.name == "Wolf" }
+
+        GameEvent.MediumRevealed.send(wolf, MediumResult.WEREWOLF, human)
+
+        assertEquals(mapOf("Wolf" to true), io.divinationPanels.last().mediumResults)
+    }
+
+    @Test
+    fun `claimed divine result appears in divine reports of divination panel`() {
+        val io = CapturingIO()
+        val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
+        InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
+        val v2 = gameSetup.playerManager.allPlayers.single { it.name == "V2" }
+        val wolf = gameSetup.playerManager.allPlayers.single { it.name == "Wolf" }
+        val allPlayers = AllPlayers(gameSetup.playerManager)
+
+        GameEvent.StatementMade.send(1, "V2", Statement.DivinationReport(v2, wolf, DivineResult.WEREWOLF), allPlayers)
+
+        assertEquals(
+            listOf(ReportEntry("V2", "Wolf", isWerewolf = true)),
+            io.divinationPanels.last().divineReports,
+        )
+    }
+
+    @Test
+    fun `divination panel is not updated for unrelated events`() {
+        val io = CapturingIO()
+        val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
+        InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
+        val countAfterStart = io.divinationPanels.size
+
+        GameEvent.DiscussionStarted.send(1, AllPlayers(gameSetup.playerManager))
+
+        assertEquals(countAfterStart, io.divinationPanels.size)
     }
 }

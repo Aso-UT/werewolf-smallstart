@@ -18,6 +18,15 @@
   type PlayerStatus = 'alive' | 'executed' | 'attacked'
   type SurvivalEntry = { name: string; status: PlayerStatus }
 
+  type ReportEntry = { source: string; targetName: string; isWerewolf: boolean }
+  type DivinationData = {
+    playerNames: string[]
+    divineResults: { targetName: string; isWerewolf: boolean }[]
+    mediumResults: { targetName: string; isWerewolf: boolean }[]
+    divineReports: ReportEntry[]
+    mediumReports: ReportEntry[]
+  }
+
   let status = '接続中...'
   let entries: LogEntry[] = []
   let input: InputState = { type: 'idle' }
@@ -25,6 +34,13 @@
   let logEl: HTMLElement
   let ws: WebSocket
   let survivalPlayers: SurvivalEntry[] = []
+  let divination: DivinationData = {
+    playerNames: [],
+    divineResults: [],
+    mediumResults: [],
+    divineReports: [],
+    mediumReports: [],
+  }
 
   onMount(() => {
     ws = new WebSocket(`ws://${location.host}/game`)
@@ -55,6 +71,9 @@
         break
       case 'survival':
         survivalPlayers = msg.players as SurvivalEntry[]
+        break
+      case 'divination':
+        divination = msg as unknown as DivinationData
         break
     }
   }
@@ -93,6 +112,18 @@
     if (s === 'executed') return '処刑'
     if (s === 'attacked') return '襲撃'
     throw new Error(`Unknown player status: ${s}`)
+  }
+
+  function uniqueSources(reports: ReportEntry[]): string[] {
+    const seen = new Set<string>()
+    return reports.reduce<string[]>((acc, r) => {
+      if (!seen.has(r.source)) { seen.add(r.source); acc.push(r.source) }
+      return acc
+    }, [])
+  }
+
+  function reportOf(reports: ReportEntry[], player: string, source: string): ReportEntry | undefined {
+    return reports.find(r => r.targetName === player && r.source === source)
   }
 </script>
 
@@ -161,15 +192,100 @@
         {/each}
       </ul>
     {/if}
+
+    {#if divination.divineResults.length > 0}
+      <h2 class="panel-section">占い結果</h2>
+      <ul class="result-list">
+        {#each divination.divineResults as r}
+          <li class="result-entry">
+            <span class="result-name">{r.targetName}</span>
+            <span class="badge {r.isWerewolf ? 'black' : 'white'}">&nbsp;</span>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+
+    {#if divination.mediumResults.length > 0}
+      <h2 class="panel-section">霊媒結果</h2>
+      <ul class="result-list">
+        {#each divination.mediumResults as r}
+          <li class="result-entry">
+            <span class="result-name">{r.targetName}</span>
+            <span class="badge {r.isWerewolf ? 'black' : 'white'}">&nbsp;</span>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+
+    {#if divination.divineReports.length > 0}
+      {@const sources = uniqueSources(divination.divineReports)}
+      <h2 class="panel-section">占い申告</h2>
+      <div class="report-scroll">
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th></th>
+              {#each sources as src}<th>{src}</th>{/each}
+            </tr>
+          </thead>
+          <tbody>
+            {#each divination.playerNames as player}
+              <tr>
+                <td class="row-label">{player}</td>
+                {#each sources as src}
+                  {@const entry = reportOf(divination.divineReports, player, src)}
+                  <td>
+                    {#if entry}
+                      <span class="badge {entry.isWerewolf ? 'black' : 'white'}">&nbsp;</span>
+                    {/if}
+                  </td>
+                {/each}
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      </div>
+    {/if}
+
+    {#if divination.mediumReports.length > 0}
+      {@const sources = uniqueSources(divination.mediumReports)}
+      <h2 class="panel-section">霊媒申告</h2>
+      <div class="report-scroll">
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th></th>
+              {#each sources as src}<th>{src}</th>{/each}
+            </tr>
+          </thead>
+          <tbody>
+            {#each divination.playerNames as player}
+              <tr>
+                <td class="row-label">{player}</td>
+                {#each sources as src}
+                  {@const entry = reportOf(divination.mediumReports, player, src)}
+                  <td>
+                    {#if entry}
+                      <span class="badge {entry.isWerewolf ? 'black' : 'white'}">&nbsp;</span>
+                    {/if}
+                  </td>
+                {/each}
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      </div>
+    {/if}
   </aside>
 </div>
 
 <style>
   .layout { display: flex; gap: 16px; max-width: 1100px; margin: 0 auto; padding: 16px; font-family: sans-serif; }
   .main { flex: 1; min-width: 0; }
-  .panel { width: 200px; flex-shrink: 0; border: 1px solid #ccc; border-radius: 4px; padding: 12px; background: #fafafa; align-self: flex-start; }
+  .panel { width: 240px; flex-shrink: 0; border: 1px solid #ccc; border-radius: 4px; padding: 12px; background: #fafafa; align-self: flex-start; }
   h1 { margin: 0 0 4px; }
   h2 { margin: 0 0 10px; font-size: 1em; color: #444; }
+  .panel-section { margin: 14px 0 6px; }
   .status { color: #666; margin-bottom: 8px; }
   .controls { margin: 8px 0; }
   .log { border: 1px solid #ccc; height: 500px; overflow-y: auto; padding: 8px; background: #fafafa; }
@@ -192,4 +308,17 @@
   .alive .player-status { background: #d4f7d4; color: #2a6e2a; }
   .executed .player-status { background: #f7d4d4; color: #6e2a2a; }
   .attacked .player-status { background: #f7ead4; color: #6e4a2a; }
+
+  .result-list { list-style: none; margin: 0; padding: 0; }
+  .result-entry { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; font-size: 0.9em; }
+  .result-name { flex: 1; }
+
+  .report-scroll { overflow-x: auto; }
+  .report-table { border-collapse: collapse; font-size: 0.8em; width: 100%; }
+  .report-table th { font-weight: normal; color: #666; padding: 2px 4px; text-align: center; white-space: nowrap; }
+  .report-table td { padding: 2px 4px; text-align: center; }
+  .row-label { text-align: left; white-space: nowrap; color: #444; }
+  .badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 0.85em; }
+  .badge.black { background: #333; color: #fff; }
+  .badge.white { background: #eee; color: #333; border: 1px solid #ccc; }
 </style>
