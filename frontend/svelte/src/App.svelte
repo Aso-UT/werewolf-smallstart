@@ -84,20 +84,20 @@
   }
 
   function choose(name: string) {
-    ws.send(name)
+    ws.send(JSON.stringify({ type: 'choose', value: name }))
     input = { type: 'idle' }
   }
 
   function speak() {
     const text = speakText.trim()
     if (!text || ws.readyState !== WebSocket.OPEN) return
-    ws.send(text)
+    ws.send(JSON.stringify({ type: 'speak', text }))
     input = { type: 'idle' }
     speakText = ''
   }
 
   function abort() {
-    if (ws.readyState === WebSocket.OPEN) ws.send('abort')
+    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'abort' }))
     input = { type: 'idle' }
   }
 
