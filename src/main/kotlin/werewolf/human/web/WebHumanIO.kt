@@ -27,8 +27,8 @@ class WebHumanIO : HumanIO {
 
     override fun updateDivinationPanel(view: DivinationView) {
         val playerNamesJson = view.playerNames.joinToString(",") { it.jsonEncode() }
-        val divineResultsJson = view.divineResults.entries.joinToString(",") { (k, v) -> """{"targetName":${k.jsonEncode()},"result":${v.jsonEncode()}}""" }
-        val mediumResultsJson = view.mediumResults.entries.joinToString(",") { (k, v) -> """{"targetName":${k.jsonEncode()},"result":${v.jsonEncode()}}""" }
+        val divineResultsJson = view.divineResults.entries.joinToString(",") { (k, v) -> """{"targetName":${k.jsonEncode()},"isWerewolf":$v}""" }
+        val mediumResultsJson = view.mediumResults.entries.joinToString(",") { (k, v) -> """{"targetName":${k.jsonEncode()},"isWerewolf":$v}""" }
         val divineReportsJson = view.divineReports.joinToString(",") { it.toJson() }
         val mediumReportsJson = view.mediumReports.joinToString(",") { it.toJson() }
         enqueue(
@@ -80,7 +80,7 @@ class WebHumanIO : HumanIO {
 }
 
 private fun ReportEntry.toJson(): String =
-    """{"source":${source.jsonEncode()},"targetName":${targetName.jsonEncode()},"result":${result.jsonEncode()}}"""
+    """{"source":${source.jsonEncode()},"targetName":${targetName.jsonEncode()},"isWerewolf":$isWerewolf}"""
 
 private fun PlayerStatus.toJson(): String = when (this) {
     PlayerStatus.ALIVE -> "\"alive\""

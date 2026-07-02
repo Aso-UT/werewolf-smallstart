@@ -105,7 +105,7 @@ class GameNoteTest {
 
         GameEvent.Divined.send(wolf, DivineResult.WEREWOLF, human)
 
-        assertEquals(mapOf("Wolf" to "人狼"), io.divinationPanels.last().divineResults)
+        assertEquals(mapOf("Wolf" to true), io.divinationPanels.last().divineResults)
     }
 
     @Test
@@ -118,7 +118,7 @@ class GameNoteTest {
 
         GameEvent.MediumRevealed.send(wolf, MediumResult.WEREWOLF, human)
 
-        assertEquals(mapOf("Wolf" to "人狼である"), io.divinationPanels.last().mediumResults)
+        assertEquals(mapOf("Wolf" to true), io.divinationPanels.last().mediumResults)
     }
 
     @Test
@@ -133,7 +133,7 @@ class GameNoteTest {
         GameEvent.StatementMade.send(1, "V2", Statement.DivinationReport(v2, wolf, DivineResult.WEREWOLF), allPlayers)
 
         assertEquals(
-            listOf(ReportEntry("V2", "Wolf", "人狼")),
+            listOf(ReportEntry("V2", "Wolf", isWerewolf = true)),
             io.divinationPanels.last().divineReports,
         )
     }

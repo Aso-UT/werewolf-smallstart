@@ -1,6 +1,8 @@
 package werewolf.human
 
+import werewolf.game.DivineResult
 import werewolf.game.GameEvent
+import werewolf.game.MediumResult
 import werewolf.game.Statement
 import werewolf.view.DivinationView
 import werewolf.view.PlayerStatus
@@ -10,8 +12,8 @@ import werewolf.view.SurvivalView
 class GameNote {
     private val playerStatuses = mutableMapOf<String, PlayerStatus>()
     private val playerNames = mutableListOf<String>()
-    private val divineResults = mutableMapOf<String, String>()
-    private val mediumResults = mutableMapOf<String, String>()
+    private val divineResults = mutableMapOf<String, Boolean>()
+    private val mediumResults = mutableMapOf<String, Boolean>()
     private val divineReports = mutableSetOf<ReportEntry>()
     private val mediumReports = mutableSetOf<ReportEntry>()
 
@@ -23,13 +25,13 @@ class GameNote {
             }
             is GameEvent.PlayerExecuted -> playerStatuses[event.executed.name] = PlayerStatus.EXECUTED
             is GameEvent.PlayerAttacked -> playerStatuses[event.attacked.name] = PlayerStatus.ATTACKED
-            is GameEvent.Divined -> divineResults[event.target.name] = event.result.displayName
-            is GameEvent.MediumRevealed -> mediumResults[event.target.name] = event.result.displayName
+            is GameEvent.Divined -> divineResults[event.target.name] = event.result == DivineResult.WEREWOLF
+            is GameEvent.MediumRevealed -> mediumResults[event.target.name] = event.result == MediumResult.WEREWOLF
             is GameEvent.StatementMade -> when (val stmt = event.statement) {
                 is Statement.DivinationReport ->
-                    divineReports += ReportEntry(event.speakerName, stmt.target.name, stmt.result.displayName)
+                    divineReports += ReportEntry(event.speakerName, stmt.target.name, stmt.result == DivineResult.WEREWOLF)
                 is Statement.MediumReport ->
-                    mediumReports += ReportEntry(event.speakerName, stmt.target.name, stmt.result.displayName)
+                    mediumReports += ReportEntry(event.speakerName, stmt.target.name, stmt.result == MediumResult.WEREWOLF)
                 else -> Unit
             }
             else -> Unit

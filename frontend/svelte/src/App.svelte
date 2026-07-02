@@ -18,11 +18,11 @@
   type PlayerStatus = 'alive' | 'executed' | 'attacked'
   type SurvivalEntry = { name: string; status: PlayerStatus }
 
-  type ReportEntry = { source: string; targetName: string; result: string }
+  type ReportEntry = { source: string; targetName: string; isWerewolf: boolean }
   type DivinationData = {
     playerNames: string[]
-    divineResults: { targetName: string; result: string }[]
-    mediumResults: { targetName: string; result: string }[]
+    divineResults: { targetName: string; isWerewolf: boolean }[]
+    mediumResults: { targetName: string; isWerewolf: boolean }[]
     divineReports: ReportEntry[]
     mediumReports: ReportEntry[]
   }
@@ -114,10 +114,6 @@
     throw new Error(`Unknown player status: ${s}`)
   }
 
-  function isWerewolf(result: string): boolean {
-    return result === '人狼' || result === '人狼である'
-  }
-
   function uniqueSources(reports: ReportEntry[]): string[] {
     const seen = new Set<string>()
     return reports.reduce<string[]>((acc, r) => {
@@ -203,7 +199,7 @@
         {#each divination.divineResults as r}
           <li class="result-entry">
             <span class="result-name">{r.targetName}</span>
-            <span class="badge {isWerewolf(r.result) ? 'black' : 'white'}">&nbsp;</span>
+            <span class="badge {r.isWerewolf ? 'black' : 'white'}">&nbsp;</span>
           </li>
         {/each}
       </ul>
@@ -215,7 +211,7 @@
         {#each divination.mediumResults as r}
           <li class="result-entry">
             <span class="result-name">{r.targetName}</span>
-            <span class="badge {isWerewolf(r.result) ? 'black' : 'white'}">&nbsp;</span>
+            <span class="badge {r.isWerewolf ? 'black' : 'white'}">&nbsp;</span>
           </li>
         {/each}
       </ul>
@@ -240,7 +236,7 @@
                   {@const entry = reportOf(divination.divineReports, player, src)}
                   <td>
                     {#if entry}
-                      <span class="badge {isWerewolf(entry.result) ? 'black' : 'white'}">&nbsp;</span>
+                      <span class="badge {entry.isWerewolf ? 'black' : 'white'}">&nbsp;</span>
                     {/if}
                   </td>
                 {/each}
@@ -270,7 +266,7 @@
                   {@const entry = reportOf(divination.mediumReports, player, src)}
                   <td>
                     {#if entry}
-                      <span class="badge {isWerewolf(entry.result) ? 'black' : 'white'}">&nbsp;</span>
+                      <span class="badge {entry.isWerewolf ? 'black' : 'white'}">&nbsp;</span>
                     {/if}
                   </td>
                 {/each}
