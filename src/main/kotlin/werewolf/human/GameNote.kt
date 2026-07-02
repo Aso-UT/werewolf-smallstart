@@ -7,7 +7,7 @@ import werewolf.view.PlayerStatus
 import werewolf.view.ReportEntry
 import werewolf.view.SurvivalView
 
-class GameNote(private val myName: String) {
+class GameNote {
     private val playerStatuses = mutableMapOf<String, PlayerStatus>()
     private val playerNames = mutableListOf<String>()
     private val divineResults = mutableMapOf<String, String>()

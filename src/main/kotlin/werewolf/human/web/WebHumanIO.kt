@@ -31,7 +31,11 @@ class WebHumanIO : HumanIO {
         val mediumResultsJson = view.mediumResults.entries.joinToString(",") { (k, v) -> """{"targetName":${k.jsonEncode()},"result":${v.jsonEncode()}}""" }
         val divineReportsJson = view.divineReports.joinToString(",") { it.toJson() }
         val mediumReportsJson = view.mediumReports.joinToString(",") { it.toJson() }
-        enqueue("""{"type":"divination","playerNames":[$playerNamesJson],"divineResults":[$divineResultsJson],"mediumResults":[$mediumResultsJson],"divineReports":[$divineReportsJson],"mediumReports":[$mediumReportsJson]}""")
+        enqueue(
+            """{"type":"divination","playerNames":[$playerNamesJson],""" +
+            """"divineResults":[$divineResultsJson],"mediumResults":[$mediumResultsJson],""" +
+            """"divineReports":[$divineReportsJson],"mediumReports":[$mediumReportsJson]}"""
+        )
     }
 
     override fun updatePanel(view: SurvivalView) {

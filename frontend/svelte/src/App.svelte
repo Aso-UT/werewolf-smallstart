@@ -198,24 +198,24 @@
     {/if}
 
     {#if divination.divineResults.length > 0}
-      <h2 class="panel-section">占い結果（確定）</h2>
+      <h2 class="panel-section">占い結果</h2>
       <ul class="result-list">
         {#each divination.divineResults as r}
           <li class="result-entry">
             <span class="result-name">{r.targetName}</span>
-            <span class="badge {isWerewolf(r.result) ? 'black' : 'white'}">{isWerewolf(r.result) ? '黒' : '白'}</span>
+            <span class="badge {isWerewolf(r.result) ? 'black' : 'white'}">&nbsp;</span>
           </li>
         {/each}
       </ul>
     {/if}
 
     {#if divination.mediumResults.length > 0}
-      <h2 class="panel-section">霊媒結果（確定）</h2>
+      <h2 class="panel-section">霊媒結果</h2>
       <ul class="result-list">
         {#each divination.mediumResults as r}
           <li class="result-entry">
             <span class="result-name">{r.targetName}</span>
-            <span class="badge {isWerewolf(r.result) ? 'black' : 'white'}">{isWerewolf(r.result) ? '黒' : '白'}</span>
+            <span class="badge {isWerewolf(r.result) ? 'black' : 'white'}">&nbsp;</span>
           </li>
         {/each}
       </ul>
@@ -240,7 +240,7 @@
                   {@const entry = reportOf(divination.divineReports, player, src)}
                   <td>
                     {#if entry}
-                      <span class="badge {isWerewolf(entry.result) ? 'black' : 'white'}">{isWerewolf(entry.result) ? '黒' : '白'}</span>
+                      <span class="badge {isWerewolf(entry.result) ? 'black' : 'white'}">&nbsp;</span>
                     {/if}
                   </td>
                 {/each}
@@ -270,7 +270,7 @@
                   {@const entry = reportOf(divination.mediumReports, player, src)}
                   <td>
                     {#if entry}
-                      <span class="badge {isWerewolf(entry.result) ? 'black' : 'white'}">{isWerewolf(entry.result) ? '黒' : '白'}</span>
+                      <span class="badge {isWerewolf(entry.result) ? 'black' : 'white'}">&nbsp;</span>
                     {/if}
                   </td>
                 {/each}
