@@ -98,6 +98,7 @@ val npmUpdateDeps by tasks.registering(Exec::class) {
 }
 
 tasks.processResources {
+    dependsOn(npmBuild)
     from("frontend/svelte/dist") {
         into("static/svelte")
     }
