@@ -14,6 +14,10 @@ import io.ktor.websocket.readText
 import io.ktor.websocket.send
 import java.util.concurrent.CountDownLatch
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
 import werewolf.human.HumanIO
 import werewolf.human.web.WebHumanIO
 
@@ -57,12 +61,12 @@ class WebHumanConnection : HumanConnection {
         launch {
             for (frame in incoming) {
                 if (frame is Frame.Text) {
-                    val text = frame.readText()
-                    if (text == "abort") {
-                        webHumanIO.requestAbort()
-                        webHumanIO.incoming.trySend("")
-                    } else {
-                        webHumanIO.incoming.trySend(text)
+                    val msg = Json.parseToJsonElement(frame.readText()).jsonObject
+                    when (val type = getStringField(msg, "type", "client message")) {
+                        "abort" -> { webHumanIO.requestAbort(); webHumanIO.incoming.trySend("") }
+                        "choose" -> webHumanIO.incoming.trySend(getStringField(msg, "value", "choose message"))
+                        "speak" -> webHumanIO.incoming.trySend(getStringField(msg, "text", "speak message"))
+                        else -> error("Unknown message type '$type' in client message: $msg")
                     }
                 }
             }
@@ -79,6 +83,12 @@ class WebHumanConnection : HumanConnection {
         private const val SERVER_STOP_GRACE_MS = 100L
         private const val SERVER_STOP_TIMEOUT_MS = 1000L
     }
+}
+
+private fun getStringField(json: JsonObject, key: String, context: String): String {
+    val element = json[key] ?: error("Missing '$key' field in $context: $json")
+    return (element as? JsonPrimitive)?.content
+        ?: error("Field '$key' is not a string primitive in $context: $json")
 }
 
 private class ConnectionObserver {
