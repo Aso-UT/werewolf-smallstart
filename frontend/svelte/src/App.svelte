@@ -89,9 +89,8 @@
   }
 
   function speak() {
-    const text = speakText.trim()
-    if (!text || ws.readyState !== WebSocket.OPEN) return
-    ws.send(JSON.stringify({ type: 'speak', text }))
+    if (ws.readyState !== WebSocket.OPEN) return
+    ws.send(JSON.stringify({ type: 'speak', text: speakText.trim() }))
     input = { type: 'idle' }
     speakText = ''
   }

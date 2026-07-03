@@ -127,6 +127,46 @@ class HumanPlayerTest {
     }
 
     @Test
+    fun `speak with DIVINATION_REPORT attaches the entered comment`() {
+        val alice = NothingPlayer(Role.VILLAGER, "Alice")
+        val io = CapturingIO(
+            StatementType.DIVINATION_REPORT.displayName,
+            "Alice",
+            DivineResult.WEREWOLF.displayName,
+            freeTextAnswer = "昨日の議論で怪しいと思っていました",
+        )
+        val human = HumanPlayer(Role.SEER, "Human", io)
+        val context = DiscussionContext.Open(1, 1, listOf(human), listOf(human, alice))
+
+        val statement = human.discuss(context)
+
+        assertEquals(
+            Statement.DivinationReport(human, alice, DivineResult.WEREWOLF, "昨日の議論で怪しいと思っていました"),
+            statement,
+        )
+    }
+
+    @Test
+    fun `speak with MEDIUM_REPORT attaches the entered comment`() {
+        val alice = NothingPlayer(Role.VILLAGER, "Alice")
+        val io = CapturingIO(
+            StatementType.MEDIUM_REPORT.displayName,
+            "Alice",
+            MediumResult.NOT_WEREWOLF.displayName,
+            freeTextAnswer = "無実の方を処刑してしまい申し訳ない気持ちです",
+        )
+        val human = HumanPlayer(Role.MEDIUM, "Human", io)
+        val context = DiscussionContext.Open(1, 1, listOf(human), listOf(human, alice))
+
+        val statement = human.discuss(context)
+
+        assertEquals(
+            Statement.MediumReport(human, alice, MediumResult.NOT_WEREWOLF, "無実の方を処刑してしまい申し訳ない気持ちです"),
+            statement,
+        )
+    }
+
+    @Test
     fun `watchEpilogue delegates to io`() {
         val io = CapturingIO()
         val human = HumanPlayer(Role.VILLAGER, "Human", io)

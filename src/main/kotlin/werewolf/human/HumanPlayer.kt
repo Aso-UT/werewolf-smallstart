@@ -70,7 +70,8 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
         val target = candidates.single { it.name == targetName }
         val results = DivineResult.entries
         val resultName = io.promptChoice(ChoiceView("占い報告 - 結果", "占い結果を選んでください", results.map { it.displayName }))
-        return Statement.DivinationReport(this, target, results.single { it.displayName == resultName })
+        val comment = io.promptFreeText("占い報告 - 補足", "補足があれば入力してください")
+        return Statement.DivinationReport(this, target, results.single { it.displayName == resultName }, comment)
     }
 
     private fun buildMediumReport(context: DiscussionContext): Statement {
@@ -79,7 +80,8 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
         val target = candidates.single { it.name == targetName }
         val results = MediumResult.entries
         val resultName = io.promptChoice(ChoiceView("霊媒報告 - 結果", "霊媒結果を選んでください", results.map { it.displayName }))
-        return Statement.MediumReport(this, target, results.single { it.displayName == resultName })
+        val comment = io.promptFreeText("霊媒報告 - 補足", "補足があれば入力してください")
+        return Statement.MediumReport(this, target, results.single { it.displayName == resultName }, comment)
     }
 
     override fun watchEpilogue(chronicles: List<ChronicleView>) {

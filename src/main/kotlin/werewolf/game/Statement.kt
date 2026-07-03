@@ -9,13 +9,25 @@ sealed class Statement {
         override fun text() = content
     }
 
-    data class DivinationReport(val claimant: Player, val target: Player, val result: DivineResult) : Statement() {
+    data class DivinationReport(
+        val claimant: Player,
+        val target: Player,
+        val result: DivineResult,
+        val comment: String = "",
+    ) : Statement() {
         override val type = StatementType.DIVINATION_REPORT
-        override fun text() = "${target.name} は「${result.displayName}」です。"
+        override fun text() = "${target.name} は「${result.displayName}」です。".withComment(comment)
     }
 
-    data class MediumReport(val claimant: Player, val target: Player, val result: MediumResult) : Statement() {
+    data class MediumReport(
+        val claimant: Player,
+        val target: Player,
+        val result: MediumResult,
+        val comment: String = "",
+    ) : Statement() {
         override val type = StatementType.MEDIUM_REPORT
-        override fun text() = "${target.name} は「${result.displayName}」です。"
+        override fun text() = "${target.name} は「${result.displayName}」です。".withComment(comment)
     }
 }
+
+private fun String.withComment(comment: String): String = if (comment.isBlank()) this else "$this $comment"

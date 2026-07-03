@@ -45,6 +45,26 @@ class ClaimTest {
     }
 
     @Test
+    fun `DivinationReport text appends comment when present and omits it when blank`() {
+        val speaker = NothingPlayer(Role.SEER, "Speaker")
+        val target = NothingPlayer(Role.VILLAGER, "Target")
+        val withComment = Statement.DivinationReport(speaker, target, DivineResult.WEREWOLF, "怪しいと思っていました")
+        val withoutComment = Statement.DivinationReport(speaker, target, DivineResult.WEREWOLF)
+        assertEquals("Target は「人狼」です。 怪しいと思っていました", withComment.text())
+        assertEquals("Target は「人狼」です。", withoutComment.text())
+    }
+
+    @Test
+    fun `MediumReport text appends comment when present and omits it when blank`() {
+        val speaker = NothingPlayer(Role.MEDIUM, "Speaker")
+        val target = NothingPlayer(Role.VILLAGER, "Target")
+        val withComment = Statement.MediumReport(speaker, target, MediumResult.NOT_WEREWOLF, "無実の方を処刑してしまい申し訳ない気持ちです")
+        val withoutComment = Statement.MediumReport(speaker, target, MediumResult.NOT_WEREWOLF)
+        assertEquals("Target は「人狼でない」です。 無実の方を処刑してしまい申し訳ない気持ちです", withComment.text())
+        assertEquals("Target は「人狼でない」です。", withoutComment.text())
+    }
+
+    @Test
     fun `FallbackClaim has empty statement and failure reason in chronicle`() {
         val speaker = NothingPlayer(Role.VILLAGER, "Speaker")
         val context = openContext(listOf(speaker))
