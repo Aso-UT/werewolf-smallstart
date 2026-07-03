@@ -62,10 +62,11 @@ class WebHumanConnection : HumanConnection {
             for (frame in incoming) {
                 if (frame is Frame.Text) {
                     val msg = Json.parseToJsonElement(frame.readText()).jsonObject
-                    when (getStringField(msg, "type", "client message")) {
+                    when (val type = getStringField(msg, "type", "client message")) {
                         "abort" -> { webHumanIO.requestAbort(); webHumanIO.incoming.trySend("") }
                         "choose" -> webHumanIO.incoming.trySend(getStringField(msg, "value", "choose message"))
                         "speak" -> webHumanIO.incoming.trySend(getStringField(msg, "text", "speak message"))
+                        else -> error("Unknown message type '$type' in client message: $msg")
                     }
                 }
             }
