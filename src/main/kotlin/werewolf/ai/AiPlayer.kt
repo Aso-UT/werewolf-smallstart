@@ -4,16 +4,19 @@ import werewolf.game.Choice
 import werewolf.game.ChronicleView
 import werewolf.game.Claim
 import werewolf.game.DiscussionContext
+import werewolf.game.DivineResult
 import werewolf.game.FallbackChoice
 import werewolf.game.FallbackClaim
 import werewolf.game.GameEvent
 import werewolf.game.GameOverSignal
+import werewolf.game.MediumResult
 import werewolf.game.Player
 import werewolf.game.Recallable
 import werewolf.game.RecallView
 import werewolf.game.Role
 import werewolf.game.SelectionContext
 import werewolf.game.Statement
+import werewolf.game.StatementType
 
 class AiPlayer(
     role: Role,
@@ -23,6 +26,7 @@ class AiPlayer(
 ) : Player(role) {
     private val roleAdvice = RoleAdvice.random(role, name)
     private val _myMemories = mutableListOf<Recallable>(instruction, roleAdvice)
+    private val statementFormat = StatementFormat()
 
     init {
         memorize(instruction)
@@ -34,22 +38,17 @@ class AiPlayer(
     }
 
     override fun speak(context: DiscussionContext): Claim {
-        val instruction = """
-            【${context.title}】${context.description}
-
-            以下の形式で発言してください。
-            ゲーム上の発言（50文字以内）[発言の真意（50文字以内）]
-            例：占い師です。Aliceは白でした。[狂人として占い師を偽装し、信用を得るための発言]
-            回答には、「ゲーム上の発言」などのプロンプト文字列は含めないでください。
-        """.trimIndent()
+        val instruction = statementFormat.buildInstruction(context)
         repeat(2) {
             val completion = prompt(instruction)
             try {
-                val (text, intent) = parseSpeakResponse(completion.text)
+                val parsed = statementFormat.parse(completion.text)
+                val type = context.availableTypes.singleOrNull { it.displayName == parsed.typeLabel }
+                    ?: throw InvalidAiInputException("選択できない発言の種類です: ${parsed.typeLabel}")
                 val claim = Claim(
-                    this, context, Statement.Plain(text),
-                    intentForRecall = intent,
-                    intentForChronicle = withMetadata(intent, completion.metadata),
+                    this, context, buildStatement(context, type, parsed.content),
+                    intentForRecall = parsed.intent,
+                    intentForChronicle = withMetadata(parsed.intent, completion.metadata),
                 )
                 _myMemories.add(claim)
                 return claim
@@ -61,13 +60,25 @@ class AiPlayer(
         return FallbackClaim(this, context).also { _myMemories.add(it) }
     }
 
-    private fun parseSpeakResponse(input: String): Pair<String, String> {
-        val separatorIdx = input.indexOf("[").takeIf { it >= 0 }
-            ?: throw InvalidAiInputException("「発言[真意]」の形式ではありません: $input")
-        val text = input.substring(0, separatorIdx).trim()
-        val intent = input.substring(separatorIdx + 1).removeSuffix("]").trim()
-        return text to intent
+    private fun buildStatement(context: DiscussionContext, type: StatementType, content: String): Statement = when (type) {
+        StatementType.PLAIN -> Statement.Plain(content)
+        StatementType.DIVINATION_REPORT -> {
+            val (targetName, resultLabel, comment) = statementFormat.extractReportParts(content)
+            val result = DivineResult.entries.singleOrNull { it.displayName == resultLabel }
+                ?: throw InvalidAiInputException("占い結果報告の結果が不正です: $resultLabel")
+            Statement.DivinationReport(this, resolveTarget(context, targetName), result, comment)
+        }
+        StatementType.MEDIUM_REPORT -> {
+            val (targetName, resultLabel, comment) = statementFormat.extractReportParts(content)
+            val result = MediumResult.entries.singleOrNull { it.displayName == resultLabel }
+                ?: throw InvalidAiInputException("霊媒結果報告の結果が不正です: $resultLabel")
+            Statement.MediumReport(this, resolveTarget(context, targetName), result, comment)
+        }
     }
+
+    private fun resolveTarget(context: DiscussionContext, targetName: String): Player =
+        context.allPlayers.singleOrNull { it.name == targetName }
+            ?: throw InvalidAiInputException("報告の対象が不正です: $targetName")
 
     override fun choose(context: SelectionContext): Choice {
         val candidates = context.candidates()
@@ -108,8 +119,6 @@ class AiPlayer(
             ?: throw InvalidAiInputException("候補に存在しないターゲットです: $targetString")
         return target to intent
     }
-
-    private class InvalidAiInputException(message: String) : Exception(message)
 
     override fun watchEpilogue(chronicles: List<ChronicleView>) = Unit
 
