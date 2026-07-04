@@ -40,9 +40,11 @@ class AiPlayer(
         repeat(2) {
             val completion = prompt(instruction)
             try {
-                val parsed = statementFormat.parse(completion.text, context)
+                val parsed = statementFormat.parse(completion.text)
+                val type = context.availableTypes.singleOrNull { it.displayName == parsed.typeLabel }
+                    ?: throw InvalidAiInputException("選択できない発言の種類です: ${parsed.typeLabel}")
                 val claim = Claim(
-                    this, context, buildStatement(context, parsed),
+                    this, context, buildStatement(context, type, parsed.content),
                     intentForRecall = parsed.intent,
                     intentForChronicle = withMetadata(parsed.intent, completion.metadata),
                 )
@@ -56,14 +58,14 @@ class AiPlayer(
         return FallbackClaim(this, context).also { _myMemories.add(it) }
     }
 
-    private fun buildStatement(context: DiscussionContext, parsed: ParsedStatement): Statement = when (parsed.type) {
-        StatementType.PLAIN -> Statement.Plain(parsed.content)
+    private fun buildStatement(context: DiscussionContext, type: StatementType, content: String): Statement = when (type) {
+        StatementType.PLAIN -> Statement.Plain(content)
         StatementType.DIVINATION_REPORT -> {
-            val (target, result, comment) = statementFormat.extractDivinationReport(context, parsed.content)
+            val (target, result, comment) = statementFormat.extractDivinationReport(context, content)
             Statement.DivinationReport(this, target, result, comment)
         }
         StatementType.MEDIUM_REPORT -> {
-            val (target, result, comment) = statementFormat.extractMediumReport(context, parsed.content)
+            val (target, result, comment) = statementFormat.extractMediumReport(context, content)
             Statement.MediumReport(this, target, result, comment)
         }
     }

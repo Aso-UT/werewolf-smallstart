@@ -6,7 +6,7 @@ import werewolf.game.MediumResult
 import werewolf.game.Player
 import werewolf.game.StatementType
 
-data class ParsedStatement(val content: String, val type: StatementType, val intent: String)
+data class ParsedStatement(val content: String, val typeLabel: String, val intent: String)
 
 class StatementFormat {
     fun buildInstruction(context: DiscussionContext): String {
@@ -29,23 +29,26 @@ class StatementFormat {
     private fun availableTypes(context: DiscussionContext): List<StatementType> =
         StatementType.entries.filter { it in context.availableTypes }
 
-    fun parse(input: String, context: DiscussionContext): ParsedStatement {
+    fun parse(input: String): ParsedStatement {
+        val (body, intent) = parseBodyAndIntent(input)
+        val (typeLabel, content) = parseTypeLabelAndContent(body)
+        return ParsedStatement(content, typeLabel, intent)
+    }
+
+    private fun parseBodyAndIntent(input: String): Pair<String, String> {
         val separatorIdx = input.indexOf("[").takeIf { it >= 0 }
             ?: throw InvalidAiInputException("「発言[真意]」の形式ではありません: $input")
         val body = input.substring(0, separatorIdx).trim()
         val intent = input.substring(separatorIdx + 1).removeSuffix("]").trim()
-        val (type, content) = parseTypeAndContent(context, body)
-        return ParsedStatement(content, type, intent)
+        return body to intent
     }
 
-    private fun parseTypeAndContent(context: DiscussionContext, body: String): Pair<StatementType, String> {
+    private fun parseTypeLabelAndContent(body: String): Pair<String, String> {
         val labelSeparatorIdx = body.indexOf("：").takeIf { it >= 0 }
             ?: throw InvalidAiInputException("「発言の種類：内容」の形式ではありません: $body")
         val typeLabel = body.substring(0, labelSeparatorIdx).trim()
         val content = body.substring(labelSeparatorIdx + 1).trim()
-        val type = availableTypes(context).singleOrNull { it.displayName == typeLabel }
-            ?: throw InvalidAiInputException("選択できない発言の種類です: $typeLabel")
-        return type to content
+        return typeLabel to content
     }
 
     private fun formatDescription(type: StatementType): String = when (type) {
