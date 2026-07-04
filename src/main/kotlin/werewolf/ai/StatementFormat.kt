@@ -19,6 +19,7 @@ class StatementFormat {
             typeFormats,
             "",
             "発言全体の末尾に[発言の真意（50文字以内）]を付けてください。",
+            "例：${StatementType.PLAIN.displayName}：昨日の投票について気になる点があります[怪しい人を絞り込むため]",
             "例：${StatementType.DIVINATION_REPORT.displayName}：Alice/人狼/昨日の発言が不自然でした[占い師として信頼を得るため]",
             "",
             "回答には、上記の説明文自体は含めないでください。",
