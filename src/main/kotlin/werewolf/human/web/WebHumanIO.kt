@@ -9,8 +9,9 @@ import werewolf.human.HumanIO
 import werewolf.view.ChoiceView
 import werewolf.view.DivinationView
 import werewolf.view.PlayerStatus
+import werewolf.view.PlayerStatusView
+import werewolf.view.PlayerSummary
 import werewolf.view.ReportEntry
-import werewolf.view.SurvivalView
 
 class WebHumanIO : HumanIO {
     val outgoing = Channel<String>(Channel.UNLIMITED)
@@ -38,11 +39,9 @@ class WebHumanIO : HumanIO {
         )
     }
 
-    override fun updatePanel(view: SurvivalView) {
-        val playersJson = view.players.entries.joinToString(",") {
-            """{"name":${it.key.jsonEncode()},"status":${it.value.toJson()}}"""
-        }
-        enqueue("""{"type":"survival","players":[$playersJson]}""")
+    override fun updatePlayerStatusPanel(view: PlayerStatusView) {
+        val playersJson = view.players.joinToString(",") { it.toJson() }
+        enqueue("""{"type":"playerStatus","players":[$playersJson]}""")
     }
 
     override fun display(view: RecallView) {
@@ -81,6 +80,9 @@ class WebHumanIO : HumanIO {
 
 private fun ReportEntry.toJson(): String =
     """{"source":${source.jsonEncode()},"targetName":${targetName.jsonEncode()},"isWerewolf":$isWerewolf}"""
+
+private fun PlayerSummary.toJson(): String =
+    """{"name":${name.jsonEncode()},"status":${status.toJson()},"claimedRole":${claimedRole?.jsonEncode() ?: "null"}}"""
 
 private fun PlayerStatus.toJson(): String = when (this) {
     PlayerStatus.ALIVE -> "\"alive\""

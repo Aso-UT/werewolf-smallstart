@@ -3,11 +3,13 @@ package werewolf.human
 import werewolf.game.DivineResult
 import werewolf.game.GameEvent
 import werewolf.game.MediumResult
+import werewolf.game.Role
 import werewolf.game.Statement
 import werewolf.view.DivinationView
 import werewolf.view.PlayerStatus
+import werewolf.view.PlayerStatusView
+import werewolf.view.PlayerSummary
 import werewolf.view.ReportEntry
-import werewolf.view.SurvivalView
 
 class GameNote {
     private val playerStatuses = mutableMapOf<String, PlayerStatus>()
@@ -16,6 +18,7 @@ class GameNote {
     private val mediumResults = mutableMapOf<String, Boolean>()
     private val divineReports = mutableSetOf<ReportEntry>()
     private val mediumReports = mutableSetOf<ReportEntry>()
+    private val claimedRoles = mutableMapOf<String, String>()
 
     fun post(event: GameEvent) {
         when (event) {
@@ -28,17 +31,24 @@ class GameNote {
             is GameEvent.Divined -> divineResults[event.target.name] = event.result == DivineResult.WEREWOLF
             is GameEvent.MediumRevealed -> mediumResults[event.target.name] = event.result == MediumResult.WEREWOLF
             is GameEvent.StatementMade -> when (val stmt = event.statement) {
-                is Statement.DivinationReport ->
+                is Statement.DivinationReport -> {
                     divineReports += ReportEntry(event.speakerName, stmt.target.name, stmt.result == DivineResult.WEREWOLF)
-                is Statement.MediumReport ->
+                    claimedRoles[event.speakerName] = Role.SEER.displayName
+                }
+                is Statement.MediumReport -> {
                     mediumReports += ReportEntry(event.speakerName, stmt.target.name, stmt.result == MediumResult.WEREWOLF)
+                    claimedRoles[event.speakerName] = Role.MEDIUM.displayName
+                }
+                is Statement.RoleClaim -> claimedRoles[event.speakerName] = stmt.role.displayName
                 else -> Unit
             }
             else -> Unit
         }
     }
 
-    fun summary(): SurvivalView = SurvivalView(playerStatuses.toMap())
+    fun playerStatusSummary(): PlayerStatusView = PlayerStatusView(
+        playerNames.map { name -> PlayerSummary(name, playerStatuses.getValue(name), claimedRoles[name]) },
+    )
 
     fun divinationSummary(): DivinationView = DivinationView(
         playerNames = playerNames.toList(),

@@ -4,11 +4,11 @@ import werewolf.game.ChronicleView
 import werewolf.game.RecallView
 import werewolf.view.ChoiceView
 import werewolf.view.DivinationView
-import werewolf.view.SurvivalView
+import werewolf.view.PlayerStatusView
 
 interface HumanIO {
     fun display(view: RecallView)
-    fun updatePanel(view: SurvivalView)
+    fun updatePlayerStatusPanel(view: PlayerStatusView)
     fun updateDivinationPanel(view: DivinationView)
     fun promptChoice(view: ChoiceView): String
     fun promptFreeText(title: String, description: String): String

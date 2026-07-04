@@ -18,16 +18,16 @@ import werewolf.phase.InitialPhase
 import werewolf.view.ChoiceView
 import werewolf.view.DivinationView
 import werewolf.view.PlayerStatus
+import werewolf.view.PlayerStatusView
 import werewolf.view.ReportEntry
-import werewolf.view.SurvivalView
 
 class GameNoteTest {
 
     private class CapturingIO : HumanIO {
-        val panels = mutableListOf<SurvivalView>()
+        val panels = mutableListOf<PlayerStatusView>()
         val divinationPanels = mutableListOf<DivinationView>()
         override fun display(view: RecallView) {}
-        override fun updatePanel(view: SurvivalView) { panels += view }
+        override fun updatePlayerStatusPanel(view: PlayerStatusView) { panels += view }
         override fun updateDivinationPanel(view: DivinationView) { divinationPanels += view }
         override fun promptChoice(view: ChoiceView): String = error("not expected")
         override fun promptFreeText(title: String, description: String): String = error("not expected")
@@ -44,6 +44,10 @@ class GameNoteTest {
         return TestLodge(*otherPlayers.toTypedArray(), human to Role.VILLAGER).create()
     }
 
+    private fun statusOf(view: PlayerStatusView, name: String): PlayerStatus = view.players.single { it.name == name }.status
+
+    private fun claimedRoleOf(view: PlayerStatusView, name: String): String? = view.players.single { it.name == name }.claimedRole
+
     @Test
     fun `all players appear as alive at game start`() {
         val io = CapturingIO()
@@ -52,7 +56,7 @@ class GameNoteTest {
         InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
 
         val summary = io.panels.last()
-        assertTrue(summary.players.values.all { it == PlayerStatus.ALIVE })
+        assertTrue(summary.players.all { it.status == PlayerStatus.ALIVE })
         assertEquals(3, summary.players.size)
     }
 
@@ -66,8 +70,8 @@ class GameNoteTest {
 
         gameSetup.playerManager.execute(v2)
 
-        assertEquals(PlayerStatus.EXECUTED, io.panels.last().players["V2"])
-        assertEquals(PlayerStatus.ALIVE, io.panels.last().players["V1"])
+        assertEquals(PlayerStatus.EXECUTED, statusOf(io.panels.last(), "V2"))
+        assertEquals(PlayerStatus.ALIVE, statusOf(io.panels.last(), "V1"))
     }
 
     @Test
@@ -80,7 +84,7 @@ class GameNoteTest {
 
         gameSetup.playerManager.kill(v2)
 
-        assertEquals(PlayerStatus.ATTACKED, io.panels.last().players["V2"])
+        assertEquals(PlayerStatus.ATTACKED, statusOf(io.panels.last(), "V2"))
     }
 
     @Test
@@ -148,5 +152,72 @@ class GameNoteTest {
         GameEvent.DiscussionStarted.send(1, AllPlayers(gameSetup.playerManager))
 
         assertEquals(countAfterStart, io.divinationPanels.size)
+    }
+
+    @Test
+    fun `ROLE_CLAIM statement appears as the player's claimed role`() {
+        val io = CapturingIO()
+        val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
+        InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
+        val v2 = gameSetup.playerManager.allPlayers.single { it.name == "V2" }
+        val allPlayers = AllPlayers(gameSetup.playerManager)
+
+        GameEvent.StatementMade.send(1, "V2", Statement.RoleClaim(v2, Role.SEER), allPlayers)
+
+        assertEquals(Role.SEER.displayName, claimedRoleOf(io.panels.last(), "V2"))
+    }
+
+    @Test
+    fun `DivinationReport is treated as a seer claim`() {
+        val io = CapturingIO()
+        val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
+        InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
+        val v2 = gameSetup.playerManager.allPlayers.single { it.name == "V2" }
+        val wolf = gameSetup.playerManager.allPlayers.single { it.name == "Wolf" }
+        val allPlayers = AllPlayers(gameSetup.playerManager)
+
+        GameEvent.StatementMade.send(1, "V2", Statement.DivinationReport(v2, wolf, DivineResult.WEREWOLF), allPlayers)
+
+        assertEquals(Role.SEER.displayName, claimedRoleOf(io.panels.last(), "V2"))
+    }
+
+    @Test
+    fun `MediumReport is treated as a medium claim`() {
+        val io = CapturingIO()
+        val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
+        InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
+        val v2 = gameSetup.playerManager.allPlayers.single { it.name == "V2" }
+        val wolf = gameSetup.playerManager.allPlayers.single { it.name == "Wolf" }
+        val allPlayers = AllPlayers(gameSetup.playerManager)
+
+        GameEvent.StatementMade.send(1, "V2", Statement.MediumReport(v2, wolf, MediumResult.WEREWOLF), allPlayers)
+
+        assertEquals(Role.MEDIUM.displayName, claimedRoleOf(io.panels.last(), "V2"))
+    }
+
+    @Test
+    fun `later claim overrides an earlier one for the same player`() {
+        val io = CapturingIO()
+        val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
+        InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
+        val v2 = gameSetup.playerManager.allPlayers.single { it.name == "V2" }
+        val allPlayers = AllPlayers(gameSetup.playerManager)
+
+        GameEvent.StatementMade.send(1, "V2", Statement.RoleClaim(v2, Role.SEER), allPlayers)
+        GameEvent.StatementMade.send(1, "V2", Statement.RoleClaim(v2, Role.VILLAGER), allPlayers)
+
+        assertEquals(Role.VILLAGER.displayName, claimedRoleOf(io.panels.last(), "V2"))
+    }
+
+    @Test
+    fun `mentioning a role in a PLAIN statement is not treated as a claim`() {
+        val io = CapturingIO()
+        val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
+        InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
+        val allPlayers = AllPlayers(gameSetup.playerManager)
+
+        GameEvent.StatementMade.send(1, "V2", Statement.Plain("私は${Role.SEER.displayName}です"), allPlayers)
+
+        assertEquals(null, claimedRoleOf(io.panels.last(), "V2"))
     }
 }

@@ -16,7 +16,7 @@
     | { type: 'speak'; title: string; description: string }
 
   type PlayerStatus = 'alive' | 'executed' | 'attacked'
-  type SurvivalEntry = { name: string; status: PlayerStatus }
+  type PlayerEntry = { name: string; status: PlayerStatus; claimedRole: string | null }
 
   type ReportEntry = { source: string; targetName: string; isWerewolf: boolean }
   type DivinationData = {
@@ -33,7 +33,7 @@
   let speakText = ''
   let logEl: HTMLElement
   let ws: WebSocket
-  let survivalPlayers: SurvivalEntry[] = []
+  let players: PlayerEntry[] = []
   let divination: DivinationData = {
     playerNames: [],
     divineResults: [],
@@ -69,8 +69,8 @@
         input = { type: 'speak', title: msg.title as string, description: msg.description as string }
         speakText = ''
         break
-      case 'survival':
-        survivalPlayers = msg.players as SurvivalEntry[]
+      case 'playerStatus':
+        players = msg.players as PlayerEntry[]
         break
       case 'divination':
         divination = msg as unknown as DivinationData
@@ -178,18 +178,24 @@
   </div>
 
   <aside class="panel">
-    <h2>生存状況</h2>
-    {#if survivalPlayers.length === 0}
+    <h2>生存状況・CO</h2>
+    {#if players.length === 0}
       <p class="panel-empty">ゲーム開始前</p>
     {:else}
-      <ul class="survival-list">
-        {#each survivalPlayers as p}
-          <li class="survival-entry {p.status}">
-            <span class="player-name">{p.name}</span>
-            <span class="player-status">{statusLabel(p.status)}</span>
-          </li>
-        {/each}
-      </ul>
+      <table class="status-table">
+        <thead>
+          <tr><th>プレイヤー</th><th>状態</th><th>CO</th></tr>
+        </thead>
+        <tbody>
+          {#each players as p}
+            <tr class={p.status}>
+              <td class="row-label">{p.name}</td>
+              <td><span class="player-status">{statusLabel(p.status)}</span></td>
+              <td class:co-empty={!p.claimedRole}>{p.claimedRole ?? '-'}</td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
     {/if}
 
     {#if divination.divineResults.length > 0}
@@ -299,11 +305,12 @@
   input[type='text'] { width: 70%; padding: 6px; font-size: 1em; }
 
   .panel-empty { color: #999; font-size: 0.9em; }
-  .survival-list { list-style: none; margin: 0; padding: 0; }
-  .survival-entry { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid #eee; font-size: 0.9em; }
-  .survival-entry:last-child { border-bottom: none; }
-  .player-name { flex: 1; }
-  .player-status { font-size: 0.8em; padding: 1px 6px; border-radius: 3px; }
+  .status-table { border-collapse: collapse; font-size: 0.85em; width: 100%; }
+  .status-table th { font-weight: normal; color: #666; padding: 3px 4px; text-align: left; }
+  .status-table td { padding: 4px 4px; border-bottom: 1px solid #eee; }
+  .status-table tr:last-child td { border-bottom: none; }
+  .co-empty { color: #999; }
+  .player-status { font-size: 0.8em; padding: 1px 6px; border-radius: 3px; white-space: nowrap; }
   .alive .player-status { background: #d4f7d4; color: #2a6e2a; }
   .executed .player-status { background: #f7d4d4; color: #6e2a2a; }
   .attacked .player-status { background: #f7ead4; color: #6e4a2a; }
