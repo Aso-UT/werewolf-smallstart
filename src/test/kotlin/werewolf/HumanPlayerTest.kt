@@ -16,8 +16,7 @@ import werewolf.human.HumanIO
 import werewolf.human.HumanPlayer
 import werewolf.view.ChoiceView
 import werewolf.view.DivinationView
-import werewolf.view.RoleClaimView
-import werewolf.view.SurvivalView
+import werewolf.view.PlayerStatusView
 
 class HumanPlayerTest {
 
@@ -31,9 +30,8 @@ class HumanPlayerTest {
         var capturedChronicles: List<ChronicleView> = emptyList()
 
         override fun display(view: RecallView) { displayedViews += view }
-        override fun updatePanel(view: SurvivalView) {}
+        override fun updatePlayerStatusPanel(view: PlayerStatusView) {}
         override fun updateDivinationPanel(view: DivinationView) {}
-        override fun updateRoleClaimPanel(view: RoleClaimView) {}
         override fun promptChoice(view: ChoiceView): String {
             promptedChoices += view
             return queue.removeFirst()
