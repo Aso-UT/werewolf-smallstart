@@ -4,8 +4,9 @@ import werewolf.game.DiscussionContext
 import werewolf.game.DivineResult
 import werewolf.game.MediumResult
 import werewolf.game.Player
-import werewolf.game.Statement
 import werewolf.game.StatementType
+
+data class ParsedStatement(val content: String, val type: StatementType, val intent: String)
 
 class StatementFormat {
     fun buildInstruction(context: DiscussionContext): String {
@@ -28,13 +29,23 @@ class StatementFormat {
     private fun availableTypes(context: DiscussionContext): List<StatementType> =
         StatementType.entries.filter { it in context.availableTypes }
 
-    fun parse(input: String, context: DiscussionContext, speaker: Player): Pair<Statement, String> {
+    fun parse(input: String, context: DiscussionContext): ParsedStatement {
         val separatorIdx = input.indexOf("[").takeIf { it >= 0 }
             ?: throw InvalidAiInputException("「発言[真意]」の形式ではありません: $input")
         val body = input.substring(0, separatorIdx).trim()
         val intent = input.substring(separatorIdx + 1).removeSuffix("]").trim()
-        val statement = buildTypedStatement(context, speaker, body)
-        return statement to intent
+        val (type, content) = parseTypeAndContent(context, body)
+        return ParsedStatement(content, type, intent)
+    }
+
+    private fun parseTypeAndContent(context: DiscussionContext, body: String): Pair<StatementType, String> {
+        val labelSeparatorIdx = body.indexOf("：").takeIf { it >= 0 }
+            ?: throw InvalidAiInputException("「発言の種類：内容」の形式ではありません: $body")
+        val typeLabel = body.substring(0, labelSeparatorIdx).trim()
+        val content = body.substring(labelSeparatorIdx + 1).trim()
+        val type = availableTypes(context).singleOrNull { it.displayName == typeLabel }
+            ?: throw InvalidAiInputException("選択できない発言の種類です: $typeLabel")
+        return type to content
     }
 
     private fun formatDescription(type: StatementType): String = when (type) {
@@ -45,38 +56,24 @@ class StatementFormat {
             "${type.displayName}：対象のプレイヤー名/結果（${MediumResult.entries.joinToString("か") { it.displayName }}）/補足コメント（省略可）"
     }
 
-    private fun buildTypedStatement(context: DiscussionContext, speaker: Player, body: String): Statement {
-        val labelSeparatorIdx = body.indexOf("：").takeIf { it >= 0 }
-            ?: throw InvalidAiInputException("「発言の種類：内容」の形式ではありません: $body")
-        val typeLabel = body.substring(0, labelSeparatorIdx).trim()
-        val content = body.substring(labelSeparatorIdx + 1).trim()
-        val type = availableTypes(context).singleOrNull { it.displayName == typeLabel }
-            ?: throw InvalidAiInputException("選択できない発言の種類です: $typeLabel")
-        return when (type) {
-            StatementType.PLAIN -> Statement.Plain(content)
-            StatementType.DIVINATION_REPORT -> buildDivinationReport(context, speaker, content)
-            StatementType.MEDIUM_REPORT -> buildMediumReport(context, speaker, content)
-        }
-    }
-
-    private fun buildDivinationReport(context: DiscussionContext, speaker: Player, content: String): Statement.DivinationReport {
+    fun extractDivinationReport(context: DiscussionContext, content: String): Triple<Player, DivineResult, String> {
         val parts = content.split("/")
         val target = resolveTarget(context, parts.getOrNull(0)?.trim(), content)
         val resultLabel = parts.getOrNull(1)?.trim()
             ?: throw InvalidAiInputException("占い結果報告の形式が不正です: $content")
         val result = DivineResult.entries.singleOrNull { it.displayName == resultLabel }
             ?: throw InvalidAiInputException("占い結果報告の結果が不正です: $resultLabel")
-        return Statement.DivinationReport(speaker, target, result, parts.getOrNull(2)?.trim().orEmpty())
+        return Triple(target, result, parts.getOrNull(2)?.trim().orEmpty())
     }
 
-    private fun buildMediumReport(context: DiscussionContext, speaker: Player, content: String): Statement.MediumReport {
+    fun extractMediumReport(context: DiscussionContext, content: String): Triple<Player, MediumResult, String> {
         val parts = content.split("/")
         val target = resolveTarget(context, parts.getOrNull(0)?.trim(), content)
         val resultLabel = parts.getOrNull(1)?.trim()
             ?: throw InvalidAiInputException("霊媒結果報告の形式が不正です: $content")
         val result = MediumResult.entries.singleOrNull { it.displayName == resultLabel }
             ?: throw InvalidAiInputException("霊媒結果報告の結果が不正です: $resultLabel")
-        return Statement.MediumReport(speaker, target, result, parts.getOrNull(2)?.trim().orEmpty())
+        return Triple(target, result, parts.getOrNull(2)?.trim().orEmpty())
     }
 
     private fun resolveTarget(context: DiscussionContext, targetName: String?, content: String): Player {

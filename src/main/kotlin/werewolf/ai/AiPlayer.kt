@@ -13,6 +13,8 @@ import werewolf.game.Recallable
 import werewolf.game.RecallView
 import werewolf.game.Role
 import werewolf.game.SelectionContext
+import werewolf.game.Statement
+import werewolf.game.StatementType
 
 class AiPlayer(
     role: Role,
@@ -38,11 +40,11 @@ class AiPlayer(
         repeat(2) {
             val completion = prompt(instruction)
             try {
-                val (statement, intent) = statementFormat.parse(completion.text, context, this)
+                val parsed = statementFormat.parse(completion.text, context)
                 val claim = Claim(
-                    this, context, statement,
-                    intentForRecall = intent,
-                    intentForChronicle = withMetadata(intent, completion.metadata),
+                    this, context, buildStatement(context, parsed),
+                    intentForRecall = parsed.intent,
+                    intentForChronicle = withMetadata(parsed.intent, completion.metadata),
                 )
                 _myMemories.add(claim)
                 return claim
@@ -52,6 +54,18 @@ class AiPlayer(
             }
         }
         return FallbackClaim(this, context).also { _myMemories.add(it) }
+    }
+
+    private fun buildStatement(context: DiscussionContext, parsed: ParsedStatement): Statement = when (parsed.type) {
+        StatementType.PLAIN -> Statement.Plain(parsed.content)
+        StatementType.DIVINATION_REPORT -> {
+            val (target, result, comment) = statementFormat.extractDivinationReport(context, parsed.content)
+            Statement.DivinationReport(this, target, result, comment)
+        }
+        StatementType.MEDIUM_REPORT -> {
+            val (target, result, comment) = statementFormat.extractMediumReport(context, parsed.content)
+            Statement.MediumReport(this, target, result, comment)
+        }
     }
 
     override fun choose(context: SelectionContext): Choice {
