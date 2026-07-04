@@ -13,3 +13,5 @@ class InvalidAiInput(
     override fun toRecallView() = error("InvalidAiInput is not stored in AI memory and should not appear in prompts")
     override fun toChronicleView() = ChronicleView.Action(actor.name, "無効な応答", rawResponse, metadata.toDisplayString())
 }
+
+class InvalidAiInputException(message: String) : Exception(message)

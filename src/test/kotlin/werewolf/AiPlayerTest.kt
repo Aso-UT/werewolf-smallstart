@@ -19,7 +19,7 @@ class AiPlayerTest {
 
     @Test
     fun `prompt includes received events`() {
-        val lm = FakeLanguageModel("[真意]")
+        val lm = FakeLanguageModel("発言する：[真意]")
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())
         GameEvent.RoleAssigned.send(Role.VILLAGER, villager)
         villager.discuss(openContext())
@@ -28,7 +28,7 @@ class AiPlayerTest {
 
     @Test
     fun `choice recorded in memories appears in next prompt`() {
-        val lm = FakeLanguageModel("怪しいから：Wolf", "hello[真意]")
+        val lm = FakeLanguageModel("怪しいから：Wolf", "発言する：hello[真意]")
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())
         val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
         villager.selectTarget(SelectionContext.Vote(villager, listOf(villager, wolf)))
@@ -39,7 +39,7 @@ class AiPlayerTest {
 
     @Test
     fun `claim recorded in memories appears in next prompt`() {
-        val lm = FakeLanguageModel("hello[真意内容]", "怪しいから：Wolf")
+        val lm = FakeLanguageModel("発言する：hello[真意内容]", "怪しいから：Wolf")
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())
         val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
         villager.discuss(openContext())
@@ -51,7 +51,7 @@ class AiPlayerTest {
 
     @Test
     fun `instruction appears in prompt`() {
-        val lm = FakeLanguageModel("[真意]")
+        val lm = FakeLanguageModel("発言する：[真意]")
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, Instruction("Villager", "慎重に行動してください。"))
         villager.discuss(openContext())
         assertContains(lm.prompts.first(), "慎重に行動してください。")
