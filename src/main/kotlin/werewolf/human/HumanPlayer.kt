@@ -17,6 +17,10 @@ import werewolf.view.DivinationView
 import werewolf.view.SurvivalView
 
 class HumanPlayer(role: Role, override val name: String, private val io: HumanIO) : Player(role) {
+    companion object {
+        private const val COMMENT_PROMPT = "補足があれば入力してください"
+    }
+
     private val gameNote = GameNote()
     private var lastSummary: SurvivalView? = null
     private var lastDivinationSummary: DivinationView? = null
@@ -71,7 +75,7 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
         val target = candidates.single { it.name == targetName }
         val results = DivineResult.entries
         val resultName = io.promptChoice(ChoiceView("占い報告 - 結果", "占い結果を選んでください", results.map { it.displayName }))
-        val comment = io.promptFreeText("占い報告 - 補足", "補足があれば入力してください")
+        val comment = io.promptFreeText("占い報告 - 補足", COMMENT_PROMPT)
         return Statement.DivinationReport(this, target, results.single { it.displayName == resultName }, comment)
     }
 
@@ -81,14 +85,14 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
         val target = candidates.single { it.name == targetName }
         val results = MediumResult.entries
         val resultName = io.promptChoice(ChoiceView("霊媒報告 - 結果", "霊媒結果を選んでください", results.map { it.displayName }))
-        val comment = io.promptFreeText("霊媒報告 - 補足", "補足があれば入力してください")
+        val comment = io.promptFreeText("霊媒報告 - 補足", COMMENT_PROMPT)
         return Statement.MediumReport(this, target, results.single { it.displayName == resultName }, comment)
     }
 
     private fun buildRoleClaim(): Statement {
         val roles = Role.entries
         val roleName = io.promptChoice(ChoiceView("役職申告 - 役職", "申告する役職を選んでください", roles.map { it.displayName }))
-        val comment = io.promptFreeText("役職申告 - 補足", "補足があれば入力してください")
+        val comment = io.promptFreeText("役職申告 - 補足", COMMENT_PROMPT)
         return Statement.RoleClaim(this, roles.single { it.displayName == roleName }, comment)
     }
 
