@@ -50,6 +50,7 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
             StatementType.PLAIN -> buildPlain(context)
             StatementType.DIVINATION_REPORT -> buildDivinationReport(context)
             StatementType.MEDIUM_REPORT -> buildMediumReport(context)
+            StatementType.ROLE_CLAIM -> buildRoleClaim()
         }
         return Claim(this, context, statement, "プレイヤーが発言")
     }
@@ -82,6 +83,13 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
         val resultName = io.promptChoice(ChoiceView("霊媒報告 - 結果", "霊媒結果を選んでください", results.map { it.displayName }))
         val comment = io.promptFreeText("霊媒報告 - 補足", "補足があれば入力してください")
         return Statement.MediumReport(this, target, results.single { it.displayName == resultName }, comment)
+    }
+
+    private fun buildRoleClaim(): Statement {
+        val roles = Role.entries
+        val roleName = io.promptChoice(ChoiceView("役職申告 - 役職", "申告する役職を選んでください", roles.map { it.displayName }))
+        val comment = io.promptFreeText("役職申告 - 補足", "補足があれば入力してください")
+        return Statement.RoleClaim(this, roles.single { it.displayName == roleName }, comment)
     }
 
     override fun watchEpilogue(chronicles: List<ChronicleView>) {

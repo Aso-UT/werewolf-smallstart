@@ -28,6 +28,15 @@ sealed class Statement {
         override val type = StatementType.MEDIUM_REPORT
         override fun text() = "${target.name} は「${result.displayName}」です。".withComment(comment)
     }
+
+    data class RoleClaim(
+        val claimant: Player,
+        val role: Role,
+        val comment: String = "",
+    ) : Statement() {
+        override val type = StatementType.ROLE_CLAIM
+        override fun text() = "私の役職は「${role.displayName}」です。".withComment(comment)
+    }
 }
 
 private fun String.withComment(comment: String): String = if (comment.isBlank()) this else "$this $comment"

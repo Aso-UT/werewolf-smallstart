@@ -61,6 +61,10 @@ class AiPlayerSpeakTest {
             lm.prompts.first(),
             "霊媒結果を報告する：対象のプレイヤー名/結果（人狼であるか人狼でない）/補足コメント（省略可）",
         )
+        assertContains(
+            lm.prompts.first(),
+            "役職を開示する：申告する役職名（人狼か占い師か霊能者か村人か狩人か狂人）/補足コメント（省略可）",
+        )
     }
 
     @Test
@@ -121,6 +125,38 @@ class AiPlayerSpeakTest {
         assertEquals(alice, report.target)
         assertEquals(MediumResult.NOT_WEREWOLF, report.result)
         assertEquals("", report.comment)
+    }
+
+    @Test
+    fun `discuss selects ROLE_CLAIM and builds a role claim with comment`() {
+        val lm = FakeLanguageModel("役職を開示する：占い師/信じてください[占い師として信頼を得るため]")
+        val madman = AiPlayer(Role.MADMAN, "Madman", lm, testInstruction("Madman"))
+        val result = madman.discuss(openContext(listOf(madman)))
+        val claim = assertIs<Statement.RoleClaim>(result)
+        assertEquals(Role.SEER, claim.role)
+        assertEquals("信じてください", claim.comment)
+    }
+
+    @Test
+    fun `discuss selects ROLE_CLAIM and omits comment when not provided`() {
+        val lm = FakeLanguageModel("役職を開示する：占い師[占い師として信頼を得るため]")
+        val seer = AiPlayer(Role.SEER, "Seer", lm, testInstruction("Seer"))
+        val result = seer.discuss(openContext(listOf(seer)))
+        val claim = assertIs<Statement.RoleClaim>(result)
+        assertEquals(Role.SEER, claim.role)
+        assertEquals("", claim.comment)
+    }
+
+    @Test
+    fun `discuss falls back when claimed role name is unknown`() {
+        val lm = FakeLanguageModel(
+            "役職を開示する：宇宙人[意図]",
+            "役職を開示する：宇宙人[意図]",
+        )
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())
+        val result = villager.discuss(openContext(listOf(villager)))
+        assertIs<Statement.Plain>(result)
+        assertEquals("", result.text())
     }
 
     @Test

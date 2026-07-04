@@ -3,6 +3,7 @@ package werewolf.ai
 import werewolf.game.DiscussionContext
 import werewolf.game.DivineResult
 import werewolf.game.MediumResult
+import werewolf.game.Role
 import werewolf.game.StatementType
 
 data class ParsedStatement(val content: String, val typeLabel: String, val intent: String)
@@ -57,6 +58,8 @@ class StatementFormat {
             "${type.displayName}：対象のプレイヤー名/結果（${DivineResult.entries.joinToString("か") { it.displayName }}）/補足コメント（省略可）"
         StatementType.MEDIUM_REPORT ->
             "${type.displayName}：対象のプレイヤー名/結果（${MediumResult.entries.joinToString("か") { it.displayName }}）/補足コメント（省略可）"
+        StatementType.ROLE_CLAIM ->
+            "${type.displayName}：申告する役職名（${Role.entries.joinToString("か") { it.displayName }}）/補足コメント（省略可）"
     }
 
     fun extractReportParts(content: String): Triple<String, String, String> {
@@ -66,5 +69,12 @@ class StatementFormat {
         val resultLabel = parts.getOrNull(1)?.trim()
             ?: throw InvalidAiInputException("報告の形式が不正です: $content")
         return Triple(targetName, resultLabel, parts.getOrNull(2)?.trim().orEmpty())
+    }
+
+    fun extractRoleClaimParts(content: String): Pair<String, String> {
+        val parts = content.split("/")
+        val roleName = parts.getOrNull(0)?.trim()
+        if (roleName.isNullOrEmpty()) throw InvalidAiInputException("役職申告の形式が不正です: $content")
+        return roleName to parts.getOrNull(1)?.trim().orEmpty()
     }
 }
