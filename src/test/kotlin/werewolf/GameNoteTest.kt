@@ -19,6 +19,8 @@ import werewolf.view.ChoiceView
 import werewolf.view.DivinationView
 import werewolf.view.PlayerStatus
 import werewolf.view.ReportEntry
+import werewolf.view.RoleClaimEntry
+import werewolf.view.RoleClaimView
 import werewolf.view.SurvivalView
 
 class GameNoteTest {
@@ -26,9 +28,11 @@ class GameNoteTest {
     private class CapturingIO : HumanIO {
         val panels = mutableListOf<SurvivalView>()
         val divinationPanels = mutableListOf<DivinationView>()
+        val roleClaimPanels = mutableListOf<RoleClaimView>()
         override fun display(view: RecallView) {}
         override fun updatePanel(view: SurvivalView) { panels += view }
         override fun updateDivinationPanel(view: DivinationView) { divinationPanels += view }
+        override fun updateRoleClaimPanel(view: RoleClaimView) { roleClaimPanels += view }
         override fun promptChoice(view: ChoiceView): String = error("not expected")
         override fun promptFreeText(title: String, description: String): String = error("not expected")
         override fun watchEpilogue(chronicles: List<ChronicleView>) {}
@@ -148,5 +152,67 @@ class GameNoteTest {
         GameEvent.DiscussionStarted.send(1, AllPlayers(gameSetup.playerManager))
 
         assertEquals(countAfterStart, io.divinationPanels.size)
+    }
+
+    @Test
+    fun `ROLE_CLAIM statement appears in role claim panel`() {
+        val io = CapturingIO()
+        val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
+        InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
+        val v2 = gameSetup.playerManager.allPlayers.single { it.name == "V2" }
+        val allPlayers = AllPlayers(gameSetup.playerManager)
+
+        GameEvent.StatementMade.send(1, "V2", Statement.RoleClaim(v2, Role.SEER), allPlayers)
+
+        assertEquals(
+            listOf(RoleClaimEntry("V2", Role.SEER.displayName)),
+            io.roleClaimPanels.last().roleClaims,
+        )
+    }
+
+    @Test
+    fun `DivinationReport is treated as a seer claim in the role claim panel`() {
+        val io = CapturingIO()
+        val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
+        InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
+        val v2 = gameSetup.playerManager.allPlayers.single { it.name == "V2" }
+        val wolf = gameSetup.playerManager.allPlayers.single { it.name == "Wolf" }
+        val allPlayers = AllPlayers(gameSetup.playerManager)
+
+        GameEvent.StatementMade.send(1, "V2", Statement.DivinationReport(v2, wolf, DivineResult.WEREWOLF), allPlayers)
+
+        assertEquals(
+            listOf(RoleClaimEntry("V2", Role.SEER.displayName)),
+            io.roleClaimPanels.last().roleClaims,
+        )
+    }
+
+    @Test
+    fun `MediumReport is treated as a medium claim in the role claim panel`() {
+        val io = CapturingIO()
+        val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
+        InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
+        val v2 = gameSetup.playerManager.allPlayers.single { it.name == "V2" }
+        val wolf = gameSetup.playerManager.allPlayers.single { it.name == "Wolf" }
+        val allPlayers = AllPlayers(gameSetup.playerManager)
+
+        GameEvent.StatementMade.send(1, "V2", Statement.MediumReport(v2, wolf, MediumResult.WEREWOLF), allPlayers)
+
+        assertEquals(
+            listOf(RoleClaimEntry("V2", Role.MEDIUM.displayName)),
+            io.roleClaimPanels.last().roleClaims,
+        )
+    }
+
+    @Test
+    fun `role claim panel is not updated for unrelated events`() {
+        val io = CapturingIO()
+        val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
+        InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
+        val countAfterStart = io.roleClaimPanels.size
+
+        GameEvent.DiscussionStarted.send(1, AllPlayers(gameSetup.playerManager))
+
+        assertEquals(countAfterStart, io.roleClaimPanels.size)
     }
 }

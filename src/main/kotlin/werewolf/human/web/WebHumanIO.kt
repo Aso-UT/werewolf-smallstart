@@ -10,6 +10,7 @@ import werewolf.view.ChoiceView
 import werewolf.view.DivinationView
 import werewolf.view.PlayerStatus
 import werewolf.view.ReportEntry
+import werewolf.view.RoleClaimView
 import werewolf.view.SurvivalView
 
 class WebHumanIO : HumanIO {
@@ -43,6 +44,13 @@ class WebHumanIO : HumanIO {
             """{"name":${it.key.jsonEncode()},"status":${it.value.toJson()}}"""
         }
         enqueue("""{"type":"survival","players":[$playersJson]}""")
+    }
+
+    override fun updateRoleClaimPanel(view: RoleClaimView) {
+        val roleClaimsJson = view.roleClaims.joinToString(",") {
+            """{"claimant":${it.claimant.jsonEncode()},"role":${it.role.jsonEncode()}}"""
+        }
+        enqueue("""{"type":"roleClaim","roleClaims":[$roleClaimsJson]}""")
     }
 
     override fun display(view: RecallView) {

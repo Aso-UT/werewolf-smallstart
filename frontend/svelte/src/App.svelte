@@ -27,6 +27,9 @@
     mediumReports: ReportEntry[]
   }
 
+  type RoleClaimEntry = { claimant: string; role: string }
+  type RoleClaimData = { roleClaims: RoleClaimEntry[] }
+
   let status = '接続中...'
   let entries: LogEntry[] = []
   let input: InputState = { type: 'idle' }
@@ -41,6 +44,7 @@
     divineReports: [],
     mediumReports: [],
   }
+  let roleClaims: RoleClaimEntry[] = []
 
   onMount(() => {
     ws = new WebSocket(`ws://${location.host}/game`)
@@ -74,6 +78,9 @@
         break
       case 'divination':
         divination = msg as unknown as DivinationData
+        break
+      case 'roleClaim':
+        roleClaims = (msg as unknown as RoleClaimData).roleClaims
         break
     }
   }
@@ -274,6 +281,18 @@
           </tbody>
         </table>
       </div>
+    {/if}
+
+    {#if roleClaims.length > 0}
+      <h2 class="panel-section">役職申告</h2>
+      <ul class="result-list">
+        {#each roleClaims as c}
+          <li class="result-entry">
+            <span class="result-name">{c.claimant}</span>
+            <span>{c.role}</span>
+          </li>
+        {/each}
+      </ul>
     {/if}
   </aside>
 </div>

@@ -3,10 +3,13 @@ package werewolf.human
 import werewolf.game.DivineResult
 import werewolf.game.GameEvent
 import werewolf.game.MediumResult
+import werewolf.game.Role
 import werewolf.game.Statement
 import werewolf.view.DivinationView
 import werewolf.view.PlayerStatus
 import werewolf.view.ReportEntry
+import werewolf.view.RoleClaimEntry
+import werewolf.view.RoleClaimView
 import werewolf.view.SurvivalView
 
 class GameNote {
@@ -16,6 +19,7 @@ class GameNote {
     private val mediumResults = mutableMapOf<String, Boolean>()
     private val divineReports = mutableSetOf<ReportEntry>()
     private val mediumReports = mutableSetOf<ReportEntry>()
+    private val roleClaims = mutableSetOf<RoleClaimEntry>()
 
     fun post(event: GameEvent) {
         when (event) {
@@ -28,10 +32,15 @@ class GameNote {
             is GameEvent.Divined -> divineResults[event.target.name] = event.result == DivineResult.WEREWOLF
             is GameEvent.MediumRevealed -> mediumResults[event.target.name] = event.result == MediumResult.WEREWOLF
             is GameEvent.StatementMade -> when (val stmt = event.statement) {
-                is Statement.DivinationReport ->
+                is Statement.DivinationReport -> {
                     divineReports += ReportEntry(event.speakerName, stmt.target.name, stmt.result == DivineResult.WEREWOLF)
-                is Statement.MediumReport ->
+                    roleClaims += RoleClaimEntry(event.speakerName, Role.SEER.displayName)
+                }
+                is Statement.MediumReport -> {
                     mediumReports += ReportEntry(event.speakerName, stmt.target.name, stmt.result == MediumResult.WEREWOLF)
+                    roleClaims += RoleClaimEntry(event.speakerName, Role.MEDIUM.displayName)
+                }
+                is Statement.RoleClaim -> roleClaims += RoleClaimEntry(event.speakerName, stmt.role.displayName)
                 else -> Unit
             }
             else -> Unit
@@ -47,4 +56,6 @@ class GameNote {
         divineReports = divineReports.toList(),
         mediumReports = mediumReports.toList(),
     )
+
+    fun roleClaimSummary(): RoleClaimView = RoleClaimView(roleClaims.toList())
 }
