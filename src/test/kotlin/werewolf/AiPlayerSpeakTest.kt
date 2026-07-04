@@ -10,7 +10,6 @@ import werewolf.game.DivineResult
 import werewolf.game.MediumResult
 import werewolf.game.Role
 import werewolf.game.Statement
-import werewolf.game.StatementType
 
 import kotlin.test.Test
 import kotlin.test.assertContains
@@ -53,26 +52,26 @@ class AiPlayerSpeakTest {
         val lm = FakeLanguageModel("発言する：hello[真意]")
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())
         villager.discuss(openContext())
-        assertContains(lm.prompts.first(), "${StatementType.PLAIN.displayName}：ゲーム上の発言（50文字以内）")
+        assertContains(lm.prompts.first(), "発言する：ゲーム上の発言（50文字以内）")
         assertContains(
             lm.prompts.first(),
-            "${StatementType.DIVINATION_REPORT.displayName}：対象のプレイヤー名/結果（人狼か人狼でない）/補足コメント（省略可）",
+            "占い結果を報告する：対象のプレイヤー名/結果（人狼か人狼でない）/補足コメント（省略可）",
         )
         assertContains(
             lm.prompts.first(),
-            "${StatementType.MEDIUM_REPORT.displayName}：対象のプレイヤー名/結果（人狼であるか人狼でない）/補足コメント（省略可）",
+            "霊媒結果を報告する：対象のプレイヤー名/結果（人狼であるか人狼でない）/補足コメント（省略可）",
         )
     }
 
     @Test
-    fun `discuss uses the plain single-type format when only PLAIN is available`() {
-        val lm = FakeLanguageModel("hello[真意]")
+    fun `discuss uses the typed format even when only PLAIN is available`() {
+        val lm = FakeLanguageModel("発言する：hello[真意]")
         val wolf = AiPlayer(Role.WEREWOLF, "Wolf", lm, testInstruction("Wolf"))
         val context = DiscussionContext.Conclave(1, 1, listOf(wolf), listOf(wolf))
         val result = wolf.discuss(context)
         assertIs<Statement.Plain>(result)
         assertEquals("hello", result.text())
-        assertContains(lm.prompts.first(), "ゲーム上の発言（50文字以内）[発言の真意（50文字以内）]")
+        assertContains(lm.prompts.first(), "発言する：ゲーム上の発言（50文字以内）")
     }
 
     @Test

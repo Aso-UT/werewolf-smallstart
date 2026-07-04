@@ -22,7 +22,7 @@ class AiPlayer(
 ) : Player(role) {
     private val roleAdvice = RoleAdvice.random(role, name)
     private val _myMemories = mutableListOf<Recallable>(instruction, roleAdvice)
-    private val statementFormat = StatementFormat(this)
+    private val statementFormat = StatementFormat()
 
     init {
         memorize(instruction)
@@ -38,7 +38,7 @@ class AiPlayer(
         repeat(2) {
             val completion = prompt(instruction)
             try {
-                val (statement, intent) = statementFormat.parse(completion.text, context)
+                val (statement, intent) = statementFormat.parse(completion.text, context, this)
                 val claim = Claim(
                     this, context, statement,
                     intentForRecall = intent,
