@@ -79,7 +79,7 @@ class AiPlayerChooseTest {
 
     @Test
     fun `choose metadata is included in intentForChronicle but not in recall`() {
-        val lm = FakeLanguageModel("怪しいから：Wolf", "[dummy]", metadata = ModelMetadata { "model=test" })
+        val lm = FakeLanguageModel("怪しいから：Wolf", "発言する：[dummy]", metadata = ModelMetadata { "model=test" })
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())
         val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
         val context = SelectionContext.Vote(villager, listOf(villager, wolf))
