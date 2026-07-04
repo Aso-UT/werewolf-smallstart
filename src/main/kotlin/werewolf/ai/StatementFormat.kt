@@ -22,18 +22,19 @@ class StatementFormat(private val speaker: Player) {
         }
         val candidates = context.allPlayers.filter { it !== speaker }.joinToString("、") { it.name }
         val formatLines = types.joinToString("\n") { "・${statementFormatLine(it)}" }
-        return """
-            【${context.title}】${context.description}
-
-            発言の種類を一つ選び、以下のいずれかの形式で発言してください。
-            $formatLines
-
-            対象に指定できるプレイヤー：$candidates
-            発言全体の末尾に[発言の真意（50文字以内）]を付けてください。
-            例：${StatementType.DIVINATION_REPORT.displayName}：Alice/人狼/昨日の発言が不自然でした[占い師として信頼を得るため]
-
-            回答には、上記の説明文自体は含めないでください。
-        """.trimIndent()
+        // trimIndent()はテンプレート内の複数行にまたがる補間値には対応できないため、行単位で組み立てる
+        return listOf(
+            "【${context.title}】${context.description}",
+            "",
+            "発言の種類を一つ選び、以下のいずれかの形式で発言してください。",
+            formatLines,
+            "",
+            "対象に指定できるプレイヤー：$candidates",
+            "発言全体の末尾に[発言の真意（50文字以内）]を付けてください。",
+            "例：${StatementType.DIVINATION_REPORT.displayName}：Alice/人狼/昨日の発言が不自然でした[占い師として信頼を得るため]",
+            "",
+            "回答には、上記の説明文自体は含めないでください。",
+        ).joinToString("\n")
     }
 
     private fun availableTypes(context: DiscussionContext): List<StatementType> =
