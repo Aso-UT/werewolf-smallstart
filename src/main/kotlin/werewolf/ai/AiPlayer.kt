@@ -4,10 +4,12 @@ import werewolf.game.Choice
 import werewolf.game.ChronicleView
 import werewolf.game.Claim
 import werewolf.game.DiscussionContext
+import werewolf.game.DivineResult
 import werewolf.game.FallbackChoice
 import werewolf.game.FallbackClaim
 import werewolf.game.GameEvent
 import werewolf.game.GameOverSignal
+import werewolf.game.MediumResult
 import werewolf.game.Player
 import werewolf.game.Recallable
 import werewolf.game.RecallView
@@ -61,14 +63,22 @@ class AiPlayer(
     private fun buildStatement(context: DiscussionContext, type: StatementType, content: String): Statement = when (type) {
         StatementType.PLAIN -> Statement.Plain(content)
         StatementType.DIVINATION_REPORT -> {
-            val (target, result, comment) = statementFormat.extractDivinationReport(context, content)
-            Statement.DivinationReport(this, target, result, comment)
+            val (targetName, resultLabel, comment) = statementFormat.extractReportParts(content)
+            val result = DivineResult.entries.singleOrNull { it.displayName == resultLabel }
+                ?: throw InvalidAiInputException("占い結果報告の結果が不正です: $resultLabel")
+            Statement.DivinationReport(this, resolveTarget(context, targetName), result, comment)
         }
         StatementType.MEDIUM_REPORT -> {
-            val (target, result, comment) = statementFormat.extractMediumReport(context, content)
-            Statement.MediumReport(this, target, result, comment)
+            val (targetName, resultLabel, comment) = statementFormat.extractReportParts(content)
+            val result = MediumResult.entries.singleOrNull { it.displayName == resultLabel }
+                ?: throw InvalidAiInputException("霊媒結果報告の結果が不正です: $resultLabel")
+            Statement.MediumReport(this, resolveTarget(context, targetName), result, comment)
         }
     }
+
+    private fun resolveTarget(context: DiscussionContext, targetName: String): Player =
+        context.allPlayers.singleOrNull { it.name == targetName }
+            ?: throw InvalidAiInputException("報告の対象が不正です: $targetName")
 
     override fun choose(context: SelectionContext): Choice {
         val candidates = context.candidates()

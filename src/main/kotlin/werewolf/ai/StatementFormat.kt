@@ -3,7 +3,6 @@ package werewolf.ai
 import werewolf.game.DiscussionContext
 import werewolf.game.DivineResult
 import werewolf.game.MediumResult
-import werewolf.game.Player
 import werewolf.game.StatementType
 
 data class ParsedStatement(val content: String, val typeLabel: String, val intent: String)
@@ -59,29 +58,12 @@ class StatementFormat {
             "${type.displayName}：対象のプレイヤー名/結果（${MediumResult.entries.joinToString("か") { it.displayName }}）/補足コメント（省略可）"
     }
 
-    fun extractDivinationReport(context: DiscussionContext, content: String): Triple<Player, DivineResult, String> {
+    fun extractReportParts(content: String): Triple<String, String, String> {
         val parts = content.split("/")
-        val target = resolveTarget(context, parts.getOrNull(0)?.trim(), content)
-        val resultLabel = parts.getOrNull(1)?.trim()
-            ?: throw InvalidAiInputException("占い結果報告の形式が不正です: $content")
-        val result = DivineResult.entries.singleOrNull { it.displayName == resultLabel }
-            ?: throw InvalidAiInputException("占い結果報告の結果が不正です: $resultLabel")
-        return Triple(target, result, parts.getOrNull(2)?.trim().orEmpty())
-    }
-
-    fun extractMediumReport(context: DiscussionContext, content: String): Triple<Player, MediumResult, String> {
-        val parts = content.split("/")
-        val target = resolveTarget(context, parts.getOrNull(0)?.trim(), content)
-        val resultLabel = parts.getOrNull(1)?.trim()
-            ?: throw InvalidAiInputException("霊媒結果報告の形式が不正です: $content")
-        val result = MediumResult.entries.singleOrNull { it.displayName == resultLabel }
-            ?: throw InvalidAiInputException("霊媒結果報告の結果が不正です: $resultLabel")
-        return Triple(target, result, parts.getOrNull(2)?.trim().orEmpty())
-    }
-
-    private fun resolveTarget(context: DiscussionContext, targetName: String?, content: String): Player {
+        val targetName = parts.getOrNull(0)?.trim()
         if (targetName.isNullOrEmpty()) throw InvalidAiInputException("報告の形式が不正です: $content")
-        return context.allPlayers.singleOrNull { it.name == targetName }
-            ?: throw InvalidAiInputException("報告の対象が不正です: $targetName")
+        val resultLabel = parts.getOrNull(1)?.trim()
+            ?: throw InvalidAiInputException("報告の形式が不正です: $content")
+        return Triple(targetName, resultLabel, parts.getOrNull(2)?.trim().orEmpty())
     }
 }
