@@ -167,6 +167,33 @@ class HumanPlayerTest {
     }
 
     @Test
+    fun `speak with ROLE_CLAIM prompts for role`() {
+        val io = CapturingIO(StatementType.ROLE_CLAIM.displayName, Role.SEER.displayName)
+        val human = HumanPlayer(Role.MADMAN, "Human", io)
+        val context = DiscussionContext.Open(1, 1, listOf(human), listOf(human))
+
+        val statement = human.discuss(context)
+
+        assertEquals(Statement.RoleClaim(human, Role.SEER), statement)
+        assertEquals(2, io.promptedChoices.size)
+    }
+
+    @Test
+    fun `speak with ROLE_CLAIM attaches the entered comment`() {
+        val io = CapturingIO(
+            StatementType.ROLE_CLAIM.displayName,
+            Role.SEER.displayName,
+            freeTextAnswer = "信じてください",
+        )
+        val human = HumanPlayer(Role.MADMAN, "Human", io)
+        val context = DiscussionContext.Open(1, 1, listOf(human), listOf(human))
+
+        val statement = human.discuss(context)
+
+        assertEquals(Statement.RoleClaim(human, Role.SEER, "信じてください"), statement)
+    }
+
+    @Test
     fun `watchEpilogue delegates to io`() {
         val io = CapturingIO()
         val human = HumanPlayer(Role.VILLAGER, "Human", io)

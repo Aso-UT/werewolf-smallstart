@@ -65,6 +65,15 @@ class ClaimTest {
     }
 
     @Test
+    fun `RoleClaim text appends comment when present and omits it when blank`() {
+        val speaker = NothingPlayer(Role.MADMAN, "Speaker")
+        val withComment = Statement.RoleClaim(speaker, Role.SEER, "信じてください")
+        val withoutComment = Statement.RoleClaim(speaker, Role.SEER)
+        assertEquals("私の役職は「占い師」です。 信じてください", withComment.text())
+        assertEquals("私の役職は「占い師」です。", withoutComment.text())
+    }
+
+    @Test
     fun `FallbackClaim has empty statement and failure reason in chronicle`() {
         val speaker = NothingPlayer(Role.VILLAGER, "Speaker")
         val context = openContext(listOf(speaker))

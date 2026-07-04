@@ -74,6 +74,12 @@ class AiPlayer(
                 ?: throw InvalidAiInputException("霊媒結果報告の結果が不正です: $resultLabel")
             Statement.MediumReport(this, resolveTarget(context, targetName), result, comment)
         }
+        StatementType.ROLE_CLAIM -> {
+            val (roleName, comment) = statementFormat.extractRoleClaimParts(content)
+            val role = Role.entries.singleOrNull { it.displayName == roleName }
+                ?: throw InvalidAiInputException("役職申告の役職が不正です: $roleName")
+            Statement.RoleClaim(this, role, comment)
+        }
     }
 
     private fun resolveTarget(context: DiscussionContext, targetName: String): Player =
