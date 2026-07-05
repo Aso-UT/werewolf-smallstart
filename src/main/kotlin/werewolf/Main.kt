@@ -31,7 +31,10 @@ fun main() {
 }
 
 private fun selectLodge(connection: HumanConnection): Lodge {
-    println("Lodgeを選択してください: AllHuman / RollerCPU / RandomCPU / HonestCPU / RoleAwareCPU / PocAI / Gemini / Anthropic")
+    println(
+        "Lodgeを選択してください: AllHuman / RollerCPU / RandomCPU / HonestCPU / RoleAwareCPU / " +
+            "PocAI / Gemini / Haiku / Sonnet / Opus",
+    )
     return when (readLine()?.trim()) {
         "RollerCPU"    -> RollerCpuLodge(connection)
         "RandomCPU"    -> RandomCpuLodge(connection)
@@ -39,7 +42,9 @@ private fun selectLodge(connection: HumanConnection): Lodge {
         "RoleAwareCPU" -> RoleAwareCpuLodge(connection)
         "PocAI"        -> PocAiLodge(connection)
         "Gemini"       -> GeminiLodge(connection)
-        "Anthropic"    -> AnthropicLodge(connection)
+        "Haiku"        -> AnthropicLodge(connection, AnthropicLodge.HAIKU_MODEL)
+        "Sonnet"       -> AnthropicLodge(connection, AnthropicLodge.SONNET_MODEL)
+        "Opus"         -> AnthropicLodge(connection, AnthropicLodge.OPUS_MODEL)
         else           -> SmallLodge(connection)
     }
 }
