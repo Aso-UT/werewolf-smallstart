@@ -177,8 +177,7 @@
           {@const role = claimedRoleOf(entry.actor)}
           <div class="event">
             <span class="title">[{entry.title}]</span>
-            {#if role}<span class="role-badge">{role}</span>{/if}
-            {entry.actor}: {entry.body}
+            {entry.actor}{#if role}<span class="role-badge">{role}</span>{/if}: {entry.body}
           </div>
         {:else if entry.type === 'action'}
           <div class="event">
@@ -312,7 +311,7 @@
   .event { margin: 4px 0; line-height: 1.4; }
   .title { font-weight: bold; color: #444; }
   .intent { color: #888; font-size: 0.9em; }
-  .role-badge { display: inline-block; margin-right: 4px; padding: 1px 6px; border-radius: 3px; font-size: 0.8em; background: #dde6f7; color: #33507a; }
+  .role-badge { display: inline-block; margin-left: 4px; padding: 1px 6px; border-radius: 3px; font-size: 0.8em; background: #dde6f7; color: #33507a; }
   .epilogue { margin: 16px 0 0; padding: 12px; background: #eef; border-left: 4px solid #88a; white-space: pre-wrap; font-family: inherit; }
   .input-area { margin-bottom: 8px; padding: 12px; border: 2px solid #88a; background: #f0f0fa; }
   .input-title { font-weight: bold; margin: 0 0 4px; }
