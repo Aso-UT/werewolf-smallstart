@@ -115,6 +115,27 @@ class NightPhaseTest {
     }
 
     @Test
+    fun `seer is notified when every other player has already been divined`() {
+        val villager1 = ReceivingPlayer(Role.VILLAGER, "V1")
+        val villager2 = ReceivingPlayer(Role.VILLAGER, "V2")
+        val wolf = FixedTargetPlayer(Role.WEREWOLF, "Wolf", villager1)
+        val seer = RecordingPlayer(Role.SEER, "Seer")
+        val setup = TestLodge(
+            wolf to Role.WEREWOLF, seer to Role.SEER,
+            villager1 to Role.VILLAGER, villager2 to Role.VILLAGER,
+        ).create()
+        setup.oracle.divine(seer, wolf)
+        setup.oracle.divine(seer, villager1)
+        setup.oracle.divine(seer, villager2)
+
+        NightPhase(setup.playerManager, setup.oracle, 3).proceed()
+
+        val divined = seer.received.filterIsInstance<GameEvent.Divined>()
+        assertEquals(3, divined.size)
+        assertTrue(seer.received.any { it is GameEvent.NoDivineTargetLeft })
+    }
+
+    @Test
     fun `guard protecting different player does not prevent wolf attack`() {
         val villager1 = ReceivingPlayer(Role.VILLAGER, "V1")
         val villager2 = ReceivingPlayer(Role.VILLAGER, "V2")
