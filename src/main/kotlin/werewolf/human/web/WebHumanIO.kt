@@ -93,7 +93,9 @@ private fun PlayerStatus.toJson(): String = when (this) {
 private fun RecallView.toJson(): String = when (this) {
     is RecallView.Observation ->
         """{"type":"observation","title":${category.jsonEncode()},"body":${content.jsonEncode()}}"""
-    is RecallView.Action ->
+    is RecallView.AttributedObservation ->
+        """{"type":"attributedObservation","title":${category.jsonEncode()},"actor":${actor.jsonEncode()},"body":${content.jsonEncode()}}"""
+    is RecallView.SelfAction ->
         """{"type":"action","title":${category.jsonEncode()},"body":${content.jsonEncode()},"intent":${intent.jsonEncode()}}"""
 }
 

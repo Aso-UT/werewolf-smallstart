@@ -63,7 +63,7 @@ class HumanPlayerTest {
         human.selectTarget(context)
 
         assertEquals(
-            listOf<RecallView>(RecallView.Action("投票", "Alice", "プレイヤーが選択")),
+            listOf<RecallView>(RecallView.SelfAction("投票", "Alice", "プレイヤーが選択")),
             io.displayedViews,
         )
     }

@@ -11,7 +11,7 @@ sealed class Claim(
         require(statement.type in context.availableTypes) { "${statement.type} is not available in ${context.title}" }
     }
 
-    override fun toRecallView() = RecallView.Action(context.title, statement.text(), intentForRecall)
+    override fun toRecallView() = RecallView.SelfAction(context.title, statement.text(), intentForRecall)
     override fun toChronicleView() = ChronicleView.Action(speaker.name, context.title, statement.text(), intentForChronicle)
 
     companion object {
