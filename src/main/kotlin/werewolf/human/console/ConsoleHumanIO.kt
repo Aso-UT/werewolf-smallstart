@@ -24,7 +24,8 @@ class ConsoleHumanIO : HumanIO {
 
     override fun display(view: RecallView) = when (view) {
         is RecallView.Observation -> println("[${view.category}] ${view.content}")
-        is RecallView.Action -> println("[${view.category}] ${view.content}\n  [${view.intent}]")
+        is RecallView.AttributedObservation -> println("[${view.category}] ${view.actor}: ${view.content}")
+        is RecallView.SelfAction -> println("[${view.category}] ${view.content}\n  [${view.intent}]")
     }
 
     private fun sendMessage(title: String, content: String) {

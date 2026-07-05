@@ -11,7 +11,7 @@ sealed class Choice(
         require(selected in context.candidates()) { "${selected.name} is not in candidates" }
     }
 
-    override fun toRecallView() = RecallView.Action(context.title, selected.name, intentForRecall)
+    override fun toRecallView() = RecallView.SelfAction(context.title, selected.name, intentForRecall)
     override fun toChronicleView() = ChronicleView.Action(chooser.name, context.title, selected.name, intentForChronicle)
 
     companion object {

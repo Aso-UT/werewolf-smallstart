@@ -186,6 +186,7 @@ class AiPlayer(
 // Uses <> to avoid collision with AI response delimiters (: and [])
 private fun RecallView.toHistoryEntry(): String = when (this) {
     is RecallView.Observation -> "<$category> $content"
-    is RecallView.Action -> "<$category> $content <$intent>"
+    is RecallView.AttributedObservation -> "<$category> $actor: $content"
+    is RecallView.SelfAction -> "<$category> $content <$intent>"
 }
 

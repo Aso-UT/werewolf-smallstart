@@ -3,11 +3,13 @@ package werewolf
 import werewolf.ai.AiPlayer
 import werewolf.ai.Instruction
 import werewolf.ai.LanguageModel
+import werewolf.game.AllPlayers
 import werewolf.game.ChronicleView
 import werewolf.game.GameEvent
 import werewolf.game.GameOverSignal
 import werewolf.game.Role
 import werewolf.game.SelectionContext
+import werewolf.game.Statement
 
 import kotlin.test.Test
 import kotlin.test.assertContains
@@ -47,6 +49,20 @@ class AiPlayerTest {
         assertContains(lm.prompts[1], "議論")
         assertContains(lm.prompts[1], "hello")
         assertContains(lm.prompts[1], "真意内容")
+    }
+
+    @Test
+    fun `another player's statement broadcast appears in next prompt with speaker name`() {
+        val lm = FakeLanguageModel("発言する：[真意]")
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())
+        val alice = ReceivingPlayer(Role.VILLAGER, "Alice")
+        val setup = TestLodge(villager to Role.VILLAGER, alice to Role.VILLAGER).create()
+        val allPlayers = AllPlayers(setup.playerManager)
+
+        GameEvent.StatementMade.send(1, "Alice", Statement.Plain("怪しい人がいます"), allPlayers)
+        villager.discuss(openContext())
+
+        assertContains(lm.prompts.first(), "Alice: 怪しい人がいます")
     }
 
     @Test
