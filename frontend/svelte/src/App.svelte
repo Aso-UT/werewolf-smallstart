@@ -154,7 +154,6 @@
             type="text"
             bind:value={speakText}
             placeholder="発言を入力..."
-            on:keydown={(e) => e.key === 'Enter' && speak()}
           />
           <button on:click={speak}>送信</button>
         </div>
