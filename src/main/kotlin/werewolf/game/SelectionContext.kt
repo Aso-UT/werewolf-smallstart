@@ -8,9 +8,9 @@ sealed class SelectionContext(val title: String, val description: String) {
         override fun candidates() = players.filterNot { it === self || it in allies }
     }
 
-    class Divine(private val self: Player, private val players: List<Player>)
+    class Divine(private val self: Player, private val players: List<Player>, private val alreadyDivined: List<Player>)
         : SelectionContext("夜の行動", "占う対象を選んでください") {
-        override fun candidates() = players.filterNot { it === self }
+        override fun candidates() = players.filterNot { it === self || it in alreadyDivined }
     }
 
     class Guard(private val self: Player, private val players: List<Player>)

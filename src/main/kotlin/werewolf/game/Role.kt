@@ -13,8 +13,15 @@ enum class Role(val displayName: String, val side: Side, val divineResult: Divin
     SEER("占い師", Side.CITIZEN, DivineResult.NOT_WEREWOLF, MediumResult.NOT_WEREWOLF) {
         override fun firstNightAction(self: Player, players: List<Player>, knowledge: List<GameEvent>): NightAction =
             NightAction.FirstNightDivine
-        override fun normalNightAction(self: Player, players: List<Player>, knowledge: List<GameEvent>): NightAction =
-            NightAction.Divine(self.selectTarget(SelectionContext.Divine(self, players)))
+        override fun normalNightAction(self: Player, players: List<Player>, knowledge: List<GameEvent>): NightAction {
+            val alreadyDivined = knowledge.filterIsInstance<GameEvent.Divined>().map { it.target }
+            val context = SelectionContext.Divine(self, players, alreadyDivined)
+            if (context.candidates().isEmpty()) {
+                GameEvent.NoDivineTargetLeft.send(self)
+                return NightAction.None
+            }
+            return NightAction.Divine(self.selectTarget(context))
+        }
     },
     MEDIUM("霊能者", Side.CITIZEN, DivineResult.NOT_WEREWOLF, MediumResult.NOT_WEREWOLF) {
         override fun firstNightAction(self: Player, players: List<Player>, knowledge: List<GameEvent>): NightAction =
