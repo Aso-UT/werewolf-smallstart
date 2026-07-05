@@ -53,3 +53,6 @@ bin/
 ### Frontend ###
 frontend/svelte/node_modules/
 frontend/svelte/dist/
+
+### Scratch ###
+.scratch/

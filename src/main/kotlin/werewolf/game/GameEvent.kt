@@ -63,6 +63,16 @@ sealed class GameEvent : Recallable() {
     }
 
     @ConsistentCopyVisibility
+    data class NoDivineTargetLeft private constructor(private val recipient: Player) : GameEvent() {
+        override val title = "占い結果"
+        override fun body() = "占っていない相手がいないため、占うことができませんでした。"
+        override val recipients: Notifiable = recipient
+        companion object {
+            fun send(recipient: Player) = NoDivineTargetLeft(recipient).dispatch()
+        }
+    }
+
+    @ConsistentCopyVisibility
     data class MediumRevealed private constructor(val target: Player, val result: MediumResult, private val recipient: Player) : GameEvent() {
         override val title = "霊視結果"
         override fun body() = "${target.name}は「${result.displayName}」です。"
