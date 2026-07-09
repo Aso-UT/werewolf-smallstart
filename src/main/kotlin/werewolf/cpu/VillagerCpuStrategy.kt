@@ -5,10 +5,11 @@ import werewolf.game.Player
 import werewolf.game.Role
 import werewolf.game.SelectionContext
 import werewolf.game.Statement
+import werewolf.game.StatementType
 
 class VillagerCpuStrategy(self: RoleAwareCpuPlayer) : RoleAwareCpuStrategy(self, Role.VILLAGER, CitizenVoting(self)) {
 
-    override fun buildStatement(context: DiscussionContext) = Statement.Plain("")
+    override fun buildStatement(context: DiscussionContext, availableTypes: Set<StatementType>) = Statement.Plain("")
 
     override fun selectTargetForOthers(context: SelectionContext, candidates: List<Player>): Player =
         candidates.random()

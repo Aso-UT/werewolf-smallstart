@@ -16,6 +16,7 @@ class RollerCpuPlayer(role: Role, override val name: String) : CpuPlayer(role) {
         return Choice(this, context, candidates[selectCount++ % candidates.size], "順番通りに選択")
     }
 
-    override fun speak(context: DiscussionContext): Claim = Claim(this, context, Statement.Plain(""), "発言戦略なし")
+    override fun speak(context: DiscussionContext, claimableRoles: Set<Role>): Claim =
+        Claim(this, context, Statement.Plain(""), claimableRoles, "発言戦略なし")
     override fun onReceive(event: GameEvent) { /* does not use received events */ }
 }

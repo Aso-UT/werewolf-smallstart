@@ -31,3 +31,6 @@ sealed class DiscussionContext {
         override val availableTypes = setOf(StatementType.PLAIN)
     }
 }
+
+fun DiscussionContext.selectableTypes(claimableRoles: Set<Role>): Set<StatementType> =
+    if (claimableRoles.isEmpty()) availableTypes - StatementType.ROLE_CLAIM else availableTypes

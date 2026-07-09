@@ -17,7 +17,7 @@ class ClaimTest {
         val context = DiscussionContext.Conclave(1, 1, listOf(speaker), listOf(speaker))
         val statement = Statement.DivinationReport(speaker, speaker, DivineResult.WEREWOLF)
         assertFailsWith<IllegalArgumentException> {
-            Claim(speaker, context, statement, "意図")
+            Claim(speaker, context, statement, emptySet(), "意図")
         }
     }
 
@@ -25,14 +25,32 @@ class ClaimTest {
     fun `Claim does not throw when statement type is available`() {
         val speaker = NothingPlayer(Role.VILLAGER, "Speaker")
         val context = openContext(listOf(speaker))
-        assertNotNull(Claim(speaker, context, Statement.Plain("発言"), "意図"))
+        assertNotNull(Claim(speaker, context, Statement.Plain("発言"), emptySet(), "意図"))
+    }
+
+    @Test
+    fun `Claim throws when statement is RoleClaim for a role that is not claimable`() {
+        val speaker = NothingPlayer(Role.VILLAGER, "Speaker")
+        val context = openContext(listOf(speaker))
+        val statement = Statement.RoleClaim(speaker, Role.SEER)
+        assertFailsWith<IllegalArgumentException> {
+            Claim(speaker, context, statement, emptySet(), "意図")
+        }
+    }
+
+    @Test
+    fun `Claim does not throw when statement is RoleClaim for a claimable role`() {
+        val speaker = NothingPlayer(Role.SEER, "Speaker")
+        val context = openContext(listOf(speaker))
+        val statement = Statement.RoleClaim(speaker, Role.SEER)
+        assertNotNull(Claim(speaker, context, statement, setOf(Role.SEER), "意図"))
     }
 
     @Test
     fun `toRecallView returns action with context title, content and intent`() {
         val speaker = NothingPlayer(Role.VILLAGER, "Speaker")
         val context = openContext(listOf(speaker))
-        val claim = Claim(speaker, context, Statement.Plain("発言内容"), "真意内容")
+        val claim = Claim(speaker, context, Statement.Plain("発言内容"), emptySet(), "真意内容")
         assertEquals(RecallView.SelfAction("議論", "発言内容", "真意内容"), claim.toRecallView())
     }
 
@@ -40,7 +58,7 @@ class ClaimTest {
     fun `toChronicleView returns action with speaker, context title, content and intent`() {
         val speaker = NothingPlayer(Role.VILLAGER, "Speaker")
         val context = openContext(listOf(speaker))
-        val claim = Claim(speaker, context, Statement.Plain("発言内容"), "真意内容")
+        val claim = Claim(speaker, context, Statement.Plain("発言内容"), emptySet(), "真意内容")
         assertEquals(ChronicleView.Action("Speaker", "議論", "発言内容", "真意内容"), claim.toChronicleView())
     }
 

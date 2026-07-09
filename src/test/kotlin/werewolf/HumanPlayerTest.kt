@@ -3,9 +3,11 @@ package werewolf
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import werewolf.game.AllPlayers
 import werewolf.game.ChronicleView
 import werewolf.game.DiscussionContext
 import werewolf.game.DivineResult
+import werewolf.game.GameEvent
 import werewolf.game.MediumResult
 import werewolf.game.RecallView
 import werewolf.game.Role
@@ -176,6 +178,42 @@ class HumanPlayerTest {
 
         assertEquals(Statement.RoleClaim(human, Role.SEER), statement)
         assertEquals(2, io.promptedChoices.size)
+    }
+
+    @Test
+    fun `villager is not offered ROLE_CLAIM as a statement type`() {
+        val io = CapturingIO(StatementType.PLAIN.displayName, freeTextAnswer = "hello")
+        val human = HumanPlayer(Role.VILLAGER, "Human", io)
+        val context = DiscussionContext.Open(1, 1, listOf(human), listOf(human))
+
+        human.discuss(context)
+
+        assertTrue(io.promptedChoices.single().options.none { it == StatementType.ROLE_CLAIM.displayName })
+    }
+
+    @Test
+    fun `speak with ROLE_CLAIM skips role prompt when only one role is claimable`() {
+        val io = CapturingIO(StatementType.ROLE_CLAIM.displayName)
+        val human = HumanPlayer(Role.SEER, "Human", io)
+        val context = DiscussionContext.Open(1, 1, listOf(human), listOf(human))
+
+        val statement = human.discuss(context)
+
+        assertEquals(Statement.RoleClaim(human, Role.SEER), statement)
+        assertEquals(1, io.promptedChoices.size)
+    }
+
+    @Test
+    fun `seer who already claimed is not offered ROLE_CLAIM again`() {
+        val io = CapturingIO(StatementType.PLAIN.displayName, freeTextAnswer = "hello")
+        val human = HumanPlayer(Role.SEER, "Human", io)
+        val allPlayers = AllPlayers(TestLodge(human to Role.SEER).create().playerManager)
+        GameEvent.StatementMade.send(1, human.name, Statement.RoleClaim(human, Role.SEER), allPlayers)
+        val context = DiscussionContext.Open(2, 1, listOf(human), listOf(human))
+
+        human.discuss(context)
+
+        assertTrue(io.promptedChoices.single().options.none { it == StatementType.ROLE_CLAIM.displayName })
     }
 
     @Test

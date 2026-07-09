@@ -5,13 +5,14 @@ import werewolf.game.DivineResult
 import werewolf.game.MediumResult
 import werewolf.game.Role
 import werewolf.game.StatementType
+import werewolf.game.selectableTypes
 
 data class ParsedStatement(val content: String, val typeLabel: String, val intent: String)
 
 class StatementFormat {
-    fun buildInstruction(context: DiscussionContext): String {
-        val types = availableTypes(context)
-        val typeFormats = types.joinToString("\n") { "・${formatDescription(it)}" }
+    fun buildInstruction(context: DiscussionContext, claimableRoles: Set<Role>): String {
+        val types = availableTypes(context, claimableRoles)
+        val typeFormats = types.joinToString("\n") { "・${formatDescription(it, claimableRoles)}" }
         // trimIndent()はテンプレート内の複数行にまたがる補間値には対応できないため、行単位で組み立てる
         return listOf(
             "【${context.title}】${context.description}",
@@ -27,8 +28,8 @@ class StatementFormat {
         ).joinToString("\n")
     }
 
-    private fun availableTypes(context: DiscussionContext): List<StatementType> =
-        StatementType.entries.filter { it in context.availableTypes }
+    private fun availableTypes(context: DiscussionContext, claimableRoles: Set<Role>): List<StatementType> =
+        StatementType.entries.filter { it in context.selectableTypes(claimableRoles) }
 
     fun parse(input: String): ParsedStatement {
         val (body, intent) = parseBodyAndIntent(input)
@@ -52,14 +53,14 @@ class StatementFormat {
         return typeLabel to content
     }
 
-    private fun formatDescription(type: StatementType): String = when (type) {
+    private fun formatDescription(type: StatementType, claimableRoles: Set<Role>): String = when (type) {
         StatementType.PLAIN -> "${type.displayName}：ゲーム上の発言（50文字以内）"
         StatementType.DIVINATION_REPORT ->
             "${type.displayName}：対象のプレイヤー名/結果（${DivineResult.entries.joinToString("か") { it.displayName }}）/補足コメント（省略可）"
         StatementType.MEDIUM_REPORT ->
             "${type.displayName}：対象のプレイヤー名/結果（${MediumResult.entries.joinToString("か") { it.displayName }}）/補足コメント（省略可）"
         StatementType.ROLE_CLAIM ->
-            "${type.displayName}：申告する役職名（${Role.entries.joinToString("か") { it.displayName }}）/補足コメント（省略可）"
+            "${type.displayName}：申告する役職名（${claimableRoles.joinToString("か") { it.displayName }}）/補足コメント（省略可）"
     }
 
     fun extractReportParts(content: String): Triple<String, String, String> {

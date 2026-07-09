@@ -20,10 +20,10 @@ class ConclaveTest {
         var receivedStartedDay: Int? = null
         private var statementIndex = 0
 
-        override fun speak(context: DiscussionContext): Claim {
+        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>): Claim {
             val statement = statements[statementIndex++]
             _log.add("$name:said:$statement")
-            return Claim(this, context, Statement.Plain(statement), "")
+            return Claim(this, context, Statement.Plain(statement), claimableRoles, "")
         }
 
         override fun onReceive(event: GameEvent) {

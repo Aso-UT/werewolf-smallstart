@@ -12,6 +12,7 @@ import werewolf.game.Role
 import werewolf.game.SelectionContext
 import werewolf.game.Statement
 import werewolf.game.StatementType
+import werewolf.game.selectableTypes
 import werewolf.view.ChoiceView
 import werewolf.view.DivinationView
 import werewolf.view.PlayerStatusView
@@ -48,19 +49,19 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
         }
     }
 
-    override fun speak(context: DiscussionContext): Claim {
-        val type = selectType(context)
+    override fun speak(context: DiscussionContext, claimableRoles: Set<Role>): Claim {
+        val type = selectType(context, claimableRoles)
         val statement = when (type) {
             StatementType.PLAIN -> buildPlain(context)
             StatementType.DIVINATION_REPORT -> buildDivinationReport(context)
             StatementType.MEDIUM_REPORT -> buildMediumReport(context)
-            StatementType.ROLE_CLAIM -> buildRoleClaim()
+            StatementType.ROLE_CLAIM -> buildRoleClaim(claimableRoles)
         }
-        return Claim(this, context, statement, "プレイヤーが発言")
+        return Claim(this, context, statement, claimableRoles, "プレイヤーが発言")
     }
 
-    private fun selectType(context: DiscussionContext): StatementType {
-        val types = StatementType.entries.filter { it in context.availableTypes }
+    private fun selectType(context: DiscussionContext, claimableRoles: Set<Role>): StatementType {
+        val types = StatementType.entries.filter { it in context.selectableTypes(claimableRoles) }
         if (types.size == 1) return types.first()
         val selected = io.promptChoice(ChoiceView(context.title, context.description, types.map { it.displayName }))
         return types.single { it.displayName == selected }
@@ -89,11 +90,16 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
         return Statement.MediumReport(this, target, results.single { it.displayName == resultName }, comment)
     }
 
-    private fun buildRoleClaim(): Statement {
-        val roles = Role.entries
-        val roleName = io.promptChoice(ChoiceView("役職申告 - 役職", "申告する役職を選んでください", roles.map { it.displayName }))
+    private fun buildRoleClaim(claimableRoles: Set<Role>): Statement {
+        val roles = claimableRoles.toList()
+        val role = if (roles.size == 1) {
+            roles.single()
+        } else {
+            val roleName = io.promptChoice(ChoiceView("役職申告 - 役職", "申告する役職を選んでください", roles.map { it.displayName }))
+            roles.single { it.displayName == roleName }
+        }
         val comment = io.promptFreeText("役職申告 - 補足", COMMENT_PROMPT)
-        return Statement.RoleClaim(this, roles.single { it.displayName == roleName }, comment)
+        return Statement.RoleClaim(this, role, comment)
     }
 
     override fun watchEpilogue(chronicles: List<ChronicleView>) {

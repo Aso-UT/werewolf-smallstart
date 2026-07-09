@@ -17,6 +17,7 @@ import werewolf.game.Role
 import werewolf.game.SelectionContext
 import werewolf.game.Statement
 import werewolf.game.StatementType
+import werewolf.game.selectableTypes
 
 class AiPlayer(
     role: Role,
@@ -37,16 +38,16 @@ class AiPlayer(
         _myMemories.add(event)
     }
 
-    override fun speak(context: DiscussionContext): Claim {
-        val instruction = statementFormat.buildInstruction(context)
+    override fun speak(context: DiscussionContext, claimableRoles: Set<Role>): Claim {
+        val instruction = statementFormat.buildInstruction(context, claimableRoles)
         repeat(2) {
             val completion = prompt(instruction)
             try {
                 val parsed = statementFormat.parse(completion.text)
-                val type = context.availableTypes.singleOrNull { it.displayName == parsed.typeLabel }
+                val type = context.selectableTypes(claimableRoles).singleOrNull { it.displayName == parsed.typeLabel }
                     ?: throw InvalidAiInputException("選択できない発言の種類です: ${parsed.typeLabel}")
                 val claim = Claim(
-                    this, context, buildStatement(context, type, parsed.content),
+                    this, context, buildStatement(context, type, parsed.content, claimableRoles), claimableRoles,
                     intentForRecall = parsed.intent,
                     intentForChronicle = withMetadata(parsed.intent, completion.metadata),
                 )
@@ -60,7 +61,12 @@ class AiPlayer(
         return FallbackClaim(this, context).also { _myMemories.add(it) }
     }
 
-    private fun buildStatement(context: DiscussionContext, type: StatementType, content: String): Statement = when (type) {
+    private fun buildStatement(
+        context: DiscussionContext,
+        type: StatementType,
+        content: String,
+        claimableRoles: Set<Role>,
+    ): Statement = when (type) {
         StatementType.PLAIN -> Statement.Plain(content)
         StatementType.DIVINATION_REPORT -> {
             val (targetName, resultLabel, comment) = statementFormat.extractReportParts(content)
@@ -76,7 +82,7 @@ class AiPlayer(
         }
         StatementType.ROLE_CLAIM -> {
             val (roleName, comment) = statementFormat.extractRoleClaimParts(content)
-            val role = Role.entries.singleOrNull { it.displayName == roleName }
+            val role = claimableRoles.singleOrNull { it.displayName == roleName }
                 ?: throw InvalidAiInputException("役職申告の役職が不正です: $roleName")
             Statement.RoleClaim(this, role, comment)
         }
