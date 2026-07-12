@@ -3,6 +3,7 @@ package werewolf
 import werewolf.game.*
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
@@ -25,13 +26,21 @@ class PlayerTest {
         name: String,
         private val speakerToSet: Player,
     ) : NothingPlayer(role, name) {
-        override fun speak(context: DiscussionContext): Claim =
-            Claim(speakerToSet, context, Statement.Plain(""), "")
+        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>): Claim =
+            Claim(speakerToSet, context, Statement.Plain(""), claimableRoles, "")
     }
 
     private class SpeakingPlayer(role: Role, name: String) : NothingPlayer(role, name) {
-        override fun speak(context: DiscussionContext): Claim =
-            Claim(this, context, Statement.Plain(""), "")
+        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>): Claim =
+            Claim(this, context, Statement.Plain(""), claimableRoles, "")
+    }
+
+    private class CapturingSpeakerPlayer(role: Role, name: String) : ReceivingPlayer(role, name) {
+        var receivedClaimableRoles: Set<Role>? = null
+        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>): Claim {
+            receivedClaimableRoles = claimableRoles
+            return Claim(this, context, Statement.Plain(""), claimableRoles, "")
+        }
     }
 
     @Test
@@ -64,5 +73,41 @@ class PlayerTest {
         val player = SpeakingPlayer(Role.VILLAGER, "Player")
         player.discuss(openContext(listOf(player)))
         assertTrue(player.reveal(fakeCitizenWinSignal()).any { it is Claim })
+    }
+
+    @Test
+    fun `villager cannot claim any role`() {
+        val player = CapturingSpeakerPlayer(Role.VILLAGER, "Player")
+        player.discuss(openContext(listOf(player)))
+        assertEquals(emptySet(), player.receivedClaimableRoles)
+    }
+
+    @Test
+    fun `seer can claim own role when not yet revealed`() {
+        val player = CapturingSpeakerPlayer(Role.SEER, "Player")
+        player.discuss(openContext(listOf(player)))
+        assertEquals(setOf(Role.SEER), player.receivedClaimableRoles)
+    }
+
+    @Test
+    fun `seer cannot claim again after already revealed`() {
+        val player = CapturingSpeakerPlayer(Role.SEER, "Player")
+        val allPlayers = AllPlayers(TestLodge(player to Role.SEER).create().playerManager)
+        GameEvent.StatementMade.send(1, player.name, Statement.RoleClaim(player, Role.SEER), allPlayers)
+
+        player.discuss(openContext(listOf(player)))
+
+        assertEquals(emptySet(), player.receivedClaimableRoles)
+    }
+
+    @Test
+    fun `werewolf can keep re-claiming roles after already claiming`() {
+        val player = CapturingSpeakerPlayer(Role.WEREWOLF, "Player")
+        val allPlayers = AllPlayers(TestLodge(player to Role.WEREWOLF).create().playerManager)
+        GameEvent.StatementMade.send(1, player.name, Statement.RoleClaim(player, Role.SEER), allPlayers)
+
+        player.discuss(openContext(listOf(player)))
+
+        assertEquals(Role.entries.toSet() - Role.VILLAGER, player.receivedClaimableRoles)
     }
 }

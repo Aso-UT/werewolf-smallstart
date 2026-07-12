@@ -8,14 +8,17 @@ import werewolf.game.Player
 import werewolf.game.Role
 import werewolf.game.SelectionContext
 import werewolf.game.Statement
+import werewolf.game.StatementType
 
 class MadmanCpuStrategy(
     self: RoleAwareCpuPlayer,
     private val impersonating: Role = listOf(Role.SEER, Role.MEDIUM).random(),
 ) : RoleAwareCpuStrategy(self, Role.MADMAN, WerewolfVoting(self)) {
 
-    override fun buildStatement(context: DiscussionContext): Statement {
+    override fun buildStatement(context: DiscussionContext, availableTypes: Set<StatementType>): Statement {
         if (context.round > 1) return Statement.Plain("")
+        val impersonatedType = if (impersonating == Role.SEER) StatementType.DIVINATION_REPORT else StatementType.MEDIUM_REPORT
+        if (impersonatedType !in availableTypes) return Statement.Plain("")
         return if (impersonating == Role.SEER) fakeSeerStatement(context) else fakeMediumStatement()
     }
 

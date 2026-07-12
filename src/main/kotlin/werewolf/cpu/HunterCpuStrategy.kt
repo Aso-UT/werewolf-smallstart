@@ -5,11 +5,12 @@ import werewolf.game.Player
 import werewolf.game.Role
 import werewolf.game.SelectionContext
 import werewolf.game.Statement
+import werewolf.game.StatementType
 
 class HunterCpuStrategy(self: RoleAwareCpuPlayer) : RoleAwareCpuStrategy(self, Role.HUNTER, CitizenVoting(self)) {
     private val query = KnowledgeQuery(self)
 
-    override fun buildStatement(context: DiscussionContext) = Statement.Plain("")
+    override fun buildStatement(context: DiscussionContext, availableTypes: Set<StatementType>) = Statement.Plain("")
 
     override fun selectTargetForOthers(context: SelectionContext, candidates: List<Player>): Player =
         when (context) {

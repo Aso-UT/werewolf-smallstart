@@ -50,8 +50,8 @@ class AiPlayerSpeakTest {
     @Test
     fun `discuss prompt includes format instruction for every available type`() {
         val lm = FakeLanguageModel("発言する：hello[真意]")
-        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())
-        villager.discuss(openContext())
+        val seer = AiPlayer(Role.SEER, "Seer", lm, testInstruction("Seer"))
+        seer.discuss(openContext())
         assertContains(lm.prompts.first(), "発言する：ゲーム上の発言（50文字以内）")
         assertContains(
             lm.prompts.first(),
@@ -63,8 +63,16 @@ class AiPlayerSpeakTest {
         )
         assertContains(
             lm.prompts.first(),
-            "役職を開示する：申告する役職名（人狼か占い師か霊能者か村人か狩人か狂人）/補足コメント（省略可）",
+            "役職を開示する：申告する役職名（占い師）/補足コメント（省略可）",
         )
+    }
+
+    @Test
+    fun `discuss prompt omits ROLE_CLAIM format when no role is claimable`() {
+        val lm = FakeLanguageModel("発言する：hello[真意]")
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())
+        villager.discuss(openContext())
+        assertFalse(lm.prompts.first().contains("役職を開示する"))
     }
 
     @Test
@@ -152,6 +160,30 @@ class AiPlayerSpeakTest {
         val lm = FakeLanguageModel(
             "役職を開示する：宇宙人[意図]",
             "役職を開示する：宇宙人[意図]",
+        )
+        val seer = AiPlayer(Role.SEER, "Seer", lm, testInstruction("Seer"))
+        val result = seer.discuss(openContext(listOf(seer)))
+        assertIs<Statement.Plain>(result)
+        assertEquals("", result.text())
+    }
+
+    @Test
+    fun `discuss falls back when claimed role is not claimable by this player`() {
+        val lm = FakeLanguageModel(
+            "役職を開示する：霊能者[意図]",
+            "役職を開示する：霊能者[意図]",
+        )
+        val seer = AiPlayer(Role.SEER, "Seer", lm, testInstruction("Seer"))
+        val result = seer.discuss(openContext(listOf(seer)))
+        assertIs<Statement.Plain>(result)
+        assertEquals("", result.text())
+    }
+
+    @Test
+    fun `discuss falls back when villager attempts ROLE_CLAIM`() {
+        val lm = FakeLanguageModel(
+            "役職を開示する：占い師[意図]",
+            "役職を開示する：占い師[意図]",
         )
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())
         val result = villager.discuss(openContext(listOf(villager)))

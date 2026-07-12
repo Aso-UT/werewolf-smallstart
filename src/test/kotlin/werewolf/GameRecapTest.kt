@@ -12,7 +12,8 @@ import kotlin.test.assertTrue
 class GameRecapTest {
 
     private class SpeakingPlayer(role: Role, name: String) : ReceivingPlayer(role, name) {
-        override fun speak(context: DiscussionContext): Claim = Claim(this, context, Statement.Plain("$name speaks"), "intent")
+        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>): Claim =
+            Claim(this, context, Statement.Plain("$name speaks"), claimableRoles, "intent")
     }
 
     private fun playerManager(vararg players: Player): PlayerManager =

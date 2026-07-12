@@ -6,10 +6,12 @@ import werewolf.game.Player
 import werewolf.game.Role
 import werewolf.game.SelectionContext
 import werewolf.game.Statement
+import werewolf.game.StatementType
 
 class SeerCpuStrategy(self: RoleAwareCpuPlayer) : RoleAwareCpuStrategy(self, Role.SEER, SeerVoting(self)) {
 
-    override fun buildStatement(context: DiscussionContext): Statement {
+    override fun buildStatement(context: DiscussionContext, availableTypes: Set<StatementType>): Statement {
+        if (StatementType.DIVINATION_REPORT !in availableTypes) return Statement.Plain("")
         val next = nextUnreportedDivination() ?: return Statement.Plain("")
         return Statement.DivinationReport(self, next.target, next.result)
     }

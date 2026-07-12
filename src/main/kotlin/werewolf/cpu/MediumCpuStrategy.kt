@@ -6,10 +6,12 @@ import werewolf.game.Player
 import werewolf.game.Role
 import werewolf.game.SelectionContext
 import werewolf.game.Statement
+import werewolf.game.StatementType
 
 class MediumCpuStrategy(self: RoleAwareCpuPlayer) : RoleAwareCpuStrategy(self, Role.MEDIUM, CitizenVoting(self)) {
 
-    override fun buildStatement(context: DiscussionContext): Statement {
+    override fun buildStatement(context: DiscussionContext, availableTypes: Set<StatementType>): Statement {
+        if (StatementType.MEDIUM_REPORT !in availableTypes) return Statement.Plain("")
         val next = nextUnreportedReveal() ?: return Statement.Plain("")
         return Statement.MediumReport(self, next.target, next.result)
     }

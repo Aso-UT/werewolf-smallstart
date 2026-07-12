@@ -16,9 +16,9 @@ class HonestCpuPlayer(role: Role, override val name: String) : CpuPlayer(role) {
         if (!event.isPublicKnowledge()) unspoken.add(event)
     }
 
-    override fun speak(context: DiscussionContext): Claim {
+    override fun speak(context: DiscussionContext, claimableRoles: Set<Role>): Claim {
         val statement = if (unspoken.isEmpty()) Statement.Plain("") else Statement.Plain(unspoken.removeFirst().body())
-        return Claim(this, context, statement, "受け取った非公開情報を順番に開示")
+        return Claim(this, context, statement, claimableRoles, "受け取った非公開情報を順番に開示")
     }
 
     override fun choose(context: SelectionContext): Choice {

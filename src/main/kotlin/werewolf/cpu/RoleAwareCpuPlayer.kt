@@ -6,6 +6,7 @@ import werewolf.game.DiscussionContext
 import werewolf.game.GameEvent
 import werewolf.game.Role
 import werewolf.game.SelectionContext
+import werewolf.game.selectableTypes
 
 class RoleAwareCpuPlayer(val myRole: Role, override val name: String) : CpuPlayer(myRole) {
     private val _knowledge = mutableListOf<GameEvent>()
@@ -17,6 +18,9 @@ class RoleAwareCpuPlayer(val myRole: Role, override val name: String) : CpuPlaye
     ).single { it.appliesTo() }
 
     override fun onReceive(event: GameEvent) { _knowledge.add(event) }
-    override fun speak(context: DiscussionContext) = Claim(this, context, strategy.buildStatement(context), "役職戦略に基づく発言")
+    override fun speak(context: DiscussionContext, claimableRoles: Set<Role>): Claim {
+        val statement = strategy.buildStatement(context, context.selectableTypes(claimableRoles))
+        return Claim(this, context, statement, claimableRoles, "役職戦略に基づく発言")
+    }
     override fun choose(context: SelectionContext) = Choice(this, context, strategy.selectTarget(context), "戦略による選択")
 }
