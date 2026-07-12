@@ -23,9 +23,10 @@
 ## 作業手順
 
 1. issueを立てる（テンプレートを使用）
-2. `develop` からブランチを切る（命名規則に従う）
-3. 実装する
-4. PRを作成し、`Closes #番号` でissueと紐づける
+2. ローカルの `develop` をリモート最新に同期する（`git checkout develop && git pull origin develop`。Claude Codeでは `/sync-develop` コマンドで実行できる）
+3. `develop` からブランチを切る（命名規則に従う）
+4. 実装する
+5. PRを作成し、`Closes #番号` でissueと紐づける
 
 ## issue
 
