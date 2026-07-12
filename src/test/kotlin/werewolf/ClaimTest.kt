@@ -80,8 +80,8 @@ class ClaimTest {
         val target = NothingPlayer(Role.VILLAGER, "Target")
         val withComment = Statement.DivinationReport(speaker, target, DivineResult.WEREWOLF, "怪しいと思っていました")
         val withoutComment = Statement.DivinationReport(speaker, target, DivineResult.WEREWOLF)
-        assertEquals("Target は「人狼」です。 怪しいと思っていました", withComment.text())
-        assertEquals("Target は「人狼」です。", withoutComment.text())
+        assertEquals("Targetを占ったところ、「人狼」でした。 怪しいと思っていました", withComment.text())
+        assertEquals("Targetを占ったところ、「人狼」でした。", withoutComment.text())
     }
 
     @Test
@@ -90,8 +90,8 @@ class ClaimTest {
         val target = NothingPlayer(Role.VILLAGER, "Target")
         val withComment = Statement.MediumReport(speaker, target, MediumResult.NOT_WEREWOLF, "無実の方を処刑してしまい申し訳ない気持ちです")
         val withoutComment = Statement.MediumReport(speaker, target, MediumResult.NOT_WEREWOLF)
-        assertEquals("Target は「人狼でない」です。 無実の方を処刑してしまい申し訳ない気持ちです", withComment.text())
-        assertEquals("Target は「人狼でない」です。", withoutComment.text())
+        assertEquals("Targetの霊能結果は、「人狼以外」でした。 無実の方を処刑してしまい申し訳ない気持ちです", withComment.text())
+        assertEquals("Targetの霊能結果は、「人狼以外」でした。", withoutComment.text())
     }
 
     @Test
