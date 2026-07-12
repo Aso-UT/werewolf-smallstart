@@ -9,8 +9,11 @@ sealed class Claim(
     private val intentForChronicle: String,
 ) : Recallable() {
     init {
-        require(statement.type in context.selectableTypes(claimableRoles)) {
+        require(statement.type in context.availableTypes) {
             "${statement.type} is not available in ${context.title}"
+        }
+        require(statement.type in context.selectableTypes(claimableRoles)) {
+            "${statement.type} is not available for ${speaker.name} now. context:${context.title}, claimable roles: $claimableRoles."
         }
         if (statement is Statement.RoleClaim) {
             require(statement.role in claimableRoles) {

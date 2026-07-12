@@ -8,8 +8,7 @@ import kotlin.test.assertNull
 
 class ClaimedRoleTest {
 
-    private fun eventsFor(player: Player): List<GameEvent> =
-        player.reveal(fakeCitizenWinSignal()).filterIsInstance<GameEvent>()
+    private fun eventsFor(player: Player): List<Recallable> = player.reveal(fakeCitizenWinSignal())
 
     @Test
     fun `returns null when player has not claimed anything`() {

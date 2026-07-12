@@ -29,13 +29,25 @@ class ClaimTest {
     }
 
     @Test
-    fun `Claim throws when statement is RoleClaim for a role that is not claimable`() {
+    fun `Claim throws when statement type is ROLE_CLAIM but speaker has no claimable role`() {
         val speaker = NothingPlayer(Role.VILLAGER, "Speaker")
         val context = openContext(listOf(speaker))
         val statement = Statement.RoleClaim(speaker, Role.SEER)
-        assertFailsWith<IllegalArgumentException> {
+        val exception = assertFailsWith<IllegalArgumentException> {
             Claim(speaker, context, statement, emptySet(), "意図")
         }
+        assertContains(exception.message.orEmpty(), "is not available for")
+    }
+
+    @Test
+    fun `Claim throws when statement is RoleClaim for a role outside claimable roles`() {
+        val speaker = NothingPlayer(Role.SEER, "Speaker")
+        val context = openContext(listOf(speaker))
+        val statement = Statement.RoleClaim(speaker, Role.WEREWOLF)
+        val exception = assertFailsWith<IllegalArgumentException> {
+            Claim(speaker, context, statement, setOf(Role.SEER), "意図")
+        }
+        assertContains(exception.message.orEmpty(), "is not claimable by")
     }
 
     @Test

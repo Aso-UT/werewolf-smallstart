@@ -30,7 +30,7 @@ abstract class Player(private val role: Role) : Notifiable {
     protected abstract fun speak(context: DiscussionContext, claimableRoles: Set<Role>): Claim
 
     private fun claimableRoles(): Set<Role> {
-        val alreadyRevealed = ClaimedRole(_memories.filterIsInstance<GameEvent>()).of(this) == role
+        val alreadyRevealed = ClaimedRole(_memories).of(this) == role
         return RoleClaimPolicy.claimableRoles(role, alreadyRevealed)
     }
     abstract fun watchEpilogue(chronicles: List<ChronicleView>)

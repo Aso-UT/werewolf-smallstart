@@ -1,7 +1,7 @@
 package werewolf.game
 
-class ClaimedRole(events: List<GameEvent>) {
-    private val statements = events.filterIsInstance<GameEvent.StatementMade>().map { it.statement }
+class ClaimedRole(memories: List<Recallable>) {
+    private val statements = memories.filterIsInstance<GameEvent.StatementMade>().map { it.statement }
 
     // 複数回申告された場合は最後の申告を優先する（人狼・狂人の騙り替えを想定）
     @Suppress("FunctionMinLength")
