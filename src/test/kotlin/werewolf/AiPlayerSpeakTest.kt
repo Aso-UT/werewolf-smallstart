@@ -55,11 +55,11 @@ class AiPlayerSpeakTest {
         assertContains(lm.prompts.first(), "発言する：ゲーム上の発言（50文字以内）")
         assertContains(
             lm.prompts.first(),
-            "占い結果を報告する：対象のプレイヤー名/結果（人狼か人狼でない）/補足コメント（省略可）",
+            "占い結果を報告する：対象のプレイヤー名/結果（人狼か人狼以外）/補足コメント（省略可）",
         )
         assertContains(
             lm.prompts.first(),
-            "霊媒結果を報告する：対象のプレイヤー名/結果（人狼であるか人狼でない）/補足コメント（省略可）",
+            "霊媒結果を報告する：対象のプレイヤー名/結果（人狼か人狼以外）/補足コメント（省略可）",
         )
         assertContains(
             lm.prompts.first(),
@@ -126,7 +126,7 @@ class AiPlayerSpeakTest {
     @Test
     fun `discuss selects MEDIUM_REPORT and omits comment when not provided`() {
         val alice = NothingPlayer(Role.VILLAGER, "Alice")
-        val lm = FakeLanguageModel("霊媒結果を報告する：Alice/人狼でない[霊能者として信頼を得るため]")
+        val lm = FakeLanguageModel("霊媒結果を報告する：Alice/人狼以外[霊能者として信頼を得るため]")
         val medium = AiPlayer(Role.MEDIUM, "Medium", lm, testInstruction("Medium"))
         val result = medium.discuss(openContext(listOf(medium, alice)))
         val report = assertIs<Statement.MediumReport>(result)

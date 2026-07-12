@@ -16,7 +16,7 @@ sealed class Statement {
         val comment: String = "",
     ) : Statement() {
         override val type = StatementType.DIVINATION_REPORT
-        override fun text() = "${target.name} は「${result.displayName}」です。".withComment(comment)
+        override fun text() = "${target.name}を占ったところ、「${result.displayName}」でした。".withComment(comment)
     }
 
     data class MediumReport(
@@ -26,7 +26,7 @@ sealed class Statement {
         val comment: String = "",
     ) : Statement() {
         override val type = StatementType.MEDIUM_REPORT
-        override fun text() = "${target.name} は「${result.displayName}」です。".withComment(comment)
+        override fun text() = "${target.name}の霊能結果は、「${result.displayName}」でした。".withComment(comment)
     }
 
     data class RoleClaim(
