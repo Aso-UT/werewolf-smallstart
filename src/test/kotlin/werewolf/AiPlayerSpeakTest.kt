@@ -3,10 +3,12 @@ package werewolf
 import werewolf.ai.AiPlayer
 import werewolf.ai.InvalidAiInput
 import werewolf.ai.ModelMetadata
+import werewolf.game.AllPlayers
 import werewolf.game.ChronicleView
 import werewolf.game.Claim
 import werewolf.game.DiscussionContext
 import werewolf.game.DivineResult
+import werewolf.game.GameEvent
 import werewolf.game.MediumResult
 import werewolf.game.Role
 import werewolf.game.Statement
@@ -50,17 +52,16 @@ class AiPlayerSpeakTest {
     @Test
     fun `discuss prompt includes format instruction for every available type`() {
         val lm = FakeLanguageModel("発言する：hello[真意]")
+        val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
         val seer = AiPlayer(Role.SEER, "Seer", lm, testInstruction("Seer"))
-        seer.discuss(openContext())
+        GameEvent.Divined.send(wolf, DivineResult.WEREWOLF, seer)
+        seer.discuss(openContext(listOf(seer, wolf)))
         assertContains(lm.prompts.first(), "発言する：ゲーム上の発言（50文字以内）")
         assertContains(
             lm.prompts.first(),
-            "占い結果を報告する：対象のプレイヤー名/結果（人狼か人狼以外）/補足コメント（省略可）",
+            "占い結果を報告する：対象のプレイヤー名/実際の占い結果/補足コメント（省略可）。報告できる対象と結果：Wolfは人狼",
         )
-        assertContains(
-            lm.prompts.first(),
-            "霊媒結果を報告する：対象のプレイヤー名/結果（人狼か人狼以外）/補足コメント（省略可）",
-        )
+        assertFalse(lm.prompts.first().contains("霊媒結果を報告する"))
         assertContains(
             lm.prompts.first(),
             "役職を開示する：申告する役職名（占い師）/補足コメント（省略可）",
@@ -113,24 +114,26 @@ class AiPlayerSpeakTest {
 
     @Test
     fun `discuss selects DIVINATION_REPORT and builds a report with target result and comment`() {
-        val alice = NothingPlayer(Role.WEREWOLF, "Alice")
-        val lm = FakeLanguageModel("占い結果を報告する：Alice/人狼/怪しい発言が多かったので[占い師として信頼を得るため]")
+        val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
+        val lm = FakeLanguageModel("占い結果を報告する：Wolf/人狼/怪しい発言が多かったので[占い師として信頼を得るため]")
         val seer = AiPlayer(Role.SEER, "Seer", lm, testInstruction("Seer"))
-        val result = seer.discuss(openContext(listOf(seer, alice)))
+        GameEvent.Divined.send(wolf, DivineResult.WEREWOLF, seer)
+        val result = seer.discuss(openContext(listOf(seer, wolf)))
         val report = assertIs<Statement.DivinationReport>(result)
-        assertEquals(alice, report.target)
+        assertEquals(wolf, report.target)
         assertEquals(DivineResult.WEREWOLF, report.result)
         assertEquals("怪しい発言が多かったので", report.comment)
     }
 
     @Test
     fun `discuss selects MEDIUM_REPORT and omits comment when not provided`() {
-        val alice = NothingPlayer(Role.VILLAGER, "Alice")
-        val lm = FakeLanguageModel("霊媒結果を報告する：Alice/人狼以外[霊能者として信頼を得るため]")
+        val villager = NothingPlayer(Role.VILLAGER, "Villager")
+        val lm = FakeLanguageModel("霊媒結果を報告する：Villager/人狼以外[霊能者として信頼を得るため]")
         val medium = AiPlayer(Role.MEDIUM, "Medium", lm, testInstruction("Medium"))
-        val result = medium.discuss(openContext(listOf(medium, alice)))
+        GameEvent.MediumRevealed.send(villager, MediumResult.NOT_WEREWOLF, medium)
+        val result = medium.discuss(openContext(listOf(medium, villager)))
         val report = assertIs<Statement.MediumReport>(result)
-        assertEquals(alice, report.target)
+        assertEquals(villager, report.target)
         assertEquals(MediumResult.NOT_WEREWOLF, report.result)
         assertEquals("", report.comment)
     }
@@ -187,6 +190,38 @@ class AiPlayerSpeakTest {
         )
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())
         val result = villager.discuss(openContext(listOf(villager)))
+        assertIs<Statement.Plain>(result)
+        assertEquals("", result.text())
+    }
+
+    @Test
+    fun `discuss falls back when reported divination result does not match the actual result`() {
+        val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
+        val lm = FakeLanguageModel(
+            "占い結果を報告する：Wolf/人狼以外/コメント[意図]",
+            "占い結果を報告する：Wolf/人狼以外/コメント[意図]",
+        )
+        val seer = AiPlayer(Role.SEER, "Seer", lm, testInstruction("Seer"))
+        GameEvent.Divined.send(wolf, DivineResult.WEREWOLF, seer)
+        val result = seer.discuss(openContext(listOf(seer, wolf)))
+        assertIs<Statement.Plain>(result)
+        assertEquals("", result.text())
+    }
+
+    @Test
+    fun `discuss falls back when reporting a divination target already reported`() {
+        val wolf = ReceivingPlayer(Role.WEREWOLF, "Wolf")
+        val lm = FakeLanguageModel(
+            "占い結果を報告する：Wolf/人狼/コメント[意図]",
+            "占い結果を報告する：Wolf/人狼/コメント[意図]",
+        )
+        val seer = AiPlayer(Role.SEER, "Seer", lm, testInstruction("Seer"))
+        val allPlayers = AllPlayers(TestLodge(seer to Role.SEER, wolf to Role.WEREWOLF).create().playerManager)
+        GameEvent.Divined.send(wolf, DivineResult.WEREWOLF, seer)
+        GameEvent.StatementMade.send(1, seer.name, Statement.DivinationReport(seer, wolf, DivineResult.WEREWOLF), allPlayers)
+
+        val result = seer.discuss(openContext(listOf(seer, wolf)))
+
         assertIs<Statement.Plain>(result)
         assertEquals("", result.text())
     }

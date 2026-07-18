@@ -1,16 +1,17 @@
 package werewolf.game
 
 sealed class Statement {
+    abstract val claimant: Player
     abstract val type: StatementType
     abstract fun text(): String
 
-    data class Plain(private val content: String) : Statement() {
+    data class Plain(override val claimant: Player, private val content: String) : Statement() {
         override val type = StatementType.PLAIN
         override fun text() = content
     }
 
     data class DivinationReport(
-        val claimant: Player,
+        override val claimant: Player,
         val target: Player,
         val result: DivineResult,
         val comment: String = "",
@@ -20,7 +21,7 @@ sealed class Statement {
     }
 
     data class MediumReport(
-        val claimant: Player,
+        override val claimant: Player,
         val target: Player,
         val result: MediumResult,
         val comment: String = "",
@@ -30,7 +31,7 @@ sealed class Statement {
     }
 
     data class RoleClaim(
-        val claimant: Player,
+        override val claimant: Player,
         val role: Role,
         val comment: String = "",
     ) : Statement() {

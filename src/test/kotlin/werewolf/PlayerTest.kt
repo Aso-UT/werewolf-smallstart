@@ -26,20 +26,22 @@ class PlayerTest {
         name: String,
         private val speakerToSet: Player,
     ) : NothingPlayer(role, name) {
-        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>): Claim =
-            Claim(speakerToSet, context, Statement.Plain(""), claimableRoles, "")
+        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim =
+            Claim(speakerToSet, context, Statement.Plain(speakerToSet, ""), claimableRoles, reportEligibility, "")
     }
 
     private class SpeakingPlayer(role: Role, name: String) : NothingPlayer(role, name) {
-        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>): Claim =
-            Claim(this, context, Statement.Plain(""), claimableRoles, "")
+        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim =
+            Claim(this, context, Statement.Plain(this, ""), claimableRoles, reportEligibility, "")
     }
 
     private class CapturingSpeakerPlayer(role: Role, name: String) : ReceivingPlayer(role, name) {
         var receivedClaimableRoles: Set<Role>? = null
-        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>): Claim {
+        var receivedReportEligibility: ReportEligibility? = null
+        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
             receivedClaimableRoles = claimableRoles
-            return Claim(this, context, Statement.Plain(""), claimableRoles, "")
+            receivedReportEligibility = reportEligibility
+            return Claim(this, context, Statement.Plain(this, ""), claimableRoles, reportEligibility, "")
         }
     }
 

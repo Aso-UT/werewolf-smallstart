@@ -19,10 +19,10 @@ class DiscussionTest {
         var receivedStartedDay: Int? = null
         private var statementIndex = 0
 
-        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>): Claim {
+        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
             val statement = statements[statementIndex++]
             _log.add("$name:said:$statement")
-            return Claim(this, context, Statement.Plain(statement), claimableRoles, "")
+            return Claim(this, context, Statement.Plain(this, statement), claimableRoles, reportEligibility, "")
         }
 
         override fun onReceive(event: GameEvent) {

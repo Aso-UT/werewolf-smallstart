@@ -22,17 +22,18 @@ abstract class Player(private val role: Role) : Notifiable {
     }
     protected abstract fun choose(context: SelectionContext): Choice
     fun discuss(context: DiscussionContext): Statement {
-        val claim = speak(context, claimableRoles())
+        val claim = speak(context, claimableRoles(), ReportEligibility.forRole(role, _memories, this))
         require(claim.speaker === this) { "${claim.speaker.name} is not the speaking player" }
         _memories.add(claim)
         return claim.statement
     }
-    protected abstract fun speak(context: DiscussionContext, claimableRoles: Set<Role>): Claim
+    protected abstract fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim
 
     private fun claimableRoles(): Set<Role> {
         val alreadyRevealed = ClaimedRole(_memories).of(this) == role
         return RoleClaimPolicy.claimableRoles(role, alreadyRevealed)
     }
+
     abstract fun watchEpilogue(chronicles: List<ChronicleView>)
 
     protected fun memorize(recallable: Recallable) {

@@ -4,10 +4,9 @@ import werewolf.game.Choice
 import werewolf.game.Claim
 import werewolf.game.ChronicleView
 import werewolf.game.DiscussionContext
-import werewolf.game.DivineResult
 import werewolf.game.GameEvent
-import werewolf.game.MediumResult
 import werewolf.game.Player
+import werewolf.game.ReportEligibility
 import werewolf.game.Role
 import werewolf.game.SelectionContext
 import werewolf.game.Statement
@@ -27,9 +26,8 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
     private var lastDivinationSummary: DivinationView? = null
 
     override fun choose(context: SelectionContext): Choice {
-        val candidates = context.candidates()
-        val selected = io.promptChoice(ChoiceView(context.title, context.description, candidates.map { it.name }))
-        val choice = Choice(this, context, candidates.single { it.name == selected }, "プレイヤーが選択")
+        val selected = select(context.title, context.description, context.candidates()) { it.name }
+        val choice = Choice(this, context, selected, "プレイヤーが選択")
         io.display(choice.toRecallView())
         return choice
     }
@@ -49,57 +47,51 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
         }
     }
 
-    override fun speak(context: DiscussionContext, claimableRoles: Set<Role>): Claim {
-        val type = selectType(context, claimableRoles)
+    override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
+        val type = selectType(context, claimableRoles, reportEligibility)
         val statement = when (type) {
             StatementType.PLAIN -> buildPlain(context)
-            StatementType.DIVINATION_REPORT -> buildDivinationReport(context)
-            StatementType.MEDIUM_REPORT -> buildMediumReport(context)
+            StatementType.DIVINATION_REPORT -> buildDivinationReport(reportEligibility)
+            StatementType.MEDIUM_REPORT -> buildMediumReport(reportEligibility)
             StatementType.ROLE_CLAIM -> buildRoleClaim(claimableRoles)
         }
-        return Claim(this, context, statement, claimableRoles, "プレイヤーが発言")
+        return Claim(this, context, statement, claimableRoles, reportEligibility, "プレイヤーが発言")
     }
 
-    private fun selectType(context: DiscussionContext, claimableRoles: Set<Role>): StatementType {
-        val types = StatementType.entries.filter { it in context.selectableTypes(claimableRoles) }
-        if (types.size == 1) return types.first()
-        val selected = io.promptChoice(ChoiceView(context.title, context.description, types.map { it.displayName }))
-        return types.single { it.displayName == selected }
+    private fun selectType(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): StatementType {
+        val types = StatementType.entries.filter { it in context.selectableTypes(claimableRoles, reportEligibility) }
+        return select(context.title, context.description, types) { it.displayName }
     }
 
     private fun buildPlain(context: DiscussionContext): Statement =
-        Statement.Plain(io.promptFreeText(context.title, "発言してください"))
+        Statement.Plain(this, io.promptFreeText(context.title, "発言してください"))
 
-    private fun buildDivinationReport(context: DiscussionContext): Statement {
-        val candidates = context.allPlayers.filter { it !== this }
-        val targetName = io.promptChoice(ChoiceView("占い報告 - 対象", "誰の占い結果を報告しますか？", candidates.map { it.name }))
-        val target = candidates.single { it.name == targetName }
-        val results = DivineResult.entries
-        val resultName = io.promptChoice(ChoiceView("占い報告 - 結果", "占い結果を選んでください", results.map { it.displayName }))
+    private fun buildDivinationReport(reportEligibility: ReportEligibility): Statement {
+        val target = select("占い報告 - 対象", "誰の占い結果を報告しますか？", reportEligibility.divinationCandidates()) { it.name }
+        val result = select("占い報告 - 結果", "占い結果を選んでください", reportEligibility.divinationResults(target)) { it.displayName }
         val comment = io.promptFreeText("占い報告 - 補足", COMMENT_PROMPT)
-        return Statement.DivinationReport(this, target, results.single { it.displayName == resultName }, comment)
+        return Statement.DivinationReport(this, target, result, comment)
     }
 
-    private fun buildMediumReport(context: DiscussionContext): Statement {
-        val candidates = context.allPlayers.filter { it !== this }
-        val targetName = io.promptChoice(ChoiceView("霊媒報告 - 対象", "誰の霊媒結果を報告しますか？", candidates.map { it.name }))
-        val target = candidates.single { it.name == targetName }
-        val results = MediumResult.entries
-        val resultName = io.promptChoice(ChoiceView("霊媒報告 - 結果", "霊媒結果を選んでください", results.map { it.displayName }))
+    private fun buildMediumReport(reportEligibility: ReportEligibility): Statement {
+        val target = select("霊媒報告 - 対象", "誰の霊媒結果を報告しますか？", reportEligibility.mediumCandidates()) { it.name }
+        val result = select("霊媒報告 - 結果", "霊媒結果を選んでください", reportEligibility.mediumResults(target)) { it.displayName }
         val comment = io.promptFreeText("霊媒報告 - 補足", COMMENT_PROMPT)
-        return Statement.MediumReport(this, target, results.single { it.displayName == resultName }, comment)
+        return Statement.MediumReport(this, target, result, comment)
     }
 
     private fun buildRoleClaim(claimableRoles: Set<Role>): Statement {
-        val roles = claimableRoles.toList()
-        val role = if (roles.size == 1) {
-            roles.single()
-        } else {
-            val roleName = io.promptChoice(ChoiceView("役職申告 - 役職", "申告する役職を選んでください", roles.map { it.displayName }))
-            roles.single { it.displayName == roleName }
-        }
+        val role = select("役職申告 - 役職", "申告する役職を選んでください", claimableRoles.toList()) { it.displayName }
         val comment = io.promptFreeText("役職申告 - 補足", COMMENT_PROMPT)
         return Statement.RoleClaim(this, role, comment)
+    }
+
+    private fun <T> select(title: String, description: String, candidates: List<T>, label: (T) -> String): T =
+        if (candidates.size == 1) candidates.single() else promptChoice(title, description, candidates, label)
+
+    private fun <T> promptChoice(title: String, description: String, candidates: List<T>, label: (T) -> String): T {
+        val selected = io.promptChoice(ChoiceView(title, description, candidates.map(label)))
+        return candidates.single { label(it) == selected }
     }
 
     override fun watchEpilogue(chronicles: List<ChronicleView>) {

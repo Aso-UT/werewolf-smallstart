@@ -21,7 +21,7 @@ class MadmanCpuStrategyTest {
     @Test
     fun `fake seer reports NOT_WEREWOLF on first day`() {
         val strategy = MadmanCpuStrategy(madman, Role.SEER)
-        val result = strategy.buildStatement(openContext(listOf(madman, v1, v2), day = 1), StatementType.entries.toSet())
+        val result = strategy.buildStatement(openContext(listOf(madman, v1, v2), day = 1), emptySet(), ReportEligibility.CanLie(emptyList()))
         assertTrue(result is Statement.DivinationReport)
         assertEquals(DivineResult.NOT_WEREWOLF, result.result)
         assertNotSame(madman, result.target)
@@ -30,7 +30,7 @@ class MadmanCpuStrategyTest {
     @Test
     fun `fake seer reports WEREWOLF from second day onwards`() {
         val strategy = MadmanCpuStrategy(madman, Role.SEER)
-        val result = strategy.buildStatement(openContext(listOf(madman, v1, v2), day = 2), StatementType.entries.toSet())
+        val result = strategy.buildStatement(openContext(listOf(madman, v1, v2), day = 2), emptySet(), ReportEligibility.CanLie(emptyList()))
         assertTrue(result is Statement.DivinationReport)
         assertEquals(DivineResult.WEREWOLF, result.result)
         assertNotSame(madman, result.target)
@@ -39,7 +39,7 @@ class MadmanCpuStrategyTest {
     @Test
     fun `fake seer stays silent from round 2 onwards`() {
         val strategy = MadmanCpuStrategy(madman, Role.SEER)
-        val result = strategy.buildStatement(openContext(listOf(madman, v1, v2), round = 2), StatementType.entries.toSet())
+        val result = strategy.buildStatement(openContext(listOf(madman, v1, v2), round = 2), emptySet(), ReportEligibility.CanLie(emptyList()))
         assertTrue(result is Statement.Plain)
     }
 
@@ -49,7 +49,7 @@ class MadmanCpuStrategyTest {
         GameEvent.StatementMade.send(1, madman.name, Statement.DivinationReport(madman, v1, DivineResult.WEREWOLF), allPlayers)
         GameEvent.StatementMade.send(1, madman.name, Statement.DivinationReport(madman, v2, DivineResult.WEREWOLF), allPlayers)
 
-        val result = strategy.buildStatement(openContext(listOf(madman, v1, v2)), StatementType.entries.toSet())
+        val result = strategy.buildStatement(openContext(listOf(madman, v1, v2)), emptySet(), ReportEligibility.CanLie(emptyList()))
         assertTrue(result is Statement.Plain)
     }
 
@@ -58,7 +58,7 @@ class MadmanCpuStrategyTest {
         val strategy = MadmanCpuStrategy(madman, Role.MEDIUM)
         GameEvent.PlayerExecuted.send(v1, allPlayers)
 
-        val result = strategy.buildStatement(openContext(listOf(madman, v2)), StatementType.entries.toSet())
+        val result = strategy.buildStatement(openContext(listOf(madman, v2)), emptySet(), ReportEligibility.CanLie(emptyList()))
         assertTrue(result is Statement.MediumReport)
         assertEquals(MediumResult.NOT_WEREWOLF, result.result)
         assertSame(v1, result.target)
@@ -67,7 +67,7 @@ class MadmanCpuStrategyTest {
     @Test
     fun `fake medium stays silent when no executions yet`() {
         val strategy = MadmanCpuStrategy(madman, Role.MEDIUM)
-        val result = strategy.buildStatement(openContext(listOf(madman, v1, v2)), StatementType.entries.toSet())
+        val result = strategy.buildStatement(openContext(listOf(madman, v1, v2)), emptySet(), ReportEligibility.CanLie(emptyList()))
         assertTrue(result is Statement.Plain)
     }
 
@@ -75,7 +75,7 @@ class MadmanCpuStrategyTest {
     fun `fake medium stays silent from round 2 onwards`() {
         val strategy = MadmanCpuStrategy(madman, Role.MEDIUM)
         GameEvent.PlayerExecuted.send(v1, allPlayers)
-        val result = strategy.buildStatement(openContext(listOf(madman, v2), round = 2), StatementType.entries.toSet())
+        val result = strategy.buildStatement(openContext(listOf(madman, v2), round = 2), emptySet(), ReportEligibility.CanLie(emptyList()))
         assertTrue(result is Statement.Plain)
     }
 
@@ -85,7 +85,7 @@ class MadmanCpuStrategyTest {
         GameEvent.PlayerExecuted.send(v1, allPlayers)
         GameEvent.StatementMade.send(1, madman.name, Statement.MediumReport(madman, v1, MediumResult.NOT_WEREWOLF), allPlayers)
 
-        val result = strategy.buildStatement(openContext(listOf(madman, v2)), StatementType.entries.toSet())
+        val result = strategy.buildStatement(openContext(listOf(madman, v2)), emptySet(), ReportEligibility.CanLie(emptyList()))
         assertTrue(result is Statement.Plain)
     }
 }

@@ -214,9 +214,10 @@ class GameNoteTest {
         val io = CapturingIO()
         val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
         InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
+        val v2 = gameSetup.playerManager.allPlayers.single { it.name == "V2" }
         val allPlayers = AllPlayers(gameSetup.playerManager)
 
-        GameEvent.StatementMade.send(1, "V2", Statement.Plain("私は${Role.SEER.displayName}です"), allPlayers)
+        GameEvent.StatementMade.send(1, "V2", Statement.Plain(v2, "私は${Role.SEER.displayName}です"), allPlayers)
 
         assertEquals(null, claimedRoleOf(io.panels.last(), "V2"))
     }
