@@ -47,7 +47,10 @@ class AiPlayer(
                 val parsed = statementFormat.parse(completion.text)
                 val type = context.selectableTypes(claimableRoles, reportEligibility).singleOrNull { it.displayName == parsed.typeLabel }
                     ?: throw InvalidAiInputException("選択できない発言の種類です: ${parsed.typeLabel}")
-                val statement = buildStatement(context, type, parsed.content, claimableRoles, reportEligibility)
+                val statement = buildStatement(context, type, parsed.content, claimableRoles)
+                if (reportEligibility.disqualifies(statement)) {
+                    throw InvalidAiInputException("報告可能な対象・結果ではありません: ${statement.text()}")
+                }
                 val claim = Claim(
                     this, context, statement, claimableRoles, reportEligibility,
                     intentForRecall = parsed.intent,
@@ -68,24 +71,19 @@ class AiPlayer(
         type: StatementType,
         content: String,
         claimableRoles: Set<Role>,
-        reportEligibility: ReportEligibility,
     ): Statement = when (type) {
         StatementType.PLAIN -> Statement.Plain(this, content)
         StatementType.DIVINATION_REPORT -> {
             val (targetName, resultLabel, comment) = statementFormat.extractReportParts(content)
             val result = DivineResult.entries.singleOrNull { it.displayName == resultLabel }
                 ?: throw InvalidAiInputException("占い結果報告の結果が不正です: $resultLabel")
-            val statement = Statement.DivinationReport(this, resolveTarget(context, targetName), result, comment)
-            if (reportEligibility.disqualifies(statement)) throw InvalidAiInputException("報告可能な対象・結果ではありません: ${statement.text()}")
-            statement
+            Statement.DivinationReport(this, resolveTarget(context, targetName), result, comment)
         }
         StatementType.MEDIUM_REPORT -> {
             val (targetName, resultLabel, comment) = statementFormat.extractReportParts(content)
             val result = MediumResult.entries.singleOrNull { it.displayName == resultLabel }
                 ?: throw InvalidAiInputException("霊媒結果報告の結果が不正です: $resultLabel")
-            val statement = Statement.MediumReport(this, resolveTarget(context, targetName), result, comment)
-            if (reportEligibility.disqualifies(statement)) throw InvalidAiInputException("報告可能な対象・結果ではありません: ${statement.text()}")
-            statement
+            Statement.MediumReport(this, resolveTarget(context, targetName), result, comment)
         }
         StatementType.ROLE_CLAIM -> {
             val (roleName, comment) = statementFormat.extractRoleClaimParts(content)
