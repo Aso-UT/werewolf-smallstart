@@ -30,6 +30,15 @@ class PlayerTest {
             Claim(speakerToSet, context, Statement.Plain(speakerToSet, ""), claimableRoles, reportEligibility, "")
     }
 
+    private class ArbitraryClaimantSetter(
+        role: Role,
+        name: String,
+        private val claimantToSet: Player,
+    ) : NothingPlayer(role, name) {
+        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim =
+            Claim(this, context, Statement.Plain(claimantToSet, ""), claimableRoles, reportEligibility, "")
+    }
+
     private class SpeakingPlayer(role: Role, name: String) : NothingPlayer(role, name) {
         override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim =
             Claim(this, context, Statement.Plain(this, ""), claimableRoles, reportEligibility, "")
@@ -66,6 +75,14 @@ class PlayerTest {
     fun `discuss throws when speak returns a claim with wrong speaker`() {
         val otherPlayer = NothingPlayer(Role.VILLAGER, "OtherPlayer")
         val player = ArbitrarySpeakerSetter(Role.VILLAGER, "Player", speakerToSet = otherPlayer)
+        val context = openContext(listOf(player, otherPlayer))
+        assertFailsWith<IllegalArgumentException> { player.discuss(context) }
+    }
+
+    @Test
+    fun `discuss throws when speak returns a claim whose statement has wrong claimant`() {
+        val otherPlayer = NothingPlayer(Role.VILLAGER, "OtherPlayer")
+        val player = ArbitraryClaimantSetter(Role.VILLAGER, "Player", claimantToSet = otherPlayer)
         val context = openContext(listOf(player, otherPlayer))
         assertFailsWith<IllegalArgumentException> { player.discuss(context) }
     }

@@ -24,6 +24,7 @@ abstract class Player(private val role: Role) : Notifiable {
     fun discuss(context: DiscussionContext): Statement {
         val claim = speak(context, claimableRoles(), ReportEligibility.forRole(role, _memories, this))
         require(claim.speaker === this) { "${claim.speaker.name} is not the speaking player" }
+        require(claim.statement.claimant === this) { "${claim.statement.claimant.name} is not the statement's claimant" }
         _memories.add(claim)
         return claim.statement
     }
