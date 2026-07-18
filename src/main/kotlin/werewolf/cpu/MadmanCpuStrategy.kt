@@ -5,20 +5,22 @@ import werewolf.game.DivineResult
 import werewolf.game.GameEvent
 import werewolf.game.MediumResult
 import werewolf.game.Player
+import werewolf.game.ReportEligibility
 import werewolf.game.Role
 import werewolf.game.SelectionContext
 import werewolf.game.Statement
 import werewolf.game.StatementType
+import werewolf.game.selectableTypes
 
 class MadmanCpuStrategy(
     self: RoleAwareCpuPlayer,
     private val impersonating: Role = listOf(Role.SEER, Role.MEDIUM).random(),
 ) : RoleAwareCpuStrategy(self, Role.MADMAN, WerewolfVoting(self)) {
 
-    override fun buildStatement(context: DiscussionContext, availableTypes: Set<StatementType>): Statement {
-        if (context.round > 1) return Statement.Plain("")
+    override fun buildStatement(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Statement {
+        if (context.round > 1) return Statement.Plain(self, "")
         val impersonatedType = if (impersonating == Role.SEER) StatementType.DIVINATION_REPORT else StatementType.MEDIUM_REPORT
-        if (impersonatedType !in availableTypes) return Statement.Plain("")
+        if (impersonatedType !in context.selectableTypes(claimableRoles, reportEligibility)) return Statement.Plain(self, "")
         return if (impersonating == Role.SEER) fakeSeerStatement(context) else fakeMediumStatement()
     }
 
@@ -28,7 +30,7 @@ class MadmanCpuStrategy(
     private fun fakeSeerStatement(context: DiscussionContext): Statement {
         val result = if (context.day == 1) DivineResult.NOT_WEREWOLF else DivineResult.WEREWOLF
         val target = context.players.filter { it !== self && it !in accusedByMe() }.randomOrNull()
-            ?: return Statement.Plain("")
+            ?: return Statement.Plain(self, "")
         return Statement.DivinationReport(self, target, result)
     }
 
@@ -36,7 +38,7 @@ class MadmanCpuStrategy(
         val target = self.knowledge.filterIsInstance<GameEvent.PlayerExecuted>()
             .map { it.executed }
             .firstOrNull { it !in fakeMediumedByMe() }
-            ?: return Statement.Plain("")
+            ?: return Statement.Plain(self, "")
         return Statement.MediumReport(self, target, MediumResult.NOT_WEREWOLF)
     }
 

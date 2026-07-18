@@ -4,6 +4,7 @@ import werewolf.game.Choice
 import werewolf.game.Claim
 import werewolf.game.DiscussionContext
 import werewolf.game.GameEvent
+import werewolf.game.ReportEligibility
 import werewolf.game.Role
 import werewolf.game.SelectionContext
 import werewolf.game.Statement
@@ -16,7 +17,7 @@ class RollerCpuPlayer(role: Role, override val name: String) : CpuPlayer(role) {
         return Choice(this, context, candidates[selectCount++ % candidates.size], "順番通りに選択")
     }
 
-    override fun speak(context: DiscussionContext, claimableRoles: Set<Role>): Claim =
-        Claim(this, context, Statement.Plain(""), claimableRoles, "発言戦略なし")
+    override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim =
+        Claim(this, context, Statement.Plain(this, ""), claimableRoles, reportEligibility, "発言戦略なし")
     override fun onReceive(event: GameEvent) { /* does not use received events */ }
 }

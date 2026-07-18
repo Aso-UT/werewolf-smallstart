@@ -3,6 +3,7 @@ package werewolf.ai
 import werewolf.game.DiscussionContext
 import werewolf.game.DivineResult
 import werewolf.game.MediumResult
+import werewolf.game.ReportEligibility
 import werewolf.game.Role
 import werewolf.game.StatementType
 import werewolf.game.selectableTypes
@@ -10,9 +11,9 @@ import werewolf.game.selectableTypes
 data class ParsedStatement(val content: String, val typeLabel: String, val intent: String)
 
 class StatementFormat {
-    fun buildInstruction(context: DiscussionContext, claimableRoles: Set<Role>): String {
-        val types = availableTypes(context, claimableRoles)
-        val typeFormats = types.joinToString("\n") { "・${formatDescription(it, claimableRoles)}" }
+    fun buildInstruction(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): String {
+        val types = availableTypes(context, claimableRoles, reportEligibility)
+        val typeFormats = types.joinToString("\n") { "・${formatDescription(it, claimableRoles, reportEligibility)}" }
         // trimIndent()はテンプレート内の複数行にまたがる補間値には対応できないため、行単位で組み立てる
         return listOf(
             "【${context.title}】${context.description}",
@@ -28,8 +29,8 @@ class StatementFormat {
         ).joinToString("\n")
     }
 
-    private fun availableTypes(context: DiscussionContext, claimableRoles: Set<Role>): List<StatementType> =
-        StatementType.entries.filter { it in context.selectableTypes(claimableRoles) }
+    private fun availableTypes(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): List<StatementType> =
+        StatementType.entries.filter { it in context.selectableTypes(claimableRoles, reportEligibility) }
 
     fun parse(input: String): ParsedStatement {
         val (body, intent) = parseBodyAndIntent(input)
@@ -53,14 +54,34 @@ class StatementFormat {
         return typeLabel to content
     }
 
-    private fun formatDescription(type: StatementType, claimableRoles: Set<Role>): String = when (type) {
+    private fun formatDescription(type: StatementType, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): String = when (type) {
         StatementType.PLAIN -> "${type.displayName}：ゲーム上の発言（50文字以内）"
-        StatementType.DIVINATION_REPORT ->
-            "${type.displayName}：対象のプレイヤー名/結果（${DivineResult.entries.joinToString("か") { it.displayName }}）/補足コメント（省略可）"
-        StatementType.MEDIUM_REPORT ->
-            "${type.displayName}：対象のプレイヤー名/結果（${MediumResult.entries.joinToString("か") { it.displayName }}）/補足コメント（省略可）"
+        StatementType.DIVINATION_REPORT -> divinationReportFormat(reportEligibility)
+        StatementType.MEDIUM_REPORT -> mediumReportFormat(reportEligibility)
         StatementType.ROLE_CLAIM ->
             "${type.displayName}：申告する役職名（${claimableRoles.joinToString("か") { it.displayName }}）/補足コメント（省略可）"
+    }
+
+    private fun divinationReportFormat(reportEligibility: ReportEligibility): String = when (reportEligibility) {
+        is ReportEligibility.Honest -> {
+            val reportable = reportEligibility.divinations.entries.joinToString("、") { "${it.key.name}は${it.value.displayName}" }
+            "${StatementType.DIVINATION_REPORT.displayName}：対象のプレイヤー名/実際の占い結果/補足コメント（省略可）。報告できる対象と結果：$reportable"
+        }
+        is ReportEligibility.CanLie ->
+            "${StatementType.DIVINATION_REPORT.displayName}：対象のプレイヤー名/結果（${
+                DivineResult.entries.joinToString("か") { it.displayName }
+            }）/補足コメント（省略可）"
+    }
+
+    private fun mediumReportFormat(reportEligibility: ReportEligibility): String = when (reportEligibility) {
+        is ReportEligibility.Honest -> {
+            val reportable = reportEligibility.mediums.entries.joinToString("、") { "${it.key.name}は${it.value.displayName}" }
+            "${StatementType.MEDIUM_REPORT.displayName}：対象のプレイヤー名/実際の霊媒結果/補足コメント（省略可）。報告できる対象と結果：$reportable"
+        }
+        is ReportEligibility.CanLie ->
+            "${StatementType.MEDIUM_REPORT.displayName}：対象のプレイヤー名/結果（${
+                MediumResult.entries.joinToString("か") { it.displayName }
+            }）/補足コメント（省略可）"
     }
 
     fun extractReportParts(content: String): Triple<String, String, String> {

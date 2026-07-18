@@ -32,5 +32,7 @@ sealed class DiscussionContext {
     }
 }
 
-fun DiscussionContext.selectableTypes(claimableRoles: Set<Role>): Set<StatementType> =
-    if (claimableRoles.isEmpty()) availableTypes - StatementType.ROLE_CLAIM else availableTypes
+fun DiscussionContext.selectableTypes(claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Set<StatementType> {
+    val types = if (claimableRoles.isEmpty()) availableTypes - StatementType.ROLE_CLAIM else availableTypes
+    return types - reportEligibility.disallowedTypes()
+}

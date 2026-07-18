@@ -59,7 +59,7 @@ class AiPlayerTest {
         val setup = TestLodge(villager to Role.VILLAGER, alice to Role.VILLAGER).create()
         val allPlayers = AllPlayers(setup.playerManager)
 
-        GameEvent.StatementMade.send(1, "Alice", Statement.Plain("怪しい人がいます"), allPlayers)
+        GameEvent.StatementMade.send(1, "Alice", Statement.Plain(alice, "怪しい人がいます"), allPlayers)
         villager.discuss(openContext())
 
         assertContains(lm.prompts.first(), "Alice: 怪しい人がいます")

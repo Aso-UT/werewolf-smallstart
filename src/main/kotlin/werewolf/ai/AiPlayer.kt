@@ -13,6 +13,7 @@ import werewolf.game.MediumResult
 import werewolf.game.Player
 import werewolf.game.Recallable
 import werewolf.game.RecallView
+import werewolf.game.ReportEligibility
 import werewolf.game.Role
 import werewolf.game.SelectionContext
 import werewolf.game.Statement
@@ -38,16 +39,20 @@ class AiPlayer(
         _myMemories.add(event)
     }
 
-    override fun speak(context: DiscussionContext, claimableRoles: Set<Role>): Claim {
-        val instruction = statementFormat.buildInstruction(context, claimableRoles)
+    override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
+        val instruction = statementFormat.buildInstruction(context, claimableRoles, reportEligibility)
         repeat(2) {
             val completion = prompt(instruction)
             try {
                 val parsed = statementFormat.parse(completion.text)
-                val type = context.selectableTypes(claimableRoles).singleOrNull { it.displayName == parsed.typeLabel }
+                val type = context.selectableTypes(claimableRoles, reportEligibility).singleOrNull { it.displayName == parsed.typeLabel }
                     ?: throw InvalidAiInputException("選択できない発言の種類です: ${parsed.typeLabel}")
+                val statement = buildStatement(context, type, parsed.content, claimableRoles)
+                if (reportEligibility.disqualifies(statement)) {
+                    throw InvalidAiInputException("報告可能な対象・結果ではありません: ${statement.text()}")
+                }
                 val claim = Claim(
-                    this, context, buildStatement(context, type, parsed.content, claimableRoles), claimableRoles,
+                    this, context, statement, claimableRoles, reportEligibility,
                     intentForRecall = parsed.intent,
                     intentForChronicle = withMetadata(parsed.intent, completion.metadata),
                 )
@@ -67,7 +72,7 @@ class AiPlayer(
         content: String,
         claimableRoles: Set<Role>,
     ): Statement = when (type) {
-        StatementType.PLAIN -> Statement.Plain(content)
+        StatementType.PLAIN -> Statement.Plain(this, content)
         StatementType.DIVINATION_REPORT -> {
             val (targetName, resultLabel, comment) = statementFormat.extractReportParts(content)
             val result = DivineResult.entries.singleOrNull { it.displayName == resultLabel }

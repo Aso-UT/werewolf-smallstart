@@ -2,10 +2,10 @@ package werewolf.cpu
 
 import werewolf.game.DiscussionContext
 import werewolf.game.Player
+import werewolf.game.ReportEligibility
 import werewolf.game.Role
 import werewolf.game.SelectionContext
 import werewolf.game.Statement
-import werewolf.game.StatementType
 
 abstract class RoleAwareCpuStrategy(
     protected val self: RoleAwareCpuPlayer,
@@ -14,7 +14,7 @@ abstract class RoleAwareCpuStrategy(
 ) {
     fun appliesTo() = self.myRole == targetRole
 
-    abstract fun buildStatement(context: DiscussionContext, availableTypes: Set<StatementType>): Statement
+    abstract fun buildStatement(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Statement
 
     fun selectTarget(context: SelectionContext): Player {
         val candidates = context.candidates()

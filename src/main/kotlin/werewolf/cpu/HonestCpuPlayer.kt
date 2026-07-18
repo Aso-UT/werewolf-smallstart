@@ -4,6 +4,7 @@ import werewolf.game.Choice
 import werewolf.game.Claim
 import werewolf.game.DiscussionContext
 import werewolf.game.GameEvent
+import werewolf.game.ReportEligibility
 import werewolf.game.Role
 import werewolf.game.SelectionContext
 import werewolf.game.Statement
@@ -16,9 +17,9 @@ class HonestCpuPlayer(role: Role, override val name: String) : CpuPlayer(role) {
         if (!event.isPublicKnowledge()) unspoken.add(event)
     }
 
-    override fun speak(context: DiscussionContext, claimableRoles: Set<Role>): Claim {
-        val statement = if (unspoken.isEmpty()) Statement.Plain("") else Statement.Plain(unspoken.removeFirst().body())
-        return Claim(this, context, statement, claimableRoles, "受け取った非公開情報を順番に開示")
+    override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
+        val statement = if (unspoken.isEmpty()) Statement.Plain(this, "") else Statement.Plain(this, unspoken.removeFirst().body())
+        return Claim(this, context, statement, claimableRoles, reportEligibility, "受け取った非公開情報を順番に開示")
     }
 
     override fun choose(context: SelectionContext): Choice {

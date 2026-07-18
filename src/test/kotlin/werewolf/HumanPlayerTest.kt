@@ -45,14 +45,28 @@ class HumanPlayerTest {
     @Test
     fun `choose presents non-self candidates as names and returns matching player`() {
         val alice = NothingPlayer(Role.VILLAGER, "Alice")
+        val bob = NothingPlayer(Role.VILLAGER, "Bob")
         val io = CapturingIO("Alice")
+        val human = HumanPlayer(Role.VILLAGER, "Human", io)
+        val context = SelectionContext.Vote(human, listOf(human, alice, bob))
+
+        val selected = human.selectTarget(context)
+
+        assertEquals(alice, selected)
+        assertEquals(listOf("Alice", "Bob"), io.promptedChoices.single().options)
+    }
+
+    @Test
+    fun `choose auto-selects without prompting when only one candidate exists`() {
+        val alice = NothingPlayer(Role.VILLAGER, "Alice")
+        val io = CapturingIO()
         val human = HumanPlayer(Role.VILLAGER, "Human", io)
         val context = SelectionContext.Vote(human, listOf(human, alice))
 
         val selected = human.selectTarget(context)
 
         assertEquals(alice, selected)
-        assertEquals(listOf("Alice"), io.promptedChoices.single().options)
+        assertTrue(io.promptedChoices.isEmpty())
     }
 
     @Test
@@ -78,94 +92,112 @@ class HumanPlayerTest {
 
         val statement = human.discuss(context)
 
-        assertEquals(Statement.Plain("hello"), statement)
+        assertEquals(Statement.Plain(human, "hello"), statement)
         assertTrue(io.promptedChoices.isEmpty())
     }
 
     @Test
     fun `speak in open discussion prompts for type then returns plain statement`() {
         val io = CapturingIO(StatementType.PLAIN.displayName, freeTextAnswer = "hello")
-        val human = HumanPlayer(Role.VILLAGER, "Human", io)
+        val human = HumanPlayer(Role.WEREWOLF, "Human", io)
         val context = DiscussionContext.Open(1, 1, listOf(human), listOf(human))
 
         val statement = human.discuss(context)
 
-        assertEquals(Statement.Plain("hello"), statement)
+        assertEquals(Statement.Plain(human, "hello"), statement)
         assertTrue(io.promptedChoices.single().options.contains(StatementType.PLAIN.displayName))
     }
 
     @Test
-    fun `speak with DIVINATION_REPORT prompts for target and result`() {
-        val alice = NothingPlayer(Role.VILLAGER, "Alice")
-        val io = CapturingIO(
-            StatementType.DIVINATION_REPORT.displayName,
-            "Alice",
-            DivineResult.WEREWOLF.displayName,
-        )
+    fun `speak with DIVINATION_REPORT prompts for target among multiple divinations and auto-fills the true result`() {
+        val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
+        val villager = NothingPlayer(Role.VILLAGER, "Villager")
+        val io = CapturingIO(StatementType.DIVINATION_REPORT.displayName, "Wolf")
         val human = HumanPlayer(Role.SEER, "Human", io)
-        val context = DiscussionContext.Open(1, 1, listOf(human), listOf(human, alice))
+        GameEvent.Divined.send(wolf, DivineResult.WEREWOLF, human)
+        GameEvent.Divined.send(villager, DivineResult.NOT_WEREWOLF, human)
+        val context = DiscussionContext.Open(1, 1, listOf(human), listOf(human, wolf, villager))
 
         val statement = human.discuss(context)
 
-        assertEquals(Statement.DivinationReport(human, alice, DivineResult.WEREWOLF), statement)
-        assertEquals(3, io.promptedChoices.size)
+        assertEquals(Statement.DivinationReport(human, wolf, DivineResult.WEREWOLF), statement)
+        assertEquals(2, io.promptedChoices.size)
     }
 
     @Test
-    fun `speak with MEDIUM_REPORT prompts for target and result`() {
-        val alice = NothingPlayer(Role.VILLAGER, "Alice")
-        val io = CapturingIO(
-            StatementType.MEDIUM_REPORT.displayName,
-            "Alice",
-            MediumResult.NOT_WEREWOLF.displayName,
-        )
+    fun `speak with MEDIUM_REPORT prompts for target among multiple mediums and auto-fills the true result`() {
+        val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
+        val villager = NothingPlayer(Role.VILLAGER, "Villager")
+        val io = CapturingIO(StatementType.MEDIUM_REPORT.displayName, "Wolf")
         val human = HumanPlayer(Role.MEDIUM, "Human", io)
-        val context = DiscussionContext.Open(1, 1, listOf(human), listOf(human, alice))
+        GameEvent.MediumRevealed.send(wolf, MediumResult.WEREWOLF, human)
+        GameEvent.MediumRevealed.send(villager, MediumResult.NOT_WEREWOLF, human)
+        val context = DiscussionContext.Open(1, 1, listOf(human), listOf(human, wolf, villager))
 
         val statement = human.discuss(context)
 
-        assertEquals(Statement.MediumReport(human, alice, MediumResult.NOT_WEREWOLF), statement)
-        assertEquals(3, io.promptedChoices.size)
+        assertEquals(Statement.MediumReport(human, wolf, MediumResult.WEREWOLF), statement)
+        assertEquals(2, io.promptedChoices.size)
     }
 
     @Test
     fun `speak with DIVINATION_REPORT attaches the entered comment`() {
-        val alice = NothingPlayer(Role.VILLAGER, "Alice")
+        val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
         val io = CapturingIO(
             StatementType.DIVINATION_REPORT.displayName,
-            "Alice",
-            DivineResult.WEREWOLF.displayName,
             freeTextAnswer = "昨日の議論で怪しいと思っていました",
         )
         val human = HumanPlayer(Role.SEER, "Human", io)
-        val context = DiscussionContext.Open(1, 1, listOf(human), listOf(human, alice))
+        GameEvent.Divined.send(wolf, DivineResult.WEREWOLF, human)
+        val context = DiscussionContext.Open(1, 1, listOf(human), listOf(human, wolf))
 
         val statement = human.discuss(context)
 
         assertEquals(
-            Statement.DivinationReport(human, alice, DivineResult.WEREWOLF, "昨日の議論で怪しいと思っていました"),
+            Statement.DivinationReport(human, wolf, DivineResult.WEREWOLF, "昨日の議論で怪しいと思っていました"),
             statement,
         )
     }
 
     @Test
     fun `speak with MEDIUM_REPORT attaches the entered comment`() {
-        val alice = NothingPlayer(Role.VILLAGER, "Alice")
+        val villager = NothingPlayer(Role.VILLAGER, "Villager")
         val io = CapturingIO(
             StatementType.MEDIUM_REPORT.displayName,
-            "Alice",
-            MediumResult.NOT_WEREWOLF.displayName,
             freeTextAnswer = "無実の方を処刑してしまい申し訳ない気持ちです",
         )
         val human = HumanPlayer(Role.MEDIUM, "Human", io)
-        val context = DiscussionContext.Open(1, 1, listOf(human), listOf(human, alice))
+        GameEvent.MediumRevealed.send(villager, MediumResult.NOT_WEREWOLF, human)
+        val context = DiscussionContext.Open(1, 1, listOf(human), listOf(human, villager))
 
         val statement = human.discuss(context)
 
         assertEquals(
-            Statement.MediumReport(human, alice, MediumResult.NOT_WEREWOLF, "無実の方を処刑してしまい申し訳ない気持ちです"),
+            Statement.MediumReport(human, villager, MediumResult.NOT_WEREWOLF, "無実の方を処刑してしまい申し訳ない気持ちです"),
             statement,
         )
+    }
+
+    @Test
+    fun `speak with DIVINATION_REPORT as werewolf allows freely choosing any target and result`() {
+        val villager1 = ReceivingPlayer(Role.VILLAGER, "V1")
+        val villager2 = ReceivingPlayer(Role.VILLAGER, "V2")
+        val io = CapturingIO(
+            StatementType.DIVINATION_REPORT.displayName,
+            "V1",
+            DivineResult.WEREWOLF.displayName,
+        )
+        val wolf = HumanPlayer(Role.WEREWOLF, "Wolf", io)
+        val allPlayers = AllPlayers(
+            TestLodge(wolf to Role.WEREWOLF, villager1 to Role.VILLAGER, villager2 to Role.VILLAGER).create().playerManager
+        )
+        GameEvent.PlayersAnnounced.send(listOf(wolf, villager1, villager2), allPlayers)
+        val context = DiscussionContext.Open(1, 1, listOf(wolf), listOf(wolf, villager1, villager2))
+
+        val statement = wolf.discuss(context)
+
+        assertEquals(Statement.DivinationReport(wolf, villager1, DivineResult.WEREWOLF), statement)
+        assertEquals(3, io.promptedChoices.size)
     }
 
     @Test
@@ -181,14 +213,15 @@ class HumanPlayerTest {
     }
 
     @Test
-    fun `villager is not offered ROLE_CLAIM as a statement type`() {
-        val io = CapturingIO(StatementType.PLAIN.displayName, freeTextAnswer = "hello")
+    fun `villager has only PLAIN available and is not prompted for type`() {
+        val io = CapturingIO(freeTextAnswer = "hello")
         val human = HumanPlayer(Role.VILLAGER, "Human", io)
         val context = DiscussionContext.Open(1, 1, listOf(human), listOf(human))
 
-        human.discuss(context)
+        val statement = human.discuss(context)
 
-        assertTrue(io.promptedChoices.single().options.none { it == StatementType.ROLE_CLAIM.displayName })
+        assertEquals(Statement.Plain(human, "hello"), statement)
+        assertTrue(io.promptedChoices.isEmpty())
     }
 
     @Test
@@ -204,16 +237,17 @@ class HumanPlayerTest {
     }
 
     @Test
-    fun `seer who already claimed is not offered ROLE_CLAIM again`() {
-        val io = CapturingIO(StatementType.PLAIN.displayName, freeTextAnswer = "hello")
+    fun `seer who already claimed and has nothing new to report is not prompted for type`() {
+        val io = CapturingIO(freeTextAnswer = "hello")
         val human = HumanPlayer(Role.SEER, "Human", io)
         val allPlayers = AllPlayers(TestLodge(human to Role.SEER).create().playerManager)
         GameEvent.StatementMade.send(1, human.name, Statement.RoleClaim(human, Role.SEER), allPlayers)
         val context = DiscussionContext.Open(2, 1, listOf(human), listOf(human))
 
-        human.discuss(context)
+        val statement = human.discuss(context)
 
-        assertTrue(io.promptedChoices.single().options.none { it == StatementType.ROLE_CLAIM.displayName })
+        assertEquals(Statement.Plain(human, "hello"), statement)
+        assertTrue(io.promptedChoices.isEmpty())
     }
 
     @Test

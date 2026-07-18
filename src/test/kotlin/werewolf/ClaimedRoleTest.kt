@@ -14,7 +14,7 @@ class ClaimedRoleTest {
     fun `returns null when player has not claimed anything`() {
         val player = ReceivingPlayer(Role.SEER, "Player")
         val allPlayers = AllPlayers(TestLodge(player to Role.SEER).create().playerManager)
-        GameEvent.StatementMade.send(1, player.name, Statement.Plain("hello"), allPlayers)
+        GameEvent.StatementMade.send(1, player.name, Statement.Plain(player, "hello"), allPlayers)
 
         assertNull(ClaimedRole(eventsFor(player)).of(player))
     }

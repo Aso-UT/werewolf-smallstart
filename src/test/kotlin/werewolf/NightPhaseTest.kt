@@ -25,8 +25,8 @@ class NightPhaseTest {
 
     private class ConclaveWolf(name: String) : ReceivingPlayer(Role.WEREWOLF, name) {
         val heardStatements = mutableListOf<GameEvent.WerewolfStatementMade>()
-        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>): Claim =
-            Claim(this, context, Statement.Plain(""), claimableRoles, "")
+        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim =
+            Claim(this, context, Statement.Plain(this, ""), claimableRoles, reportEligibility, "")
         override fun onReceive(event: GameEvent) {
             if (event is GameEvent.WerewolfStatementMade) heardStatements.add(event)
         }
