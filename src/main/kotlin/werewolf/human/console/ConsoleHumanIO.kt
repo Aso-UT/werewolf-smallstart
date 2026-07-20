@@ -4,6 +4,7 @@ import werewolf.game.ChronicleView
 import werewolf.game.GameOverSignal
 import werewolf.game.RecallView
 import werewolf.human.HumanIO
+import werewolf.view.Atmosphere
 import werewolf.view.ChoiceView
 import werewolf.view.DivinationView
 import werewolf.view.PlayerStatusView
@@ -20,6 +21,10 @@ class ConsoleHumanIO : HumanIO {
 
     override fun updateDivinationPanel(view: DivinationView) {
         // Console has no persistent panel; divination info is visible in the event log
+    }
+
+    override fun updateAtmosphere(atmosphere: Atmosphere) {
+        // Console has no visual background; time-of-day is visible in the event log
     }
 
     override fun display(view: RecallView) = when (view) {

@@ -15,6 +15,7 @@ import werewolf.game.Statement
 import werewolf.human.HumanIO
 import werewolf.human.HumanPlayer
 import werewolf.phase.InitialPhase
+import werewolf.view.Atmosphere
 import werewolf.view.ChoiceView
 import werewolf.view.DivinationView
 import werewolf.view.PlayerStatus
@@ -29,6 +30,7 @@ class GameNoteTest {
         override fun display(view: RecallView) {}
         override fun updatePlayerStatusPanel(view: PlayerStatusView) { panels += view }
         override fun updateDivinationPanel(view: DivinationView) { divinationPanels += view }
+        override fun updateAtmosphere(atmosphere: Atmosphere) {}
         override fun promptChoice(view: ChoiceView): String = error("not expected")
         override fun promptFreeText(title: String, description: String): String = error("not expected")
         override fun watchEpilogue(chronicles: List<ChronicleView>) {}

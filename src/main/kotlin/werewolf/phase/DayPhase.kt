@@ -1,5 +1,7 @@
 package werewolf.phase
 
+import werewolf.game.AllPlayers
+import werewolf.game.GameEvent
 import werewolf.game.MajorityVoteResolver
 import werewolf.game.Oracle
 import werewolf.game.PlayerManager
@@ -12,6 +14,7 @@ class DayPhase(
 ) : Phase {
     override fun proceed(): Phase {
         OpenDiscussion(playerManager, nightNumber).conduct()
+        GameEvent.VoteStarted.send(nightNumber, AllPlayers(playerManager))
         val votes = playerManager.players.map { it.selectTarget(SelectionContext.Vote(it, playerManager.players)) }
         val mostVoted = MajorityVoteResolver.resolveNonEmpty(votes)
         playerManager.execute(mostVoted)

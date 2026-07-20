@@ -6,6 +6,7 @@ import werewolf.game.ChronicleView
 import werewolf.game.GameOverSignal
 import werewolf.game.RecallView
 import werewolf.human.HumanIO
+import werewolf.view.Atmosphere
 import werewolf.view.ChoiceView
 import werewolf.view.DivinationView
 import werewolf.view.PlayerStatus
@@ -42,6 +43,10 @@ class WebHumanIO : HumanIO {
     override fun updatePlayerStatusPanel(view: PlayerStatusView) {
         val playersJson = view.players.joinToString(",") { it.toJson() }
         enqueue("""{"type":"playerStatus","players":[$playersJson]}""")
+    }
+
+    override fun updateAtmosphere(atmosphere: Atmosphere) {
+        enqueue("""{"type":"atmosphere","value":${atmosphere.toJson()}}""")
     }
 
     override fun display(view: RecallView) {
@@ -88,6 +93,13 @@ private fun PlayerStatus.toJson(): String = when (this) {
     PlayerStatus.ALIVE -> "\"alive\""
     PlayerStatus.EXECUTED -> "\"executed\""
     PlayerStatus.ATTACKED -> "\"attacked\""
+}
+
+private fun Atmosphere.toJson(): String = when (this) {
+    Atmosphere.MORNING -> "\"morning\""
+    Atmosphere.DAY -> "\"day\""
+    Atmosphere.NIGHT -> "\"night\""
+    Atmosphere.VOTE -> "\"vote\""
 }
 
 private fun RecallView.toJson(): String = when (this) {

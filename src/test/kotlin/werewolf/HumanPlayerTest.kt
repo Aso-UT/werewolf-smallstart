@@ -14,8 +14,11 @@ import werewolf.game.Role
 import werewolf.game.SelectionContext
 import werewolf.game.Statement
 import werewolf.game.StatementType
+import werewolf.game.TimeOfDay
+import werewolf.game.Wolves
 import werewolf.human.HumanIO
 import werewolf.human.HumanPlayer
+import werewolf.view.Atmosphere
 import werewolf.view.ChoiceView
 import werewolf.view.DivinationView
 import werewolf.view.PlayerStatusView
@@ -29,11 +32,13 @@ class HumanPlayerTest {
         private val queue = ArrayDeque(choiceAnswers.toList())
         val promptedChoices = mutableListOf<ChoiceView>()
         val displayedViews = mutableListOf<RecallView>()
+        val capturedAtmospheres = mutableListOf<Atmosphere>()
         var capturedChronicles: List<ChronicleView> = emptyList()
 
         override fun display(view: RecallView) { displayedViews += view }
         override fun updatePlayerStatusPanel(view: PlayerStatusView) {}
         override fun updateDivinationPanel(view: DivinationView) {}
+        override fun updateAtmosphere(atmosphere: Atmosphere) { capturedAtmospheres += atmosphere }
         override fun promptChoice(view: ChoiceView): String {
             promptedChoices += view
             return queue.removeFirst()
@@ -263,6 +268,62 @@ class HumanPlayerTest {
         val statement = human.discuss(context)
 
         assertEquals(Statement.RoleClaim(human, Role.SEER, "信じてください"), statement)
+    }
+
+    @Test
+    fun `TimeChanged to Morning updates atmosphere to MORNING`() {
+        val io = CapturingIO()
+        val human = HumanPlayer(Role.VILLAGER, "Human", io)
+        val allPlayers = AllPlayers(TestLodge(human to Role.VILLAGER).create().playerManager)
+
+        GameEvent.TimeChanged.send(TimeOfDay.Morning, allPlayers)
+
+        assertEquals(listOf(Atmosphere.MORNING), io.capturedAtmospheres)
+    }
+
+    @Test
+    fun `TimeChanged to Night updates atmosphere to NIGHT`() {
+        val io = CapturingIO()
+        val human = HumanPlayer(Role.VILLAGER, "Human", io)
+        val allPlayers = AllPlayers(TestLodge(human to Role.VILLAGER).create().playerManager)
+
+        GameEvent.TimeChanged.send(TimeOfDay.Night(1), allPlayers)
+
+        assertEquals(listOf(Atmosphere.NIGHT), io.capturedAtmospheres)
+    }
+
+    @Test
+    fun `DiscussionStarted updates atmosphere to DAY`() {
+        val io = CapturingIO()
+        val human = HumanPlayer(Role.VILLAGER, "Human", io)
+        val allPlayers = AllPlayers(TestLodge(human to Role.VILLAGER).create().playerManager)
+
+        GameEvent.DiscussionStarted.send(1, allPlayers)
+
+        assertEquals(listOf(Atmosphere.DAY), io.capturedAtmospheres)
+    }
+
+    @Test
+    fun `VoteStarted updates atmosphere to VOTE`() {
+        val io = CapturingIO()
+        val human = HumanPlayer(Role.VILLAGER, "Human", io)
+        val allPlayers = AllPlayers(TestLodge(human to Role.VILLAGER).create().playerManager)
+
+        GameEvent.VoteStarted.send(1, allPlayers)
+
+        assertEquals(listOf(Atmosphere.VOTE), io.capturedAtmospheres)
+    }
+
+    @Test
+    fun `ConclaveStarted does not update atmosphere since it is part of night`() {
+        val io = CapturingIO()
+        val human = HumanPlayer(Role.WEREWOLF, "Human", io)
+        val wolf2 = ReceivingPlayer(Role.WEREWOLF, "Wolf2")
+        val setup = TestLodge(human to Role.WEREWOLF, wolf2 to Role.WEREWOLF).create()
+
+        GameEvent.ConclaveStarted.send(1, Wolves(setup.oracle, setup.playerManager))
+
+        assertTrue(io.capturedAtmospheres.isEmpty())
     }
 
     @Test
