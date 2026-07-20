@@ -4,7 +4,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import werewolf.game.AllPlayers
-import werewolf.game.ChronicleView
 import werewolf.game.DivineResult
 import werewolf.game.GameEvent
 import werewolf.game.GameSetup
@@ -12,11 +11,9 @@ import werewolf.game.MediumResult
 import werewolf.game.RecallView
 import werewolf.game.Role
 import werewolf.game.Statement
-import werewolf.human.HumanIO
 import werewolf.human.HumanPlayer
 import werewolf.phase.InitialPhase
 import werewolf.view.Atmosphere
-import werewolf.view.ChoiceView
 import werewolf.view.DivinationView
 import werewolf.view.PlayerStatus
 import werewolf.view.PlayerStatusView
@@ -24,16 +21,13 @@ import werewolf.view.ReportEntry
 
 class GameNoteTest {
 
-    private class CapturingIO : HumanIO {
+    private class CapturingIO : NothingHumanIO() {
         val panels = mutableListOf<PlayerStatusView>()
         val divinationPanels = mutableListOf<DivinationView>()
         override fun display(view: RecallView) {}
         override fun updatePlayerStatusPanel(view: PlayerStatusView) { panels += view }
         override fun updateDivinationPanel(view: DivinationView) { divinationPanels += view }
         override fun updateAtmosphere(atmosphere: Atmosphere) {}
-        override fun promptChoice(view: ChoiceView): String = error("not expected")
-        override fun promptFreeText(title: String, description: String): String = error("not expected")
-        override fun watchEpilogue(chronicles: List<ChronicleView>) {}
     }
 
     private class SilentPlayer(role: Role, name: String) : NothingPlayer(role, name) {

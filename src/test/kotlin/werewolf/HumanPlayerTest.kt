@@ -16,7 +16,6 @@ import werewolf.game.Statement
 import werewolf.game.StatementType
 import werewolf.game.TimeOfDay
 import werewolf.game.Wolves
-import werewolf.human.HumanIO
 import werewolf.human.HumanPlayer
 import werewolf.view.Atmosphere
 import werewolf.view.ChoiceView
@@ -28,7 +27,7 @@ class HumanPlayerTest {
     private class CapturingIO(
         vararg choiceAnswers: String,
         private val freeTextAnswer: String = "",
-    ) : HumanIO {
+    ) : NothingHumanIO() {
         private val queue = ArrayDeque(choiceAnswers.toList())
         val promptedChoices = mutableListOf<ChoiceView>()
         val displayedViews = mutableListOf<RecallView>()

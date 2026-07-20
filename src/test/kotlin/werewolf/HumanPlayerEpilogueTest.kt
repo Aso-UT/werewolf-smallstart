@@ -2,7 +2,6 @@ package werewolf
 
 import werewolf.game.*
 import werewolf.human.HumanPlayer
-import werewolf.human.HumanIO
 import werewolf.view.Atmosphere
 import werewolf.view.ChoiceView
 import werewolf.view.DivinationView
@@ -17,7 +16,7 @@ import kotlin.test.assertTrue
 
 class HumanPlayerEpilogueTest {
 
-    private class SpeakingIO : HumanIO {
+    private class SpeakingIO : NothingHumanIO() {
         var capturedChronicles: List<ChronicleView> = emptyList()
         override fun display(view: RecallView) {}
         override fun updatePlayerStatusPanel(view: PlayerStatusView) {}

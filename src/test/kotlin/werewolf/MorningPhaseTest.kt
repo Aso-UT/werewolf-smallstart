@@ -10,12 +10,7 @@ import kotlin.test.assertNull
 
 class MorningPhaseTest {
 
-    private class RecordingPlayer(role: Role, name: String) : ReceivingPlayer(role, name) {
-        val morningReports = mutableListOf<GameEvent.MorningReport>()
-        override fun onReceive(event: GameEvent) {
-            if (event is GameEvent.MorningReport) morningReports.add(event)
-        }
-    }
+    private fun RecordingPlayer.morningReports() = received.filterIsInstance<GameEvent.MorningReport>()
 
     @Test
     fun `returns DayPhase`() {
@@ -36,7 +31,7 @@ class MorningPhaseTest {
 
         MorningPhase(setup.playerManager, setup.oracle, 1).proceed()
 
-        assertNull(observer.morningReports.single().victim)
+        assertNull(observer.morningReports().single().victim)
     }
 
     @Test
@@ -52,7 +47,7 @@ class MorningPhaseTest {
 
         MorningPhase(setup.playerManager, setup.oracle, 1).proceed()
 
-        assertEquals(villager1, observer.morningReports.single().victim)
+        assertEquals(villager1, observer.morningReports().single().victim)
     }
 
     @Test
@@ -69,7 +64,7 @@ class MorningPhaseTest {
         MorningPhase(setup.playerManager, setup.oracle, 1).proceed()
         MorningPhase(setup.playerManager, setup.oracle, 2).proceed()
 
-        assertEquals(villager1, observer.morningReports[0].victim)
-        assertNull(observer.morningReports[1].victim)
+        assertEquals(villager1, observer.morningReports()[0].victim)
+        assertNull(observer.morningReports()[1].victim)
     }
 }

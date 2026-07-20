@@ -10,11 +10,6 @@ import kotlin.test.assertTrue
 
 class InitialPhaseTest {
 
-    private class RecordingPlayer(role: Role, name: String) : NothingPlayer(role, name) {
-        val received = mutableListOf<GameEvent>()
-        override fun onReceive(event: GameEvent) { received.add(event) }
-    }
-
     @Test
     fun `each player is notified of their assigned role`() {
         val villager = RecordingPlayer(Role.VILLAGER, "Villager")
