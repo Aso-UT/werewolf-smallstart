@@ -18,11 +18,6 @@ class NightPhaseTest {
         override fun choose(context: SelectionContext): Choice = Choice(this, context, target, "固定ターゲット")
     }
 
-    private open class RecordingPlayer(role: Role, name: String) : ReceivingPlayer(role, name) {
-        val received = mutableListOf<GameEvent>()
-        override fun onReceive(event: GameEvent) { received.add(event) }
-    }
-
     private class ConclaveWolf(name: String) : ReceivingPlayer(Role.WEREWOLF, name) {
         val heardStatements = mutableListOf<GameEvent.WerewolfStatementMade>()
         override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim =

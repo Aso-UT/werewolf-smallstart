@@ -107,6 +107,16 @@ sealed class GameEvent : Recallable() {
     }
 
     @ConsistentCopyVisibility
+    data class VoteStarted private constructor(val day: Int, private val allPlayers: AllPlayers) : GameEvent() {
+        override val title = "投票開始"
+        override fun body() = "${day}日目の投票が始まります。"
+        override val recipients: Notifiable = allPlayers
+        companion object {
+            fun send(day: Int, allPlayers: AllPlayers) = VoteStarted(day, allPlayers).dispatch()
+        }
+    }
+
+    @ConsistentCopyVisibility
     data class ConclaveStarted private constructor(val day: Int, private val wolves: Wolves) : GameEvent() {
         override val title = "密談開始"
         override fun body() = "${day}日目の密談が始まります。"

@@ -11,7 +11,9 @@ import werewolf.game.Role
 import werewolf.game.SelectionContext
 import werewolf.game.Statement
 import werewolf.game.StatementType
+import werewolf.game.TimeOfDay
 import werewolf.game.selectableTypes
+import werewolf.view.Atmosphere
 import werewolf.view.ChoiceView
 import werewolf.view.DivinationView
 import werewolf.view.PlayerStatusView
@@ -45,6 +47,17 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
             lastDivinationSummary = currentDivination
             io.updateDivinationPanel(currentDivination)
         }
+        atmosphereOf(event)?.let { io.updateAtmosphere(it) }
+    }
+
+    private fun atmosphereOf(event: GameEvent): Atmosphere? = when (event) {
+        is GameEvent.TimeChanged -> when (event.timeOfDay) {
+            TimeOfDay.Morning -> Atmosphere.MORNING
+            is TimeOfDay.Night -> Atmosphere.NIGHT
+        }
+        is GameEvent.DiscussionStarted -> Atmosphere.DAY
+        is GameEvent.VoteStarted -> Atmosphere.VOTE
+        else -> null
     }
 
     override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {

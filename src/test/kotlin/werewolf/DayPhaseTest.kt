@@ -14,6 +14,8 @@ class DayPhaseTest {
         role: Role, name: String, private val voteTarget: Player? = null
     ) : ReceivingPlayer(role, name) {
         var discussedCount = 0
+        val receivedEvents = mutableListOf<GameEvent>()
+        override fun onReceive(event: GameEvent) { receivedEvents += event }
         override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
             discussedCount++
             return Claim(this, context, Statement.Plain(this, ""), claimableRoles, reportEligibility, "")
@@ -54,6 +56,27 @@ class DayPhaseTest {
         DayPhase(setup.playerManager, setup.oracle, 1).proceed()
 
         assertFalse(setup.playerManager.players.contains(victim))
+    }
+
+    @Test
+    fun `VoteStarted is sent after discussion ends and before the execution result`() {
+        val victim = DayPlayer(Role.VILLAGER, "Victim")
+        val wolf = DayPlayer(Role.WEREWOLF, "Wolf", victim)
+        val v1 = DayPlayer(Role.VILLAGER, "V1", victim)
+        val v2 = DayPlayer(Role.VILLAGER, "V2", victim)
+        val v3 = DayPlayer(Role.VILLAGER, "V3", victim)
+        val setup = TestLodge(
+            wolf to Role.WEREWOLF,
+            victim to Role.VILLAGER, v1 to Role.VILLAGER, v2 to Role.VILLAGER, v3 to Role.VILLAGER,
+        ).create()
+
+        DayPhase(setup.playerManager, setup.oracle, 1).proceed()
+
+        val lastStatementIndex = wolf.receivedEvents.indexOfLast { it is GameEvent.StatementMade }
+        val voteStartedIndex = wolf.receivedEvents.indexOfFirst { it is GameEvent.VoteStarted }
+        val executedIndex = wolf.receivedEvents.indexOfFirst { it is GameEvent.PlayerExecuted }
+        assertTrue(lastStatementIndex in 0..<voteStartedIndex)
+        assertTrue(voteStartedIndex in 0..<executedIndex)
     }
 
     @Test

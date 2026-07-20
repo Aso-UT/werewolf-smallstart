@@ -16,6 +16,8 @@
     | { type: 'choose'; title: string; description: string; candidates: string[] }
     | { type: 'speak'; title: string; description: string }
 
+  type Atmosphere = 'morning' | 'day' | 'night' | 'vote'
+
   type PlayerStatus = 'alive' | 'executed' | 'attacked'
   type PlayerEntry = { name: string; status: PlayerStatus; claimedRole: string | null }
 
@@ -31,6 +33,8 @@
   let status = '接続中...'
   let entries: LogEntry[] = []
   let input: InputState = { type: 'idle' }
+  let atmosphere: Atmosphere | null = null
+  $: document.body.className = atmosphere ? `atmosphere-${atmosphere}` : ''
   let speakText = ''
   let logEl: HTMLElement
   let ws: WebSocket
@@ -75,6 +79,9 @@
         break
       case 'playerStatus':
         players = msg.players as PlayerEntry[]
+        break
+      case 'atmosphere':
+        atmosphere = msg.value as Atmosphere
         break
       case 'divination':
         divination = msg as unknown as DivinationData
@@ -298,21 +305,28 @@
 </div>
 
 <style>
+  :global(body) { margin: 0; transition: background-color 0.6s ease, color 0.6s ease; }
+  :global(body.atmosphere-morning) { background-color: #ffe3c2; }
+  :global(body.atmosphere-day) { background-color: #eaf4ff; }
+  :global(body.atmosphere-night) { background-color: #33406b; color: #eee; }
+  :global(body.atmosphere-night) .status { color: #cdd6f0; }
+  :global(body.atmosphere-vote) { background-color: #f6dede; }
+
   .layout { display: flex; gap: 16px; max-width: 1100px; margin: 0 auto; padding: 16px; font-family: sans-serif; }
   .main { flex: 1; min-width: 0; }
-  .panel { width: 240px; flex-shrink: 0; border: 1px solid #ccc; border-radius: 4px; padding: 12px; background: #fafafa; align-self: flex-start; }
+  .panel { width: 240px; flex-shrink: 0; border: 1px solid #ccc; border-radius: 4px; padding: 12px; background: #fafafa; color: #333; align-self: flex-start; }
   h1 { margin: 0 0 4px; }
   h2 { margin: 0 0 10px; font-size: 1em; color: #444; }
   .panel-section { margin: 14px 0 6px; }
   .status { color: #666; margin-bottom: 8px; }
   .controls { margin: 8px 0; }
-  .log { border: 1px solid #ccc; height: 500px; overflow-y: auto; padding: 8px; background: #fafafa; }
+  .log { border: 1px solid #ccc; height: 500px; overflow-y: auto; padding: 8px; background: #fafafa; color: #333; }
   .event { margin: 4px 0; line-height: 1.4; }
   .title { font-weight: bold; color: #444; }
   .intent { color: #888; font-size: 0.9em; }
   .role-badge { display: inline-block; margin-left: 4px; padding: 1px 6px; border-radius: 3px; font-size: 0.8em; background: #dde6f7; color: #33507a; }
   .epilogue { margin: 16px 0 0; padding: 12px; background: #eef; border-left: 4px solid #88a; white-space: pre-wrap; font-family: inherit; }
-  .input-area { margin-bottom: 8px; padding: 12px; border: 2px solid #88a; background: #f0f0fa; }
+  .input-area { margin-bottom: 8px; padding: 12px; border: 2px solid #88a; background: #f0f0fa; color: #333; }
   .input-title { font-weight: bold; margin: 0 0 4px; }
   .input-description { color: #666; font-size: 0.9em; margin: 0 0 10px; }
   button { margin: 4px; padding: 6px 14px; cursor: pointer; }
