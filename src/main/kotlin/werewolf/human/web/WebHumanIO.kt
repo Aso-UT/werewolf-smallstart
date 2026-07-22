@@ -13,6 +13,7 @@ import werewolf.view.PlayerStatus
 import werewolf.view.PlayerStatusView
 import werewolf.view.PlayerSummary
 import werewolf.view.ReportEntry
+import werewolf.view.SelectionMood
 
 class WebHumanIO : HumanIO {
     val outgoing = Channel<String>(Channel.UNLIMITED)
@@ -47,6 +48,10 @@ class WebHumanIO : HumanIO {
 
     override fun updateAtmosphere(atmosphere: Atmosphere) {
         enqueue("""{"type":"atmosphere","value":${atmosphere.toJson()}}""")
+    }
+
+    override fun updateSelectionMood(mood: SelectionMood) {
+        enqueue("""{"type":"selectionMood","value":${mood.toJson()}}""")
     }
 
     override fun display(view: RecallView) {
@@ -100,6 +105,13 @@ private fun Atmosphere.toJson(): String = when (this) {
     Atmosphere.DAY -> "\"day\""
     Atmosphere.NIGHT -> "\"night\""
     Atmosphere.VOTE -> "\"vote\""
+}
+
+private fun SelectionMood.toJson(): String = when (this) {
+    SelectionMood.ATTACK -> "\"attack\""
+    SelectionMood.DIVINE -> "\"divine\""
+    SelectionMood.GUARD -> "\"guard\""
+    SelectionMood.VOTE -> "\"vote\""
 }
 
 private fun RecallView.toJson(): String = when (this) {

@@ -17,6 +17,7 @@
     | { type: 'speak'; title: string; description: string }
 
   type Atmosphere = 'morning' | 'day' | 'night' | 'vote'
+  type SelectionMood = 'attack' | 'divine' | 'guard' | 'vote'
 
   type PlayerStatus = 'alive' | 'executed' | 'attacked'
   type PlayerEntry = { name: string; status: PlayerStatus; claimedRole: string | null }
@@ -34,6 +35,7 @@
   let entries: LogEntry[] = []
   let input: InputState = { type: 'idle' }
   let atmosphere: Atmosphere | null = null
+  let selectionMood: SelectionMood | null = null
   $: document.body.className = atmosphere ? `atmosphere-${atmosphere}` : ''
   let speakText = ''
   let logEl: HTMLElement
@@ -82,6 +84,9 @@
         break
       case 'atmosphere':
         atmosphere = msg.value as Atmosphere
+        break
+      case 'selectionMood':
+        selectionMood = msg.value as SelectionMood
         break
       case 'divination':
         divination = msg as unknown as DivinationData
@@ -151,7 +156,7 @@
     </div>
 
     {#if input.type === 'choose'}
-      <div class="input-area">
+      <div class="input-area {selectionMood ? `mood-${selectionMood}` : ''}">
         <p class="input-title">{input.title}</p>
         <p class="input-description">{input.description}</p>
         <div>
@@ -326,7 +331,15 @@
   .intent { color: #888; font-size: 0.9em; }
   .role-badge { display: inline-block; margin-left: 4px; padding: 1px 6px; border-radius: 3px; font-size: 0.8em; background: #dde6f7; color: #33507a; }
   .epilogue { margin: 16px 0 0; padding: 12px; background: #eef; border-left: 4px solid #88a; white-space: pre-wrap; font-family: inherit; }
-  .input-area { margin-bottom: 8px; padding: 12px; border: 2px solid #88a; background: #f0f0fa; color: #333; }
+  .input-area { margin-bottom: 8px; padding: 12px; border: 2px solid #88a; background: #f0f0fa; color: #333; transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease; }
+  .input-area.mood-attack { background: #2a0f0f; border-color: #7a1f1f; color: #f2d9d9; }
+  .input-area.mood-attack .input-description { color: #d9a8a8; }
+  .input-area.mood-divine { background: #241b3d; border-color: #7a5fc4; color: #e6dcfa; }
+  .input-area.mood-divine .input-description { color: #bfaee0; }
+  .input-area.mood-guard { background: #16301f; border-color: #3f8a5c; color: #dff2e6; }
+  .input-area.mood-guard .input-description { color: #a9d4bb; }
+  .input-area.mood-vote { background: #3a2020; border-color: #b45a5a; color: #f7dede; }
+  .input-area.mood-vote .input-description { color: #d9aaaa; }
   .input-title { font-weight: bold; margin: 0 0 4px; }
   .input-description { color: #666; font-size: 0.9em; margin: 0 0 10px; }
   button { margin: 4px; padding: 6px 14px; cursor: pointer; }

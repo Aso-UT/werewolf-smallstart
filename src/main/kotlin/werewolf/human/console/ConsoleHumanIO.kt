@@ -8,6 +8,7 @@ import werewolf.view.Atmosphere
 import werewolf.view.ChoiceView
 import werewolf.view.DivinationView
 import werewolf.view.PlayerStatusView
+import werewolf.view.SelectionMood
 
 class ConsoleHumanIO : HumanIO {
 
@@ -25,6 +26,10 @@ class ConsoleHumanIO : HumanIO {
 
     override fun updateAtmosphere(atmosphere: Atmosphere) {
         // Console has no visual background; time-of-day is visible in the event log
+    }
+
+    override fun updateSelectionMood(mood: SelectionMood) {
+        // Console has no visual selection panel; the choice prompt itself conveys this
     }
 
     override fun display(view: RecallView) = when (view) {

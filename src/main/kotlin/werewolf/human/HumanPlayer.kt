@@ -17,6 +17,7 @@ import werewolf.view.Atmosphere
 import werewolf.view.ChoiceView
 import werewolf.view.DivinationView
 import werewolf.view.PlayerStatusView
+import werewolf.view.SelectionMood
 
 class HumanPlayer(role: Role, override val name: String, private val io: HumanIO) : Player(role) {
     companion object {
@@ -28,10 +29,18 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
     private var lastDivinationSummary: DivinationView? = null
 
     override fun choose(context: SelectionContext): Choice {
+        io.updateSelectionMood(moodOf(context))
         val selected = select(context.title, context.description, context.candidates()) { it.name }
         val choice = Choice(this, context, selected, "プレイヤーが選択")
         io.display(choice.toRecallView())
         return choice
+    }
+
+    private fun moodOf(context: SelectionContext): SelectionMood = when (context) {
+        is SelectionContext.Attack -> SelectionMood.ATTACK
+        is SelectionContext.Divine -> SelectionMood.DIVINE
+        is SelectionContext.Guard -> SelectionMood.GUARD
+        is SelectionContext.Vote -> SelectionMood.VOTE
     }
 
     override fun onReceive(event: GameEvent) {
