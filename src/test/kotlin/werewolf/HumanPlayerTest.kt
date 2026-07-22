@@ -21,6 +21,7 @@ import werewolf.view.Atmosphere
 import werewolf.view.ChoiceView
 import werewolf.view.DivinationView
 import werewolf.view.PlayerStatusView
+import werewolf.view.SelectionMood
 
 class HumanPlayerTest {
 
@@ -32,12 +33,14 @@ class HumanPlayerTest {
         val promptedChoices = mutableListOf<ChoiceView>()
         val displayedViews = mutableListOf<RecallView>()
         val capturedAtmospheres = mutableListOf<Atmosphere>()
+        val capturedSelectionMoods = mutableListOf<SelectionMood>()
         var capturedChronicles: List<ChronicleView> = emptyList()
 
         override fun display(view: RecallView) { displayedViews += view }
         override fun updatePlayerStatusPanel(view: PlayerStatusView) {}
         override fun updateDivinationPanel(view: DivinationView) {}
         override fun updateAtmosphere(atmosphere: Atmosphere) { capturedAtmospheres += atmosphere }
+        override fun updateSelectionMood(mood: SelectionMood) { capturedSelectionMoods += mood }
         override fun promptChoice(view: ChoiceView): String {
             promptedChoices += view
             return queue.removeFirst()
@@ -86,6 +89,54 @@ class HumanPlayerTest {
             listOf<RecallView>(RecallView.SelfAction("投票", "Alice", "プレイヤーが選択")),
             io.displayedViews,
         )
+    }
+
+    @Test
+    fun `choose with Attack context updates selection mood to ATTACK`() {
+        val alice = NothingPlayer(Role.VILLAGER, "Alice")
+        val io = CapturingIO("Alice")
+        val human = HumanPlayer(Role.WEREWOLF, "Human", io)
+        val context = SelectionContext.Attack(human, listOf(human, alice), emptyList())
+
+        human.selectTarget(context)
+
+        assertEquals(listOf(SelectionMood.ATTACK), io.capturedSelectionMoods)
+    }
+
+    @Test
+    fun `choose with Divine context updates selection mood to DIVINE`() {
+        val alice = NothingPlayer(Role.VILLAGER, "Alice")
+        val io = CapturingIO("Alice")
+        val human = HumanPlayer(Role.SEER, "Human", io)
+        val context = SelectionContext.Divine(human, listOf(human, alice), emptyList())
+
+        human.selectTarget(context)
+
+        assertEquals(listOf(SelectionMood.DIVINE), io.capturedSelectionMoods)
+    }
+
+    @Test
+    fun `choose with Guard context updates selection mood to GUARD`() {
+        val alice = NothingPlayer(Role.VILLAGER, "Alice")
+        val io = CapturingIO("Alice")
+        val human = HumanPlayer(Role.HUNTER, "Human", io)
+        val context = SelectionContext.Guard(human, listOf(human, alice))
+
+        human.selectTarget(context)
+
+        assertEquals(listOf(SelectionMood.GUARD), io.capturedSelectionMoods)
+    }
+
+    @Test
+    fun `choose with Vote context updates selection mood to VOTE`() {
+        val alice = NothingPlayer(Role.VILLAGER, "Alice")
+        val io = CapturingIO("Alice")
+        val human = HumanPlayer(Role.VILLAGER, "Human", io)
+        val context = SelectionContext.Vote(human, listOf(human, alice))
+
+        human.selectTarget(context)
+
+        assertEquals(listOf(SelectionMood.VOTE), io.capturedSelectionMoods)
     }
 
     @Test
