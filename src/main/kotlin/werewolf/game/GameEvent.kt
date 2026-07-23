@@ -158,12 +158,12 @@ sealed class GameEvent : Recallable() {
     }
 
     @ConsistentCopyVisibility
-    data class GameResult private constructor(val isWinner: Boolean, private val recipient: Player) : GameEvent() {
+    data class GameResult private constructor(val winnerSide: Side, val isWinner: Boolean, private val recipient: Player) : GameEvent() {
         override val title = "勝敗結果"
         override fun body() = if (isWinner) "あなたは勝利しました。" else "あなたは敗北しました。"
         override val recipients: Notifiable = recipient
         companion object {
-            fun send(isWinner: Boolean, recipient: Player) = GameResult(isWinner, recipient).dispatch()
+            fun send(winnerSide: Side, isWinner: Boolean, recipient: Player) = GameResult(winnerSide, isWinner, recipient).dispatch()
         }
     }
 

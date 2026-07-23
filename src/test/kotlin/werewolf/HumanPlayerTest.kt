@@ -12,6 +12,7 @@ import werewolf.game.MediumResult
 import werewolf.game.RecallView
 import werewolf.game.Role
 import werewolf.game.SelectionContext
+import werewolf.game.Side
 import werewolf.game.Statement
 import werewolf.game.StatementType
 import werewolf.game.TimeOfDay
@@ -20,6 +21,7 @@ import werewolf.human.HumanPlayer
 import werewolf.view.Atmosphere
 import werewolf.view.ChoiceView
 import werewolf.view.DivinationView
+import werewolf.view.EpilogueMood
 import werewolf.view.PlayerStatusView
 import werewolf.view.SelectionMood
 
@@ -34,6 +36,7 @@ class HumanPlayerTest {
         val displayedViews = mutableListOf<RecallView>()
         val capturedAtmospheres = mutableListOf<Atmosphere>()
         val capturedSelectionMoods = mutableListOf<SelectionMood>()
+        val capturedEpilogueMoods = mutableListOf<EpilogueMood>()
         var capturedChronicles: List<ChronicleView> = emptyList()
 
         override fun display(view: RecallView) { displayedViews += view }
@@ -41,6 +44,7 @@ class HumanPlayerTest {
         override fun updateDivinationPanel(view: DivinationView) {}
         override fun updateAtmosphere(atmosphere: Atmosphere) { capturedAtmospheres += atmosphere }
         override fun updateSelectionMood(mood: SelectionMood) { capturedSelectionMoods += mood }
+        override fun updateEpilogueMood(mood: EpilogueMood) { capturedEpilogueMoods += mood }
         override fun promptChoice(view: ChoiceView): String {
             promptedChoices += view
             return queue.removeFirst()
@@ -374,6 +378,46 @@ class HumanPlayerTest {
         GameEvent.ConclaveStarted.send(1, Wolves(setup.oracle, setup.playerManager))
 
         assertTrue(io.capturedAtmospheres.isEmpty())
+    }
+
+    @Test
+    fun `GameResult with citizen win updates epilogue mood to CITIZEN_WIN`() {
+        val io = CapturingIO()
+        val human = HumanPlayer(Role.VILLAGER, "Human", io)
+
+        GameEvent.GameResult.send(Side.CITIZEN, true, human)
+
+        assertEquals(listOf(EpilogueMood.CITIZEN_WIN), io.capturedEpilogueMoods)
+    }
+
+    @Test
+    fun `GameResult with citizen win and werewolf player updates epilogue mood to CITIZEN_LOSE`() {
+        val io = CapturingIO()
+        val human = HumanPlayer(Role.WEREWOLF, "Human", io)
+
+        GameEvent.GameResult.send(Side.CITIZEN, false, human)
+
+        assertEquals(listOf(EpilogueMood.CITIZEN_LOSE), io.capturedEpilogueMoods)
+    }
+
+    @Test
+    fun `GameResult with werewolf win updates epilogue mood to WEREWOLF_WIN`() {
+        val io = CapturingIO()
+        val human = HumanPlayer(Role.WEREWOLF, "Human", io)
+
+        GameEvent.GameResult.send(Side.WEREWOLF, true, human)
+
+        assertEquals(listOf(EpilogueMood.WEREWOLF_WIN), io.capturedEpilogueMoods)
+    }
+
+    @Test
+    fun `GameResult with werewolf win and villager player updates epilogue mood to WEREWOLF_LOSE`() {
+        val io = CapturingIO()
+        val human = HumanPlayer(Role.VILLAGER, "Human", io)
+
+        GameEvent.GameResult.send(Side.WEREWOLF, false, human)
+
+        assertEquals(listOf(EpilogueMood.WEREWOLF_LOSE), io.capturedEpilogueMoods)
     }
 
     @Test

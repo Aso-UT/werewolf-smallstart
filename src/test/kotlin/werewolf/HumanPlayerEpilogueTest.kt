@@ -5,6 +5,7 @@ import werewolf.human.HumanPlayer
 import werewolf.view.Atmosphere
 import werewolf.view.ChoiceView
 import werewolf.view.DivinationView
+import werewolf.view.EpilogueMood
 import werewolf.view.PlayerStatusView
 import werewolf.phase.Conclave
 import werewolf.phase.Epilogue
@@ -22,6 +23,7 @@ class HumanPlayerEpilogueTest {
         override fun updatePlayerStatusPanel(view: PlayerStatusView) {}
         override fun updateDivinationPanel(view: DivinationView) {}
         override fun updateAtmosphere(atmosphere: Atmosphere) {}
+        override fun updateEpilogueMood(mood: EpilogueMood) {}
         override fun promptFreeText(title: String, description: String): String = "human speaks"
         override fun promptChoice(view: ChoiceView): String = view.options.first()
         override fun watchEpilogue(chronicles: List<ChronicleView>) { capturedChronicles = chronicles }

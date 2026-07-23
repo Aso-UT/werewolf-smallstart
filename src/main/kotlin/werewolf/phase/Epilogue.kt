@@ -16,7 +16,7 @@ class Epilogue(
         when (signal) {
             is GameOverSignal.Completed -> {
                 GameEvent.GameOver.send(signal.winningSide, AllPlayers(playerManager))
-                playerManager.allPlayers.forEach { GameEvent.GameResult.send(oracle.isWinner(it, signal.winningSide), it) }
+                playerManager.allPlayers.forEach { GameEvent.GameResult.send(signal.winningSide, oracle.isWinner(it, signal.winningSide), it) }
             }
             is GameOverSignal.Aborted -> Unit
         }

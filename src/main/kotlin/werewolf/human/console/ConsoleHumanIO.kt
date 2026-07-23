@@ -7,6 +7,7 @@ import werewolf.human.HumanIO
 import werewolf.view.Atmosphere
 import werewolf.view.ChoiceView
 import werewolf.view.DivinationView
+import werewolf.view.EpilogueMood
 import werewolf.view.PlayerStatusView
 import werewolf.view.SelectionMood
 
@@ -30,6 +31,10 @@ class ConsoleHumanIO : HumanIO {
 
     override fun updateSelectionMood(mood: SelectionMood) {
         // Console has no visual selection panel; the choice prompt itself conveys this
+    }
+
+    override fun updateEpilogueMood(mood: EpilogueMood) {
+        // Console has no visual background; the GameResult event itself conveys this
     }
 
     override fun display(view: RecallView) = when (view) {

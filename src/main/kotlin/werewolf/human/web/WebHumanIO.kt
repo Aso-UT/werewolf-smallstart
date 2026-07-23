@@ -9,6 +9,7 @@ import werewolf.human.HumanIO
 import werewolf.view.Atmosphere
 import werewolf.view.ChoiceView
 import werewolf.view.DivinationView
+import werewolf.view.EpilogueMood
 import werewolf.view.PlayerStatus
 import werewolf.view.PlayerStatusView
 import werewolf.view.PlayerSummary
@@ -52,6 +53,10 @@ class WebHumanIO : HumanIO {
 
     override fun updateSelectionMood(mood: SelectionMood) {
         enqueue("""{"type":"selectionMood","value":${mood.toJson()}}""")
+    }
+
+    override fun updateEpilogueMood(mood: EpilogueMood) {
+        enqueue("""{"type":"epilogueMood","value":${mood.toJson()}}""")
     }
 
     override fun display(view: RecallView) {
@@ -112,6 +117,13 @@ private fun SelectionMood.toJson(): String = when (this) {
     SelectionMood.DIVINE -> "\"divine\""
     SelectionMood.GUARD -> "\"guard\""
     SelectionMood.VOTE -> "\"vote\""
+}
+
+private fun EpilogueMood.toJson(): String = when (this) {
+    EpilogueMood.CITIZEN_WIN -> "\"citizenWin\""
+    EpilogueMood.CITIZEN_LOSE -> "\"citizenLose\""
+    EpilogueMood.WEREWOLF_WIN -> "\"werewolfWin\""
+    EpilogueMood.WEREWOLF_LOSE -> "\"werewolfLose\""
 }
 
 private fun RecallView.toJson(): String = when (this) {

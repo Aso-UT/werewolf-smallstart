@@ -52,6 +52,8 @@ class EpilogueTest {
 
         assertEquals(false, wolf.gameResult?.isWinner)
         assertEquals(true, villager.gameResult?.isWinner)
+        assertEquals(Side.CITIZEN, wolf.gameResult?.winnerSide)
+        assertEquals(Side.CITIZEN, villager.gameResult?.winnerSide)
     }
 
     @Test

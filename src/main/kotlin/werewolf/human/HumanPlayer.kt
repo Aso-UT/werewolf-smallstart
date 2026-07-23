@@ -9,6 +9,7 @@ import werewolf.game.Player
 import werewolf.game.ReportEligibility
 import werewolf.game.Role
 import werewolf.game.SelectionContext
+import werewolf.game.Side
 import werewolf.game.Statement
 import werewolf.game.StatementType
 import werewolf.game.TimeOfDay
@@ -16,6 +17,7 @@ import werewolf.game.selectableTypes
 import werewolf.view.Atmosphere
 import werewolf.view.ChoiceView
 import werewolf.view.DivinationView
+import werewolf.view.EpilogueMood
 import werewolf.view.PlayerStatusView
 import werewolf.view.SelectionMood
 
@@ -57,6 +59,7 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
             io.updateDivinationPanel(currentDivination)
         }
         atmosphereOf(event)?.let { io.updateAtmosphere(it) }
+        epilogueMoodOf(event)?.let { io.updateEpilogueMood(it) }
     }
 
     private fun atmosphereOf(event: GameEvent): Atmosphere? = when (event) {
@@ -67,6 +70,14 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
         is GameEvent.DiscussionStarted -> Atmosphere.DAY
         is GameEvent.VoteStarted -> Atmosphere.VOTE
         else -> null
+    }
+
+    private fun epilogueMoodOf(event: GameEvent): EpilogueMood? {
+        if (event !is GameEvent.GameResult) return null
+        return when (event.winnerSide) {
+            Side.CITIZEN -> if (event.isWinner) EpilogueMood.CITIZEN_WIN else EpilogueMood.CITIZEN_LOSE
+            Side.WEREWOLF -> if (event.isWinner) EpilogueMood.WEREWOLF_WIN else EpilogueMood.WEREWOLF_LOSE
+        }
     }
 
     override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {

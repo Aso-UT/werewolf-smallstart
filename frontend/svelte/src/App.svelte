@@ -18,6 +18,7 @@
 
   type Atmosphere = 'morning' | 'day' | 'night' | 'vote'
   type SelectionMood = 'attack' | 'divine' | 'guard' | 'vote'
+  type EpilogueMood = 'citizenWin' | 'citizenLose' | 'werewolfWin' | 'werewolfLose'
 
   type PlayerStatus = 'alive' | 'executed' | 'attacked'
   type PlayerEntry = { name: string; status: PlayerStatus; claimedRole: string | null }
@@ -36,6 +37,7 @@
   let input: InputState = { type: 'idle' }
   let atmosphere: Atmosphere | null = null
   let selectionMood: SelectionMood | null = null
+  let epilogueMood: EpilogueMood | null = null
   $: document.body.className = atmosphere ? `atmosphere-${atmosphere}` : ''
   let speakText = ''
   let logEl: HTMLElement
@@ -87,6 +89,9 @@
         break
       case 'selectionMood':
         selectionMood = msg.value as SelectionMood
+        break
+      case 'epilogueMood':
+        epilogueMood = msg.value as EpilogueMood
         break
       case 'divination':
         divination = msg as unknown as DivinationData
@@ -196,7 +201,7 @@
             {#if entry.intent}<br /><span class="intent">  [{entry.intent}]</span>{/if}
           </div>
         {:else if entry.type === 'epilogue'}
-          <pre class="epilogue">{entry.chronicles.map(formatChronicle).join('\n')}</pre>
+          <pre class="epilogue {epilogueMood ? `mood-${epilogueMood}` : ''}">{entry.chronicles.map(formatChronicle).join('\n')}</pre>
         {/if}
       {/each}
     </div>
@@ -331,6 +336,10 @@
   .intent { color: #888; font-size: 0.9em; }
   .role-badge { display: inline-block; margin-left: 4px; padding: 1px 6px; border-radius: 3px; font-size: 0.8em; background: #dde6f7; color: #33507a; }
   .epilogue { margin: 16px 0 0; padding: 12px; background: #eef; border-left: 4px solid #88a; white-space: pre-wrap; font-family: inherit; }
+  .epilogue.mood-citizenWin { background: #eef7ee; border-color: #4a9a5a; color: #2a4a2f; }
+  .epilogue.mood-werewolfWin { background: #2a1030; border-color: #8a3fae; color: #f0d9f7; }
+  .epilogue.mood-citizenLose { background: #2a0f0f; border-color: #7a1f1f; color: #f2d9d9; }
+  .epilogue.mood-werewolfLose { background: #1c1c24; border-color: #555566; color: #ccccd9; }
   .input-area { margin-bottom: 8px; padding: 12px; border: 2px solid #88a; background: #f0f0fa; color: #333; transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease; }
   .input-area.mood-attack { background: #2a0f0f; border-color: #7a1f1f; color: #f2d9d9; }
   .input-area.mood-attack .input-description { color: #d9a8a8; }
