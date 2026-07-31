@@ -1,5 +1,6 @@
 package werewolf.ai.anthropic
 
+import com.anthropic.models.messages.Usage
 import werewolf.ai.ModelMetadata
 
 data class CacheDiagnostics(
@@ -8,19 +9,32 @@ data class CacheDiagnostics(
     val timeSinceLastCallMs: Long?,
 )
 
+data class TokenUsage(
+    val input: Long,
+    val output: Long,
+    val cacheCreationInput: Long,
+    val cacheReadInput: Long,
+) {
+    constructor(usage: Usage) : this(
+        input = usage.inputTokens(),
+        output = usage.outputTokens(),
+        cacheCreationInput = usage.cacheCreationInputTokens().orElse(0L),
+        cacheReadInput = usage.cacheReadInputTokens().orElse(0L),
+    )
+}
+
 class AnthropicMetadata(
     val model: String,
-    val inputTokens: Long,
-    val outputTokens: Long,
-    val cacheCreationInputTokens: Long,
-    val cacheReadInputTokens: Long,
+    val tokenUsage: TokenUsage,
     val cacheDiagnostics: CacheDiagnostics,
+    val stopReason: String,
+    val effort: AnthropicEffort,
 ) : ModelMetadata {
     override fun toDisplayString(): String {
         val elapsed = cacheDiagnostics.timeSinceLastCallMs?.let { "elapsed=${it / MS_PER_SECOND}s" } ?: "elapsed=-"
-        return "model=$model in=$inputTokens out=$outputTokens" +
-            " cache_create=$cacheCreationInputTokens cache_read=$cacheReadInputTokens" +
-            " cached=${cacheDiagnostics.cachedItemCount} new=${cacheDiagnostics.newItemCount} $elapsed"
+        return "model=$model in=${tokenUsage.input} out=${tokenUsage.output}" +
+            " cache_create=${tokenUsage.cacheCreationInput} cache_read=${tokenUsage.cacheReadInput}" +
+            " cached=${cacheDiagnostics.cachedItemCount} new=${cacheDiagnostics.newItemCount} $elapsed stop=$stopReason effort=$effort"
     }
 
     companion object {

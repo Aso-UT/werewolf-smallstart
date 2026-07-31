@@ -5,12 +5,15 @@ import com.anthropic.client.okhttp.AnthropicOkHttpClient
 import com.anthropic.models.messages.CacheControlEphemeral
 import com.anthropic.models.messages.ContentBlockParam
 import com.anthropic.models.messages.MessageCreateParams
+import com.anthropic.models.messages.OutputConfig
 import com.anthropic.models.messages.TextBlockParam
+import com.anthropic.models.messages.ThinkingConfigAdaptive
 import werewolf.ai.Completion
 import werewolf.ai.LanguageModel
 
 class AnthropicLanguageModel(
     private val model: String = DEFAULT_MODEL,
+    private val effort: AnthropicEffort = AnthropicEffort.HIGH,
 ) : LanguageModel {
     private val client: AnthropicClient = AnthropicOkHttpClient.fromEnv()
     private val blockManager = HistoryBlockManager()
@@ -26,7 +29,12 @@ class AnthropicLanguageModel(
         val blocks = blockManager.buildBlocks(history)
         val params = MessageCreateParams.builder()
             .model(model)
-            .maxTokens(MAX_TOKENS)
+            .maxTokens(MAX_TOKENS).thinking(
+                ThinkingConfigAdaptive.builder()
+                    .display(ThinkingConfigAdaptive.Display.SUMMARIZED)
+                    .build()
+            )
+            .outputConfig(OutputConfig.builder().effort(effort.toSdkEffort()).build())
             .systemOfTextBlockParams(listOf(TextBlockParam.builder().text(system).build()))
             .addUserMessageOfBlockParams(buildUserBlocks(blocks, instruction))
             .build()
@@ -38,11 +46,10 @@ class AnthropicLanguageModel(
             val usage = message.usage()
             val metadata = AnthropicMetadata(
                 model = model,
-                inputTokens = usage.inputTokens(),
-                outputTokens = usage.outputTokens(),
-                cacheCreationInputTokens = usage.cacheCreationInputTokens().orElse(0L),
-                cacheReadInputTokens = usage.cacheReadInputTokens().orElse(0L),
+                tokenUsage = TokenUsage(usage),
                 cacheDiagnostics = diagnostics,
+                stopReason = message.stopReason().map { it.asString() }.orElse("unknown"),
+                effort = effort,
             )
             val text = message.content()
                 .mapNotNull { it.text().orElse(null) }
@@ -69,6 +76,6 @@ class AnthropicLanguageModel(
 
     companion object {
         private const val DEFAULT_MODEL = "claude-opus-4-7"
-        private const val MAX_TOKENS = 512L
+        private const val MAX_TOKENS = 1024L
     }
 }

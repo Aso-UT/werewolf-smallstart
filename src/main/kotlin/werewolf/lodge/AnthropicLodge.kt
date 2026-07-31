@@ -1,13 +1,15 @@
 package werewolf.lodge
 
 import werewolf.ai.LanguageModel
+import werewolf.ai.anthropic.AnthropicEffort
 import werewolf.ai.anthropic.AnthropicLanguageModel
 
 class AnthropicLodge(
     humanConnection: HumanConnection,
-    private val model: String = HAIKU_MODEL,
+    private val model: String,
+    private val effort: AnthropicEffort,
 ) : AiLodge(humanConnection) {
-    override fun createLanguageModel(): LanguageModel = AnthropicLanguageModel(model)
+    override fun createLanguageModel(): LanguageModel = AnthropicLanguageModel(model, effort)
 
     companion object {
         const val HAIKU_MODEL = "claude-haiku-4-5-20251001"
