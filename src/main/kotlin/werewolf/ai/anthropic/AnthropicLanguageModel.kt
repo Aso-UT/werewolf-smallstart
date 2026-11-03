@@ -77,6 +77,6 @@ class AnthropicLanguageModel(
 
     companion object {
         private const val DEFAULT_MODEL = "claude-opus-4-7"
-        private const val MAX_TOKENS = 2048L
+        private const val MAX_TOKENS = 16000L
     }
 }
