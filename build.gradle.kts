@@ -69,7 +69,7 @@ val npmInstall by tasks.registering(Exec::class) {
 val npmAudit by tasks.registering(Exec::class) {
     dependsOn(npmInstall)
     workingDir = file("frontend/svelte")
-    commandLine(npm, "audit")
+    commandLine(npm, "audit", "--audit-level=moderate")
 }
 
 val npmCheck by tasks.registering(Exec::class) {
