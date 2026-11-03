@@ -29,10 +29,11 @@ class AnthropicLanguageModel(
         val blocks = blockManager.buildBlocks(history)
         val params = MessageCreateParams.builder()
             .model(model)
-            .maxTokens(MAX_TOKENS).thinking(
+            .maxTokens(MAX_TOKENS)
+            .thinking(
                 ThinkingConfigAdaptive.builder()
                     .display(ThinkingConfigAdaptive.Display.SUMMARIZED)
-                    .build()
+                    .build(),
             )
             .outputConfig(OutputConfig.builder().effort(effort.toSdkEffort()).build())
             .systemOfTextBlockParams(listOf(TextBlockParam.builder().text(system).build()))
