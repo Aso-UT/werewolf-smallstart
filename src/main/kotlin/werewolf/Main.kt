@@ -1,5 +1,6 @@
 package werewolf
 
+import werewolf.ai.anthropic.AnthropicEffort
 import werewolf.game.GameOverSignal
 import werewolf.lodge.AnthropicLodge
 import werewolf.lodge.ConsoleHumanConnection
@@ -33,7 +34,7 @@ fun main() {
 private fun selectLodge(connection: HumanConnection): Lodge {
     println(
         "Lodgeを選択してください: AllHuman / RollerCPU / RandomCPU / HonestCPU / RoleAwareCPU / " +
-            "PocAI / Gemini / Haiku / Sonnet / Opus",
+            "PocAI / Gemini / Haiku / Sonnet / Opus / OpusX",
     )
     return when (readLine()?.trim()) {
         "RollerCPU"    -> RollerCpuLodge(connection)
@@ -42,9 +43,10 @@ private fun selectLodge(connection: HumanConnection): Lodge {
         "RoleAwareCPU" -> RoleAwareCpuLodge(connection)
         "PocAI"        -> PocAiLodge(connection)
         "Gemini"       -> GeminiLodge(connection)
-        "Haiku"        -> AnthropicLodge(connection, AnthropicLodge.HAIKU_MODEL)
-        "Sonnet"       -> AnthropicLodge(connection, AnthropicLodge.SONNET_MODEL)
-        "Opus"         -> AnthropicLodge(connection, AnthropicLodge.OPUS_MODEL)
+        "Haiku"        -> AnthropicLodge(connection, AnthropicLodge.HAIKU_MODEL, AnthropicEffort.HIGH)
+        "Sonnet"       -> AnthropicLodge(connection, AnthropicLodge.SONNET_MODEL, AnthropicEffort.HIGH)
+        "Opus"         -> AnthropicLodge(connection, AnthropicLodge.OPUS_MODEL, AnthropicEffort.HIGH)
+        "OpusX"        -> AnthropicLodge(connection, AnthropicLodge.OPUS_MODEL, AnthropicEffort.XHIGH)
         else           -> SmallLodge(connection)
     }
 }
