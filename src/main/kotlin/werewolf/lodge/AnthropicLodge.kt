@@ -13,7 +13,7 @@ class AnthropicLodge(
 
     companion object {
         const val HAIKU_MODEL = "claude-haiku-5-5"
-        const val SONNET_MODEL = "claude-sonnet-5"
-        const val OPUS_MODEL = "claude-opus-4-8"
+        const val SONNET_MODEL = "claude-sonnet-5-5"
+        const val OPUS_MODEL = "claude-opus-5-5"
     }
 }
