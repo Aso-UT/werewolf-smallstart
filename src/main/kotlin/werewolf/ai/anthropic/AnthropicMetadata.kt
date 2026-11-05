@@ -31,15 +31,22 @@ class AnthropicMetadata(
     val cacheDiagnostics: CacheDiagnostics,
     val stopReason: String,
     val effort: AnthropicEffort,
+    val thinkingSummary: String,
 ) : ModelMetadata {
     override fun toDisplayString(): String {
         val elapsed = cacheDiagnostics.timeSinceLastCallMs?.let { "elapsed=${it / MS_PER_SECOND}s" } ?: "elapsed=-"
-        return "model=$model in=${tokenUsage.input} out=${tokenUsage.output} thinking=${tokenUsage.thinking}" +
+        val stats = "model=$model in=${tokenUsage.input} out=${tokenUsage.output} thinking=${tokenUsage.thinking}" +
             " cache_create=${tokenUsage.cacheCreationInput} cache_read=${tokenUsage.cacheReadInput}" +
             " cached=${cacheDiagnostics.cachedItemCount} new=${cacheDiagnostics.newItemCount} $elapsed stop=$stopReason effort=$effort"
+        val summary = singleLineThinkingSummary()
+        return if (summary.isEmpty()) stats else "$stats | 思考要約: $summary"
     }
+
+    // コンソールの「[...]」表示が崩れないよう、改行などの連続する空白を1つの空白にまとめる
+    private fun singleLineThinkingSummary(): String = thinkingSummary.trim().replace(WHITESPACE, " ")
 
     companion object {
         private const val MS_PER_SECOND = 1000
+        private val WHITESPACE = Regex("\\s+")
     }
 }
