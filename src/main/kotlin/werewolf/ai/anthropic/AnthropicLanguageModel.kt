@@ -4,6 +4,7 @@ import com.anthropic.client.AnthropicClient
 import com.anthropic.client.okhttp.AnthropicOkHttpClient
 import com.anthropic.models.messages.CacheControlEphemeral
 import com.anthropic.models.messages.ContentBlockParam
+import com.anthropic.models.messages.Message
 import com.anthropic.models.messages.MessageCreateParams
 import com.anthropic.models.messages.OutputConfig
 import com.anthropic.models.messages.TextBlockParam
@@ -51,6 +52,7 @@ class AnthropicLanguageModel(
                 cacheDiagnostics = diagnostics,
                 stopReason = message.stopReason().map { it.asString() }.orElse("unknown"),
                 effort = effort,
+                thinkingSummary = extractThinkingSummary(message),
             )
             val text = message.content()
                 .mapNotNull { it.text().orElse(null) }
@@ -60,6 +62,11 @@ class AnthropicLanguageModel(
             throw AnthropicApiException("Anthropic API call failed: ${e.javaClass.simpleName}")
         }
     }
+
+    // display: SUMMARIZED を指定しているため、thinkingブロックには思考の要約が入る
+    private fun extractThinkingSummary(message: Message): String = message.content()
+        .mapNotNull { it.thinking().orElse(null) }
+        .joinToString("\n") { it.thinking() }
 
     private fun buildUserBlocks(
         blocks: List<Pair<String, Boolean>>,
