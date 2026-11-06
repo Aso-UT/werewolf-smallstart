@@ -1,5 +1,6 @@
 package werewolf.phase
 
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -20,7 +21,8 @@ abstract class Discussion<R : Notifiable>(
     protected val allPlayers: List<Player>,
 ) {
     protected abstract fun shouldEnd(history: SpeakingHistory): Boolean
-    protected abstract fun nextSpeaker(history: SpeakingHistory): Player
+    // contexts: 各発言者と、その人が次に発言する場合のコンテキスト
+    protected abstract fun nextSpeaker(contexts: Map<Player, DiscussionContext>): Player
     protected abstract fun sendStatement(round: Int, speakerName: String, statement: Statement, recipients: R)
     protected abstract fun buildContext(round: Int): DiscussionContext
     protected abstract fun sendDiscussionStarted()
@@ -30,19 +32,27 @@ abstract class Discussion<R : Notifiable>(
         sendDiscussionStarted()
         val history = SpeakingHistory()
         while (!shouldEnd(history)) {
-            val speaker = nextSpeaker(history)
-            val round = roundOf(speaker, history)
-            val statement = speaker.discuss(buildContext(round))
-            sendStatement(round, speaker.name, statement, recipients)
+            val contexts = nextContexts(history)
+            val speaker = nextSpeaker(contexts)
+            val context = contexts.getValue(speaker)
+            val statement = speaker.discuss(context)
+            sendStatement(context.round, speaker.name, statement, recipients)
             history.record(speaker)
         }
     }
 
+    private fun nextContexts(history: SpeakingHistory): Map<Player, DiscussionContext> =
+        speakers.associateWith { buildContext(roundOf(it, history)) }
+
     // そのプレイヤーにとって何回目の発言か
-    protected fun roundOf(player: Player, history: SpeakingHistory): Int = history.countOf(player) + 1
+    private fun roundOf(player: Player, history: SpeakingHistory): Int = history.countOf(player) + 1
 }
 
-open class OpenDiscussion(playerManager: PlayerManager, day: Int) :
+open class OpenDiscussion(
+    playerManager: PlayerManager,
+    day: Int,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
+) :
     Discussion<AllPlayers>(
         playerManager.players,
         AllPlayers(playerManager),
@@ -51,15 +61,15 @@ open class OpenDiscussion(playerManager: PlayerManager, day: Int) :
     ) {
     override fun shouldEnd(history: SpeakingHistory) = history.totalCount >= speakers.size * STATEMENTS_PER_PLAYER
 
-    override fun nextSpeaker(history: SpeakingHistory): Player {
-        val eagerness = collectEagerness(history)
+    override fun nextSpeaker(contexts: Map<Player, DiscussionContext>): Player {
+        val eagerness = collectEagerness(contexts)
         val highest = eagerness.values.max()
         return eagerness.filterValues { it == highest }.keys.random()
     }
 
-    private fun collectEagerness(history: SpeakingHistory): Map<Player, Eagerness> = runBlocking {
-        speakers.map { player ->
-            async(Dispatchers.IO) { player to player.eagerness(buildContext(roundOf(player, history))) }
+    private fun collectEagerness(contexts: Map<Player, DiscussionContext>): Map<Player, Eagerness> = runBlocking {
+        contexts.map { (player, context) ->
+            async(dispatcher) { player to player.eagerness(context) }
         }.awaitAll().toMap()
     }
 

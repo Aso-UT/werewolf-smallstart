@@ -20,7 +20,8 @@ open class Conclave(oracle: Oracle, playerManager: PlayerManager, day: Int) :
     protected open fun speakingOrder(speakers: List<Player>) = speakers.shuffled()
 
     override fun shouldEnd(history: SpeakingHistory) = history.totalCount >= speakers.size * ROUNDS
-    override fun nextSpeaker(history: SpeakingHistory) = order[history.totalCount % order.size]
+    // 発言回数が最も少ない人のうち、順番が先の人。結果として order の順に1回ずつ回る
+    override fun nextSpeaker(contexts: Map<Player, DiscussionContext>) = order.minBy { contexts.getValue(it).round }
     override fun sendStatement(round: Int, speakerName: String, statement: Statement, recipients: Wolves) =
         GameEvent.WerewolfStatementMade.send(round, speakerName, statement.text(), recipients)
     override fun buildContext(round: Int) = DiscussionContext.Conclave(round, day, speakers, allPlayers)
