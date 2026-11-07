@@ -66,6 +66,7 @@ class WebHumanConnection : HumanConnection {
                         "abort" -> { webHumanIO.requestAbort(); webHumanIO.incoming.trySend("") }
                         "choose" -> webHumanIO.incoming.trySend(getStringField(msg, "value", "choose message"))
                         "speak" -> webHumanIO.incoming.trySend(getStringField(msg, "text", "speak message"))
+                        "urge" -> webHumanIO.incoming.trySend(getStringField(msg, "value", "urge message"))
                         else -> error("Unknown message type '$type' in client message: $msg")
                     }
                 }

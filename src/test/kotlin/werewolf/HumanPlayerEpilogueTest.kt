@@ -26,6 +26,7 @@ class HumanPlayerEpilogueTest {
         override fun updateEpilogueMood(mood: EpilogueMood) {}
         override fun promptFreeText(title: String, description: String): String = "human speaks"
         override fun promptChoice(view: ChoiceView): String = view.options.first()
+        override fun promptSpeakingUrge(title: String, seconds: Int): Boolean = false
         override fun watchEpilogue(chronicles: List<ChronicleView>) { capturedChronicles = chronicles }
     }
 

@@ -82,6 +82,15 @@ class WebHumanIO : HumanIO {
         return text
     }
 
+    override fun promptSpeakingUrge(title: String, seconds: Int): Boolean {
+        checkAbort()
+        val description = "発言したい場合は${seconds}秒以内に「発言する」を押してください"
+        enqueue("""{"type":"urge","title":${title.jsonEncode()},"description":${description.jsonEncode()},"seconds":$seconds}""")
+        val answer = runBlocking { incoming.receive() }
+        checkAbort()
+        return answer.toBooleanStrict()
+    }
+
     override fun watchEpilogue(chronicles: List<ChronicleView>) {
         val json = chronicles.joinToString(",", "[", "]") { it.toJson() }
         enqueue("""{"type":"epilogue","chronicles":$json}""")

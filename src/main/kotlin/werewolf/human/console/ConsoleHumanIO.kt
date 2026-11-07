@@ -54,6 +54,11 @@ class ConsoleHumanIO : HumanIO {
         return readInput()
     }
 
+    override fun promptSpeakingUrge(title: String, seconds: Int): Boolean {
+        sendMessage(title, "発言しますか？(y/N)")
+        return readInput().trim().equals("y", ignoreCase = true)
+    }
+
     override fun promptChoice(view: ChoiceView): String {
         val optionsText = view.options.mapIndexed { i, option -> "${i + 1}: $option" }.joinToString("\n")
         while (true) {
