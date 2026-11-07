@@ -128,30 +128,74 @@ class DiscussionTest {
     }
 
     @Test
-    fun `player with highest eagerness speaks until discussion ends at three statements per player`() {
-        val alice = ScriptedPlayer(Role.VILLAGER, "Alice", listOf("1", "2", "3", "4", "5", "6"), constant(1))
-        val bob = ScriptedPlayer(Role.WEREWOLF, "Bob", emptyList(), constant(0))
+    fun `player with highest eagerness speaks`() {
+        val alice = ScriptedPlayer(Role.VILLAGER, "Alice", listOf("1", "2", "3"), constant(0))
+        val bob = ScriptedPlayer(Role.WEREWOLF, "Bob", listOf("1", "2", "3"), constant(1))
         val playerManager = TestLodge(alice to Role.VILLAGER, bob to Role.WEREWOLF).create().playerManager
 
         OpenDiscussion(playerManager, 1).conduct()
 
+        assertEquals("Bob", speakingOrderHeardBy(alice).first())
+    }
+
+    @Test
+    fun `the same player does not speak twice in a row`() {
+        val alice = ScriptedPlayer(Role.VILLAGER, "Alice", listOf("1", "2", "3"), constant(1))
+        val bob = ScriptedPlayer(Role.WEREWOLF, "Bob", listOf("1", "2", "3"), constant(0))
+        val playerManager = TestLodge(alice to Role.VILLAGER, bob to Role.WEREWOLF).create().playerManager
+
+        OpenDiscussion(playerManager, 1).conduct()
+
+        assertEquals(listOf("Alice", "Bob", "Alice", "Bob", "Alice", "Bob"), speakingOrderHeardBy(alice))
+    }
+
+    @Test
+    fun `player who reached the statement limit no longer speaks`() {
+        val alice = ScriptedPlayer(Role.VILLAGER, "Alice", listOf("1", "2", "3", "4"), constant(2))
+        val bob = ScriptedPlayer(Role.WEREWOLF, "Bob", listOf("1", "2", "3", "4"), constant(1))
+        val charlie = ScriptedPlayer(Role.VILLAGER, "Charlie", listOf("1"), constant(0))
+        val playerManager = TestLodge(
+            alice to Role.VILLAGER, bob to Role.WEREWOLF, charlie to Role.VILLAGER
+        ).create().playerManager
+
+        OpenDiscussion(playerManager, 1).conduct()
+
+        // 4回発言した Alice・Bob は意欲が高くても選ばれず、Charlie に回る
         assertEquals(
-            listOf("1", "2", "3", "4", "5", "6").map { "Alice:said:$it" },
-            alice.log.filter { it.startsWith("Alice:said:") },
+            listOf("Alice", "Bob", "Alice", "Bob", "Alice", "Bob", "Alice", "Bob", "Charlie"),
+            speakingOrderHeardBy(alice),
         )
-        assertEquals(emptyList(), bob.log.filter { it.startsWith("Bob:said:") })
+    }
+
+    @Test
+    fun `discussion ends when total statements reach three per speaker`() {
+        val alice = ScriptedPlayer(Role.VILLAGER, "Alice", listOf("1", "2", "3", "4"), takingTurns(0))
+        val bob = ScriptedPlayer(Role.WEREWOLF, "Bob", listOf("1", "2", "3", "4"), takingTurns(1))
+        val charlie = ScriptedPlayer(Role.VILLAGER, "Charlie", listOf("1", "2", "3", "4"), takingTurns(2))
+        val playerManager = TestLodge(
+            alice to Role.VILLAGER, bob to Role.WEREWOLF, charlie to Role.VILLAGER
+        ).create().playerManager
+
+        OpenDiscussion(playerManager, 1).conduct()
+
+        // 全員3回ずつ発言した時点では、まだ誰も上限（4回）に達していないが打ち切られる
+        assertEquals(9, speakingOrderHeardBy(alice).size)
     }
 
     @Test
     fun `round is the count of the speaker's own statements`() {
-        val alice = ScriptedPlayer(Role.VILLAGER, "Alice", listOf("1", "2", "3", "4", "5", "6"), constant(1))
-        val bob = ScriptedPlayer(Role.WEREWOLF, "Bob", emptyList(), constant(0))
+        val alice = ScriptedPlayer(Role.VILLAGER, "Alice", listOf("1", "2", "3"), constant(1))
+        val bob = ScriptedPlayer(Role.WEREWOLF, "Bob", listOf("1", "2", "3"), constant(0))
         val playerManager = TestLodge(alice to Role.VILLAGER, bob to Role.WEREWOLF).create().playerManager
 
         OpenDiscussion(playerManager, 1).conduct()
 
-        assertEquals(listOf(1, 2, 3, 4, 5, 6), alice.rounds)
+        assertEquals(listOf(1, 2, 3), alice.rounds)
+        assertEquals(listOf(1, 2, 3), bob.rounds)
     }
+
+    private fun speakingOrderHeardBy(listener: ScriptedPlayer): List<String> =
+        listener.log.filter { it.contains(":heard:") }.map { it.split(":")[2] }
 
     companion object {
         private const val TURN_STEP = 10
