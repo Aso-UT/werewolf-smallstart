@@ -15,6 +15,7 @@
     | { type: 'idle' }
     | { type: 'choose'; title: string; description: string; candidates: string[] }
     | { type: 'speak'; title: string; description: string }
+    | { type: 'urge'; title: string; description: string }
 
   type Atmosphere = 'morning' | 'day' | 'night' | 'vote'
   type SelectionMood = 'attack' | 'divine' | 'guard' | 'vote'
@@ -40,6 +41,8 @@
   let epilogueMood: EpilogueMood | null = null
   $: document.body.className = atmosphere ? `atmosphere-${atmosphere}` : ''
   let speakText = ''
+  let urgeRemaining = 0
+  let urgeTimer: ReturnType<typeof setInterval> | null = null
   let logEl: HTMLElement
   let ws: WebSocket
   let players: PlayerEntry[] = []
@@ -54,7 +57,7 @@
   onMount(() => {
     ws = new WebSocket(`ws://${location.host}/game`)
     ws.onopen = () => { status = '接続済み' }
-    ws.onclose = () => { status = '切断'; input = { type: 'idle' } }
+    ws.onclose = () => { status = '切断'; stopUrgeCountdown(); input = { type: 'idle' } }
     ws.onerror = () => { status = 'エラー' }
     ws.onmessage = ({ data }) => dispatch(JSON.parse(data as string))
   })
@@ -80,6 +83,10 @@
       case 'speak':
         input = { type: 'speak', title: msg.title as string, description: msg.description as string }
         speakText = ''
+        break
+      case 'urge':
+        input = { type: 'urge', title: msg.title as string, description: msg.description as string }
+        startUrgeCountdown(msg.seconds as number)
         break
       case 'playerStatus':
         players = msg.players as PlayerEntry[]
@@ -116,8 +123,30 @@
     speakText = ''
   }
 
+  function startUrgeCountdown(seconds: number) {
+    urgeRemaining = seconds
+    urgeTimer = setInterval(() => {
+      urgeRemaining -= 1
+      if (urgeRemaining <= 0) answerUrge(false)
+    }, 1000)
+  }
+
+  function stopUrgeCountdown() {
+    if (urgeTimer !== null) clearInterval(urgeTimer)
+    urgeTimer = null
+  }
+
+  // 押した／時間切れのどちらか一方だけを、必ず1回サーバーへ返す
+  function answerUrge(wantsToSpeak: boolean) {
+    if (input.type !== 'urge') return
+    stopUrgeCountdown()
+    ws.send(JSON.stringify({ type: 'urge', value: wantsToSpeak }))
+    input = { type: 'idle' }
+  }
+
   function abort() {
     if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'abort' }))
+    stopUrgeCountdown()
     input = { type: 'idle' }
   }
 
@@ -181,6 +210,15 @@
             placeholder="発言を入力..."
           />
           <button on:click={speak}>送信</button>
+        </div>
+      </div>
+    {:else if input.type === 'urge'}
+      <div class="input-area">
+        <p class="input-title">{input.title}</p>
+        <p class="input-description">{input.description}</p>
+        <div>
+          <button on:click={() => answerUrge(true)}>発言する</button>
+          <span class="countdown">残り {urgeRemaining} 秒</span>
         </div>
       </div>
     {/if}
@@ -353,6 +391,7 @@
   .input-description { color: #666; font-size: 0.9em; margin: 0 0 10px; }
   button { margin: 4px; padding: 6px 14px; cursor: pointer; }
   input[type='text'] { width: 70%; padding: 6px; font-size: 1em; }
+  .countdown { margin-left: 8px; color: #666; }
 
   .panel-empty { color: #999; font-size: 0.9em; }
   .status-table { border-collapse: collapse; font-size: 0.85em; width: 100%; }

@@ -19,6 +19,9 @@ import werewolf.view.ChoiceView
 class HumanPlayer(role: Role, override val name: String, private val io: HumanIO) : Player(role) {
     companion object {
         private const val COMMENT_PROMPT = "補足があれば入力してください"
+        private const val URGE_SECONDS = 5
+        // 具体的な値はAIの発言意欲のスケール（#310）が決まってから合わせる
+        private val EAGER = Eagerness(1)
     }
 
     private val screen = HumanScreen(io)
@@ -35,7 +38,12 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
         screen.show(event)
     }
 
-    override fun feelUrge(context: DiscussionContext) = SpeakingUrge(this, context, Eagerness.DEFAULT, "")
+    override fun feelUrge(context: DiscussionContext): SpeakingUrge =
+        if (io.promptSpeakingUrge(context.title, URGE_SECONDS)) {
+            SpeakingUrge(this, context, EAGER, "発言を希望")
+        } else {
+            SpeakingUrge(this, context, Eagerness.DEFAULT, "発言を希望せず")
+        }
 
     override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
         val type = selectType(context, claimableRoles, reportEligibility)
