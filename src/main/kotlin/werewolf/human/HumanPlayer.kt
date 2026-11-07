@@ -10,77 +10,29 @@ import werewolf.game.Player
 import werewolf.game.ReportEligibility
 import werewolf.game.Role
 import werewolf.game.SelectionContext
-import werewolf.game.Side
 import werewolf.game.SpeakingUrge
 import werewolf.game.Statement
 import werewolf.game.StatementType
-import werewolf.game.TimeOfDay
 import werewolf.game.selectableTypes
-import werewolf.view.Atmosphere
 import werewolf.view.ChoiceView
-import werewolf.view.DivinationView
-import werewolf.view.EpilogueMood
-import werewolf.view.PlayerStatusView
-import werewolf.view.SelectionMood
 
-@Suppress("TooManyFunctions")
 class HumanPlayer(role: Role, override val name: String, private val io: HumanIO) : Player(role) {
     companion object {
         private const val COMMENT_PROMPT = "補足があれば入力してください"
     }
 
-    private val gameNote = GameNote()
-    private var lastPlayerStatus: PlayerStatusView? = null
-    private var lastDivinationSummary: DivinationView? = null
+    private val screen = HumanScreen(io)
 
     override fun choose(context: SelectionContext): Choice {
-        io.updateSelectionMood(moodOf(context))
+        screen.showSelectionMood(context)
         val selected = select(context.title, context.description, context.candidates()) { it.name }
         val choice = Choice(this, context, selected, "プレイヤーが選択")
         io.display(choice.toRecallView())
         return choice
     }
 
-    private fun moodOf(context: SelectionContext): SelectionMood = when (context) {
-        is SelectionContext.Attack -> SelectionMood.ATTACK
-        is SelectionContext.Divine -> SelectionMood.DIVINE
-        is SelectionContext.Guard -> SelectionMood.GUARD
-        is SelectionContext.Vote -> SelectionMood.VOTE
-    }
-
     override fun onReceive(event: GameEvent) {
-        io.display(event.toRecallView())
-        gameNote.post(event)
-        val current = gameNote.playerStatusSummary()
-        if (current != lastPlayerStatus) {
-            lastPlayerStatus = current
-            io.updatePlayerStatusPanel(current)
-        }
-        val currentDivination = gameNote.divinationSummary()
-        if (currentDivination != lastDivinationSummary) {
-            lastDivinationSummary = currentDivination
-            io.updateDivinationPanel(currentDivination)
-        }
-        atmosphereOf(event)?.let { io.updateAtmosphere(it) }
-        epilogueMoodOf(event)?.let { io.updateEpilogueMood(it) }
-    }
-
-    private fun atmosphereOf(event: GameEvent): Atmosphere? = when (event) {
-        is GameEvent.TimeChanged -> when (event.timeOfDay) {
-            TimeOfDay.Morning -> Atmosphere.MORNING
-            is TimeOfDay.Night -> Atmosphere.NIGHT
-        }
-        is GameEvent.DiscussionStarted -> Atmosphere.DAY
-        is GameEvent.VoteStarted -> Atmosphere.VOTE
-        else -> null
-    }
-
-    private fun epilogueMoodOf(event: GameEvent): EpilogueMood? {
-        if (event !is GameEvent.GameResult) return null
-        return when (event.winnerSide) {
-            Side.CITIZEN -> if (event.isWinner) EpilogueMood.CITIZEN_WIN else EpilogueMood.CITIZEN_LOSE
-            Side.WEREWOLF -> if (event.isWinner) EpilogueMood.WEREWOLF_WIN else EpilogueMood.WEREWOLF_LOSE
-        }
+        screen.show(event)
     }
 
     override fun feelUrge(context: DiscussionContext) = SpeakingUrge(this, context, Eagerness.DEFAULT, "")
