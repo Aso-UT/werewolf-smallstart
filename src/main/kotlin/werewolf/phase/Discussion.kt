@@ -30,7 +30,7 @@ abstract class Discussion<R : Notifiable>(
         sendDiscussionStarted()
         val history = SpeakingHistory()
         while (!reachedTotalLimit(history)) {
-            val contexts = nextContexts(history)
+            val contexts = eligibleSpeakerContexts(history)
             if (contexts.isEmpty()) return
             val speaker = mostEager(contexts)
             val context = contexts.getValue(speaker)
@@ -43,22 +43,21 @@ abstract class Discussion<R : Notifiable>(
     private fun reachedTotalLimit(history: SpeakingHistory): Boolean =
         history.totalCount >= speakers.size * AVERAGE_STATEMENTS_PER_SPEAKER
 
-    // 発言できる人と、その人が次に発言する場合のコンテキスト
-    private fun nextContexts(history: SpeakingHistory): Map<Player, DiscussionContext> =
-        speakers.filter { canSpeak(it, history) }.associateWith { buildContext(roundOf(it, history)) }
+    private fun eligibleSpeakerContexts(history: SpeakingHistory): Map<Player, DiscussionContext> =
+        speakers.filter { canSpeak(it, history) }.associateWith { buildContext(history.nextRoundOf(it)) }
 
-    // 発言回数の上限に達しておらず、直前の発言者でもない
     private fun canSpeak(player: Player, history: SpeakingHistory): Boolean =
-        history.countOf(player) < MAX_STATEMENTS_PER_SPEAKER && history.lastSpeaker !== player
+        !reachedPersonalLimit(player, history) && !history.isLastSpeaker(player)
 
-    // そのプレイヤーにとって何回目の発言か
-    private fun roundOf(player: Player, history: SpeakingHistory): Int = history.countOf(player) + 1
+    private fun reachedPersonalLimit(player: Player, history: SpeakingHistory): Boolean =
+        history.countOf(player) >= MAX_STATEMENTS_PER_SPEAKER
 
-    // 発言意欲が最も高い人。同点ならランダム
-    private fun mostEager(contexts: Map<Player, DiscussionContext>): Player {
-        val eagerness = collectEagerness(contexts)
+    private fun mostEager(contexts: Map<Player, DiscussionContext>): Player =
+        playersWithHighestEagerness(collectEagerness(contexts)).random()
+
+    private fun playersWithHighestEagerness(eagerness: Map<Player, Eagerness>): Set<Player> {
         val highest = eagerness.values.max()
-        return eagerness.filterValues { it == highest }.keys.random()
+        return eagerness.filterValues { it == highest }.keys
     }
 
     private fun collectEagerness(contexts: Map<Player, DiscussionContext>): Map<Player, Eagerness> = runBlocking {
@@ -68,9 +67,7 @@ abstract class Discussion<R : Notifiable>(
     }
 
     companion object {
-        // 一人がひとつの議論で発言できる最大回数
         private const val MAX_STATEMENTS_PER_SPEAKER = 4
-        // 総発言回数が「発言者数×この値」に達したら議論を打ち切る
         private const val AVERAGE_STATEMENTS_PER_SPEAKER = 3
     }
 }
