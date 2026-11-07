@@ -32,7 +32,7 @@ abstract class Discussion<R : Notifiable>(
         while (!reachedTotalLimit(history)) {
             val contexts = eligibleSpeakerContexts(history)
             if (contexts.isEmpty()) return
-            val speaker = mostEager(contexts)
+            val speaker = nextSpeaker(contexts)
             val context = contexts.getValue(speaker)
             val statement = speaker.discuss(context)
             sendStatement(context.round, speaker.name, statement, recipients)
@@ -51,6 +51,9 @@ abstract class Discussion<R : Notifiable>(
 
     private fun reachedPersonalLimit(player: Player, history: SpeakingHistory): Boolean =
         history.countOf(player) >= MAX_STATEMENTS_PER_SPEAKER
+
+    private fun nextSpeaker(contexts: Map<Player, DiscussionContext>): Player =
+        contexts.keys.singleOrNull() ?: mostEager(contexts)
 
     private fun mostEager(contexts: Map<Player, DiscussionContext>): Player =
         playersWithHighestEagerness(collectEagerness(contexts)).random()
