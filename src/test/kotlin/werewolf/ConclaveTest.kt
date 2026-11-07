@@ -13,12 +13,15 @@ class ConclaveTest {
         role: Role,
         name: String,
         private val statements: List<String>,
+        private val eagerness: Int = 0,
         private val receivesExecutionEvent: Boolean = false,
     ) : NothingPlayer(role, name) {
         private val _log = mutableListOf<String>()
         val log: List<String> get() = _log
         var receivedStartedDay: Int? = null
         private var statementIndex = 0
+
+        override fun eagerness(context: DiscussionContext) = Eagerness(eagerness)
 
         override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
             val statement = statements[statementIndex++]
@@ -36,11 +39,6 @@ class ConclaveTest {
         }
     }
 
-    private fun fixedOrderConclave(oracle: Oracle, playerManager: PlayerManager) =
-        object : Conclave(oracle, playerManager, 1) {
-            override fun speakingOrder(speakers: List<Player>) = speakers
-        }
-
     @Test
     fun `werewolves receive conclave started notification`() {
         val wolf1 = ScriptedPlayer(Role.WEREWOLF, "Wolf1", listOf("a", "b", "c"))
@@ -48,7 +46,7 @@ class ConclaveTest {
         val villager = NothingPlayer(Role.VILLAGER, "Villager")
         val setup = TestLodge(wolf1 to Role.WEREWOLF, wolf2 to Role.WEREWOLF, villager to Role.VILLAGER).create()
 
-        fixedOrderConclave(setup.oracle, setup.playerManager).conduct()
+        Conclave(setup.oracle, setup.playerManager, 1).conduct()
 
         assertEquals(1, wolf1.receivedStartedDay)
         assertEquals(1, wolf2.receivedStartedDay)
@@ -61,14 +59,14 @@ class ConclaveTest {
         val villager = NothingPlayer(Role.VILLAGER, "Villager")
         val setup = TestLodge(wolf1 to Role.WEREWOLF, wolf2 to Role.WEREWOLF, villager to Role.VILLAGER).create()
 
-        fixedOrderConclave(setup.oracle, setup.playerManager).conduct()
+        Conclave(setup.oracle, setup.playerManager, 1).conduct()
 
         // villager の discuss・onReceive が呼ばれた場合は NothingPlayer がエラーを投げる
     }
 
     @Test
     fun `dead werewolf listens but does not speak`() {
-        val wolf1 = ScriptedPlayer(Role.WEREWOLF, "Wolf1", listOf("r1a", "r2a", "r3a"), receivesExecutionEvent = true)
+        val wolf1 = ScriptedPlayer(Role.WEREWOLF, "Wolf1", listOf("r1a", "r2a", "r3a"), eagerness = 1, receivesExecutionEvent = true)
         val wolf2 = ScriptedPlayer(Role.WEREWOLF, "Wolf2", listOf("r1g", "r2g", "r3g"), receivesExecutionEvent = true)
         val wolf3 = ScriptedPlayer(Role.WEREWOLF, "Wolf3", emptyList(), receivesExecutionEvent = true)
         val v1 = ReceivingPlayer(Role.VILLAGER, "V1")
@@ -80,7 +78,7 @@ class ConclaveTest {
         ).create()
         setup.playerManager.execute(wolf3)
 
-        fixedOrderConclave(setup.oracle, setup.playerManager).conduct()
+        Conclave(setup.oracle, setup.playerManager, 1).conduct()
 
         assertEquals(listOf(
             "Wolf3:heard:Wolf1:r1a", "Wolf3:heard:Wolf2:r1g",
@@ -94,7 +92,7 @@ class ConclaveTest {
         val wolf1 = ScriptedPlayer(Role.WEREWOLF, "Wolf1", emptyList())
         val setup = TestLodge(wolf1 to Role.WEREWOLF).create()
 
-        fixedOrderConclave(setup.oracle, setup.playerManager).conduct()
+        Conclave(setup.oracle, setup.playerManager, 1).conduct()
 
         assertEquals(emptyList(), wolf1.log)
         assertNull(wolf1.receivedStartedDay)
@@ -102,11 +100,11 @@ class ConclaveTest {
 
     @Test
     fun `statements are delivered to all wolves in round order`() {
-        val wolf1 = ScriptedPlayer(Role.WEREWOLF, "Wolf1", listOf("r1a", "r2a", "r3a"))
+        val wolf1 = ScriptedPlayer(Role.WEREWOLF, "Wolf1", listOf("r1a", "r2a", "r3a"), eagerness = 1)
         val wolf2 = ScriptedPlayer(Role.WEREWOLF, "Wolf2", listOf("r1b", "r2b", "r3b"))
         val setup = TestLodge(wolf1 to Role.WEREWOLF, wolf2 to Role.WEREWOLF).create()
 
-        fixedOrderConclave(setup.oracle, setup.playerManager).conduct()
+        Conclave(setup.oracle, setup.playerManager, 1).conduct()
 
         assertEquals(listOf(
             "Wolf1:said:r1a",
