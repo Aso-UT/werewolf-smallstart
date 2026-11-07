@@ -5,6 +5,7 @@ import werewolf.game.ChronicleView
 import werewolf.game.Claim
 import werewolf.game.DiscussionContext
 import werewolf.game.DivineResult
+import werewolf.game.Eagerness
 import werewolf.game.FallbackChoice
 import werewolf.game.FallbackClaim
 import werewolf.game.GameEvent
@@ -16,6 +17,7 @@ import werewolf.game.RecallView
 import werewolf.game.ReportEligibility
 import werewolf.game.Role
 import werewolf.game.SelectionContext
+import werewolf.game.SpeakingUrge
 import werewolf.game.Statement
 import werewolf.game.StatementType
 import werewolf.game.selectableTypes
@@ -38,6 +40,8 @@ class AiPlayer(
     override fun onReceive(event: GameEvent) {
         _myMemories.add(event)
     }
+
+    override fun feelUrge(context: DiscussionContext) = SpeakingUrge(this, context, Eagerness.DEFAULT, "")
 
     override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
         val instruction = statementFormat.buildInstruction(context, claimableRoles, reportEligibility)

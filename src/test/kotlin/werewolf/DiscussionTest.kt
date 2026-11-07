@@ -22,7 +22,7 @@ class DiscussionTest {
         var receivedStartedDay: Int? = null
         private var statementIndex = 0
 
-        override fun eagerness(context: DiscussionContext) = eagernessOf(context)
+        override fun feelUrge(context: DiscussionContext) = SpeakingUrge(this, context, eagernessOf(context), "")
 
         override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
             val statement = statements[statementIndex++]
