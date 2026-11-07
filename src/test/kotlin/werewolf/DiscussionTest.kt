@@ -20,9 +20,14 @@ class DiscussionTest {
         private val _rounds = mutableListOf<Int>()
         val rounds: List<Int> get() = _rounds
         var receivedStartedDay: Int? = null
+        var urgeCount = 0
+            private set
         private var statementIndex = 0
 
-        override fun feelUrge(context: DiscussionContext) = SpeakingUrge(this, context, eagernessOf(context), "")
+        override fun feelUrge(context: DiscussionContext): SpeakingUrge {
+            urgeCount++
+            return SpeakingUrge(this, context, eagernessOf(context), "")
+        }
 
         override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
             val statement = statements[statementIndex++]
@@ -147,6 +152,19 @@ class DiscussionTest {
         OpenDiscussion(playerManager, 1).conduct()
 
         assertEquals(listOf("Alice", "Bob", "Alice", "Bob", "Alice", "Bob"), speakingOrderHeardBy(alice))
+    }
+
+    @Test
+    fun `eagerness is not asked when only one player can speak`() {
+        val alice = ScriptedPlayer(Role.VILLAGER, "Alice", listOf("1", "2", "3"), constant(1))
+        val bob = ScriptedPlayer(Role.WEREWOLF, "Bob", listOf("1", "2", "3"), constant(0))
+        val playerManager = TestLodge(alice to Role.VILLAGER, bob to Role.WEREWOLF).create().playerManager
+
+        OpenDiscussion(playerManager, 1).conduct()
+
+        // 2人では、最初の1回以外は直前の発言者でない方しか発言できない
+        assertEquals(1, alice.urgeCount)
+        assertEquals(1, bob.urgeCount)
     }
 
     @Test
