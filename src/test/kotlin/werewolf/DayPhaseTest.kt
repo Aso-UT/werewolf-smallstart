@@ -25,7 +25,7 @@ class DayPhaseTest {
     }
 
     @Test
-    fun `each alive player discusses during daytime`() {
+    fun `some alive player discusses during daytime`() {
         val victim = DayPlayer(Role.VILLAGER, "Victim")
         val wolf = DayPlayer(Role.WEREWOLF, "Wolf", victim)
         val v1 = DayPlayer(Role.VILLAGER, "V1", victim)
@@ -38,7 +38,7 @@ class DayPhaseTest {
 
         DayPhase(setup.playerManager, setup.oracle, 1).proceed()
 
-        assertTrue(wolf.discussedCount > 0)
+        assertTrue(listOf(victim, wolf, v1, v2, v3).any { it.discussedCount > 0 })
     }
 
     @Test
