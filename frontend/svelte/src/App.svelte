@@ -187,6 +187,13 @@
 
     <div class="controls">
       <button on:click={abort}>ゲームを中断</button>
+      <!-- 静観したいときに画面がずれないよう、入力欄を開かずこの行の中だけに出す -->
+      {#if input.type === 'urge'}
+        <div class="urge">
+          <span class="countdown">残り {urgeRemaining} 秒</span>
+          <button on:click={() => answerUrge(true)}>発言する</button>
+        </div>
+      {/if}
     </div>
 
     {#if input.type === 'choose'}
@@ -210,15 +217,6 @@
             placeholder="発言を入力..."
           />
           <button on:click={speak}>送信</button>
-        </div>
-      </div>
-    {:else if input.type === 'urge'}
-      <div class="input-area">
-        <p class="input-title">{input.title}</p>
-        <p class="input-description">{input.description}</p>
-        <div>
-          <button on:click={() => answerUrge(true)}>発言する</button>
-          <span class="countdown">残り {urgeRemaining} 秒</span>
         </div>
       </div>
     {/if}
@@ -367,7 +365,8 @@
   h2 { margin: 0 0 10px; font-size: 1em; color: #444; }
   .panel-section { margin: 14px 0 6px; }
   .status { color: #666; margin-bottom: 8px; }
-  .controls { margin: 8px 0; }
+  .controls { margin: 8px 0; display: flex; align-items: center; justify-content: space-between; }
+  .urge { display: flex; align-items: center; }
   .log { border: 1px solid #ccc; height: 500px; overflow-y: auto; padding: 8px; background: #fafafa; color: #333; }
   .event { margin: 4px 0; line-height: 1.4; }
   .title { font-weight: bold; color: #444; }
@@ -391,7 +390,8 @@
   .input-description { color: #666; font-size: 0.9em; margin: 0 0 10px; }
   button { margin: 4px; padding: 6px 14px; cursor: pointer; }
   input[type='text'] { width: 70%; padding: 6px; font-size: 1em; }
-  .countdown { margin-left: 8px; color: #666; }
+  .countdown { color: #666; }
+  :global(body.atmosphere-night) .countdown { color: #cdd6f0; }
 
   .panel-empty { color: #999; font-size: 0.9em; }
   .status-table { border-collapse: collapse; font-size: 0.85em; width: 100%; }
