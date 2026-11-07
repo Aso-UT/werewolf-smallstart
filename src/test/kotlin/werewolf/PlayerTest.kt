@@ -44,6 +44,18 @@ class PlayerTest {
             Claim(this, context, Statement.Plain(this, ""), claimableRoles, reportEligibility, "")
     }
 
+    private class ArbitraryUrgedPlayerSetter(
+        role: Role,
+        name: String,
+        private val playerToSet: Player,
+    ) : NothingPlayer(role, name) {
+        override fun feelUrge(context: DiscussionContext) = SpeakingUrge(playerToSet, context, Eagerness.DEFAULT, "")
+    }
+
+    private class UrgedPlayer(role: Role, name: String) : NothingPlayer(role, name) {
+        override fun feelUrge(context: DiscussionContext) = SpeakingUrge(this, context, Eagerness(3), "")
+    }
+
     private class CapturingSpeakerPlayer(role: Role, name: String) : ReceivingPlayer(role, name) {
         var receivedClaimableRoles: Set<Role>? = null
         var receivedReportEligibility: ReportEligibility? = null
@@ -92,6 +104,22 @@ class PlayerTest {
         val player = SpeakingPlayer(Role.VILLAGER, "Player")
         player.discuss(openContext(listOf(player)))
         assertTrue(player.reveal(fakeCitizenWinSignal()).any { it is Claim })
+    }
+
+    @Test
+    fun `eagerness throws when feelUrge returns an urge of another player`() {
+        val otherPlayer = NothingPlayer(Role.VILLAGER, "OtherPlayer")
+        val player = ArbitraryUrgedPlayerSetter(Role.VILLAGER, "Player", playerToSet = otherPlayer)
+        val context = openContext(listOf(player, otherPlayer))
+        assertFailsWith<IllegalArgumentException> { player.eagerness(context) }
+    }
+
+    @Test
+    fun `eagerness records speaking urge in player memories and returns its eagerness`() {
+        val player = UrgedPlayer(Role.VILLAGER, "Player")
+        val eagerness = player.eagerness(openContext(listOf(player)))
+        assertEquals(Eagerness(3), eagerness)
+        assertTrue(player.reveal(fakeCitizenWinSignal()).any { it is SpeakingUrge })
     }
 
     @Test

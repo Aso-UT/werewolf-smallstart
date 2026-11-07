@@ -31,7 +31,13 @@ abstract class Player(private val role: Role) : Notifiable {
     protected abstract fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim
 
     // 議論の発言者を選ぶために、発言のたびに全員から並列に呼ばれる
-    open fun eagerness(context: DiscussionContext): Eagerness = Eagerness.DEFAULT
+    fun eagerness(context: DiscussionContext): Eagerness {
+        val urge = feelUrge(context)
+        require(urge.player === this) { "${urge.player.name} is not the urged player" }
+        _memories.add(urge)
+        return urge.eagerness
+    }
+    protected abstract fun feelUrge(context: DiscussionContext): SpeakingUrge
 
     private fun claimableRoles(): Set<Role> {
         val alreadyRevealed = ClaimedRole(_memories).of(this) == role

@@ -21,7 +21,7 @@ class ConclaveTest {
         var receivedStartedDay: Int? = null
         private var statementIndex = 0
 
-        override fun eagerness(context: DiscussionContext) = Eagerness(eagerness)
+        override fun feelUrge(context: DiscussionContext) = SpeakingUrge(this, context, Eagerness(eagerness), "")
 
         override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
             val statement = statements[statementIndex++]

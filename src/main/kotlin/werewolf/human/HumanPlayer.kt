@@ -4,12 +4,14 @@ import werewolf.game.Choice
 import werewolf.game.Claim
 import werewolf.game.ChronicleView
 import werewolf.game.DiscussionContext
+import werewolf.game.Eagerness
 import werewolf.game.GameEvent
 import werewolf.game.Player
 import werewolf.game.ReportEligibility
 import werewolf.game.Role
 import werewolf.game.SelectionContext
 import werewolf.game.Side
+import werewolf.game.SpeakingUrge
 import werewolf.game.Statement
 import werewolf.game.StatementType
 import werewolf.game.TimeOfDay
@@ -21,6 +23,7 @@ import werewolf.view.EpilogueMood
 import werewolf.view.PlayerStatusView
 import werewolf.view.SelectionMood
 
+@Suppress("TooManyFunctions")
 class HumanPlayer(role: Role, override val name: String, private val io: HumanIO) : Player(role) {
     companion object {
         private const val COMMENT_PROMPT = "補足があれば入力してください"
@@ -79,6 +82,8 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
             Side.WEREWOLF -> if (event.isWinner) EpilogueMood.WEREWOLF_WIN else EpilogueMood.WEREWOLF_LOSE
         }
     }
+
+    override fun feelUrge(context: DiscussionContext) = SpeakingUrge(this, context, Eagerness.DEFAULT, "")
 
     override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
         val type = selectType(context, claimableRoles, reportEligibility)
