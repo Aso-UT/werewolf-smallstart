@@ -3,6 +3,7 @@ package werewolf
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import werewolf.game.DiscussionContext
+import werewolf.game.Eagerness
 import werewolf.game.Role
 import werewolf.human.HumanPlayer
 
@@ -12,12 +13,19 @@ class HumanPlayerSpeakingUrgeTest {
         override fun promptSpeakingUrge(title: String, seconds: Int): Boolean = wantsToSpeak
     }
 
-    @Test
-    fun `wanting to speak gives higher eagerness than not wanting to`() {
-        val eager = HumanPlayer(Role.VILLAGER, "Eager", UrgeAnsweringIO(wantsToSpeak = true))
-        val quiet = HumanPlayer(Role.VILLAGER, "Quiet", UrgeAnsweringIO(wantsToSpeak = false))
-        val context = DiscussionContext.Open(1, 1, listOf(eager, quiet), listOf(eager, quiet))
+    private fun eagernessOf(wantsToSpeak: Boolean): Eagerness {
+        val player = HumanPlayer(Role.VILLAGER, "Human", UrgeAnsweringIO(wantsToSpeak))
+        val context = DiscussionContext.Open(1, 1, listOf(player), listOf(player))
+        return player.eagerness(context)
+    }
 
-        assertTrue(eager.eagerness(context) > quiet.eagerness(context))
+    @Test
+    fun `wanting to speak gives higher eagerness than the default`() {
+        assertTrue(eagernessOf(wantsToSpeak = true) > Eagerness.DEFAULT)
+    }
+
+    @Test
+    fun `not wanting to speak gives lower eagerness than the default`() {
+        assertTrue(eagernessOf(wantsToSpeak = false) < Eagerness.DEFAULT)
     }
 }
