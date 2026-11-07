@@ -10,7 +10,7 @@ import werewolf.view.EpilogueMood
 import werewolf.view.PlayerStatusView
 import werewolf.view.SelectionMood
 
-class HumanScreen(private val io: HumanIO) {
+class HumanScreen(private val io: HumanDisplay) {
     private val gameNote = GameNote()
     private var lastPlayerStatus: PlayerStatusView? = null
     private var lastDivinationSummary: DivinationView? = null
