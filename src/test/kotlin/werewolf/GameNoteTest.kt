@@ -79,7 +79,7 @@ class GameNoteTest {
         val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
         InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
 
-        gameSetup.oracle.revealAllRoles(gameSetup.playerManager.allPlayers, AllPlayers(gameSetup.playerManager))
+        gameSetup.oracle.revealAllRoles(gameSetup.playerManager)
 
         assertEquals(Role.VILLAGER.displayName, knownRoleOf(io.panels.last(), "V2"))
         assertEquals(Role.WEREWOLF.displayName, knownRoleOf(io.panels.last(), "Wolf"))

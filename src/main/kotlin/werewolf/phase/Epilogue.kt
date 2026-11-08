@@ -16,15 +16,13 @@ class Epilogue(
         when (signal) {
             is GameOverSignal.Completed -> {
                 GameEvent.GameOver.send(signal.winningSide, AllPlayers(playerManager))
-                revealAllRoles()
+                oracle.revealAllRoles(playerManager)
                 playerManager.allPlayers.forEach { GameEvent.GameResult.send(signal.winningSide, oracle.isWinner(it, signal.winningSide), it) }
             }
-            is GameOverSignal.Aborted -> revealAllRoles()
+            is GameOverSignal.Aborted -> oracle.revealAllRoles(playerManager)
         }
         showRecap()
     }
-
-    private fun revealAllRoles() = oracle.revealAllRoles(playerManager.allPlayers, AllPlayers(playerManager))
 
     private fun showRecap() {
         val chronicles = GameRecap(playerManager, signal).chronicles()

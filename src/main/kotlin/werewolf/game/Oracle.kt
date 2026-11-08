@@ -6,8 +6,8 @@ class Oracle(private val roles: Map<Player, Role>) {
 
     fun revealRole(player: Player) = GameEvent.RoleAssigned.send(roleOf(player), player)
 
-    fun revealAllRoles(players: List<Player>, allPlayers: AllPlayers) =
-        GameEvent.RolesRevealed.send(players.associateWith { roleOf(it) }, allPlayers)
+    fun revealAllRoles(playerManager: PlayerManager) =
+        GameEvent.RolesRevealed.send(playerManager.allPlayers.associateWith { roleOf(it) }, AllPlayers(playerManager))
 
     fun werewolves(alivePlayers: List<Player>): List<Player> = alivePlayers.filter { roleOf(it) == Role.WEREWOLF }
 
