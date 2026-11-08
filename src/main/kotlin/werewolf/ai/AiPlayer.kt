@@ -5,9 +5,9 @@ import werewolf.game.ChronicleView
 import werewolf.game.Claim
 import werewolf.game.DiscussionContext
 import werewolf.game.DivineResult
-import werewolf.game.Eagerness
 import werewolf.game.FallbackChoice
 import werewolf.game.FallbackClaim
+import werewolf.game.FallbackSpeakingUrge
 import werewolf.game.GameEvent
 import werewolf.game.GameOverSignal
 import werewolf.game.MediumResult
@@ -31,6 +31,7 @@ class AiPlayer(
     private val roleAdvice = RoleAdvice.random(role, name)
     private val _myMemories = mutableListOf<Recallable>(instruction, roleAdvice)
     private val statementFormat = StatementFormat()
+    private val urgeFormat = UrgeFormat()
 
     init {
         memorize(instruction)
@@ -41,7 +42,25 @@ class AiPlayer(
         _myMemories.add(event)
     }
 
-    override fun feelUrge(context: DiscussionContext) = SpeakingUrge(this, context, Eagerness.DEFAULT, "")
+    override fun feelUrge(context: DiscussionContext): SpeakingUrge {
+        val instruction = urgeFormat.buildInstruction(context)
+        repeat(2) {
+            val completion = prompt(instruction)
+            try {
+                val parsed = urgeFormat.parse(completion.text, context)
+                // 発言のたびにたまって入力が膨らみ、AIも解釈しにくいため記憶には入れない
+                return SpeakingUrge(
+                    this, context, parsed.eagerness,
+                    intentForRecall = parsed.intent,
+                    intentForChronicle = withMetadata(parsed.intent, completion.metadata),
+                )
+            } catch (_: InvalidAiInputException) {
+                // AI応答が不正な形式のため、記録して次のイテレーションでリトライする
+                memorize(InvalidAiInput(this, completion.text, completion.metadata))
+            }
+        }
+        return FallbackSpeakingUrge(this, context)
+    }
 
     override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
         val instruction = statementFormat.buildInstruction(context, claimableRoles, reportEligibility)
@@ -186,6 +205,12 @@ class AiPlayer(
 ・議論：発言したい度合いが最も高い人が発言します。同じ人が続けて発言することはできず、一人が発言できるのは最大4回までです。発言の合計が生存者数×3回に達すると議論は終わります
 ・発言者名は別途表示されるため、発言内で自分の名前を名乗る必要はありません
 ・投票：投票先は他のプレイヤーに開示されません。最多票のプレイヤーが処刑されます
+
+【ローカルルール：対抗COの期限】
+・ある役職のCOが出た場合、対抗COは最初のCOに続いてすぐさま行ってください。間に他の人の発言を挟んだ対抗COは認められません。
+・対抗COが複数人から続けて出た場合（例：占い師CO → 占い師CO → 占い師CO）は、どれも有効な対抗COです。
+・すぐさま対抗COが出なければ、最初にCOした者を真として扱ってください。
+・誰が真の役職者かを論理的に判断しやすくするため、このルールを設けています。
 
 【ローカルルール：積極的な発言の推奨】
 ・この村では積極的・論理的であることが正義です。誰かを疑う言葉は議論を盛り上げるため歓迎されます。

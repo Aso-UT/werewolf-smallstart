@@ -4,10 +4,12 @@ package werewolf.game
 data class Eagerness(val value: Int) : Comparable<Eagerness> {
     override fun compareTo(other: Eagerness) = value.compareTo(other.value)
 
-    // 具体的な値はAIの発言意欲のスケール（#310）が決まってから合わせる
+    // AIは1〜4の4段階から選ぶ（段階の意味はUrgeFormatを参照）
     companion object {
-        val HIGH = Eagerness(1)
-        val DEFAULT = Eagerness(0)
-        val LOW = Eagerness(-1)
+        // 対抗COに間に合うよう、最上位の段階と同じにする
+        val HIGH = Eagerness(4)
+        val DEFAULT = Eagerness(2)
+        // 発言を望まない人は、AIのどの段階よりも後に回す
+        val LOW = Eagerness(0)
     }
 }
