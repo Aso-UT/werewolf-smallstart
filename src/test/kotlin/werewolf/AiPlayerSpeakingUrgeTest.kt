@@ -23,9 +23,9 @@ class AiPlayerSpeakingUrgeTest {
 
     @Test
     fun `counter claim level is the same as a human wanting to speak`() {
-        val lm = FakeLanguageModel("対抗COするため：4")
-        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())
-        assertEquals(Eagerness.HIGH, villager.eagerness(openContext(listOf(villager))))
+        val lm = FakeLanguageModel("占い師COしたZoeに対抗COするため：4")
+        val madman = AiPlayer(Role.MADMAN, "Madman", lm, testInstruction("Madman"))
+        assertEquals(Eagerness.HIGH, madman.eagerness(openContext(listOf(madman))))
     }
 
     @Test
@@ -52,10 +52,18 @@ class AiPlayerSpeakingUrgeTest {
     }
 
     @Test
-    fun `eagerness prompt lists counter claim level in open discussion`() {
-        val lm = FakeLanguageModel("理由：2")
+    fun `counter claim level cannot be chosen by a player who cannot claim any role`() {
+        val lm = FakeLanguageModel("占い師COしたZoeに対抗COするため：4", "Zoeの占い結果に意見したいため：2")
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())
-        villager.eagerness(openContext(listOf(villager)))
+        assertEquals(Eagerness(2), villager.eagerness(openContext(listOf(villager))))
+        assertFalse(lm.instructions.first().contains("対抗COする（"))
+    }
+
+    @Test
+    fun `eagerness prompt lists counter claim level when the player can claim a role`() {
+        val lm = FakeLanguageModel("占い師COしたZoeに、真の占い師として対抗COするため：4")
+        val seer = AiPlayer(Role.SEER, "Seer", lm, testInstruction("Seer"))
+        seer.eagerness(openContext(listOf(seer)))
         assertContains(lm.instructions.first(), "4：対抗COする（")
     }
 

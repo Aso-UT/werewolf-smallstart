@@ -36,7 +36,7 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
         screen.show(event)
     }
 
-    override fun feelUrge(context: DiscussionContext): SpeakingUrge =
+    override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): SpeakingUrge =
         if (io.promptSpeakingUrge(context.title, URGE_SECONDS)) {
             SpeakingUrge(this, context, Eagerness.HIGH, "発言を希望")
         } else {

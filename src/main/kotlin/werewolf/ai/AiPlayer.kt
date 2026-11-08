@@ -42,12 +42,13 @@ class AiPlayer(
         _myMemories.add(event)
     }
 
-    override fun feelUrge(context: DiscussionContext): SpeakingUrge {
-        val instruction = urgeFormat.buildInstruction(context)
+    override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): SpeakingUrge {
+        val selectableTypes = context.selectableTypes(claimableRoles, reportEligibility)
+        val instruction = urgeFormat.buildInstruction(context, selectableTypes)
         repeat(2) {
             val completion = prompt(instruction)
             try {
-                val parsed = urgeFormat.parse(completion.text, context)
+                val parsed = urgeFormat.parse(completion.text, selectableTypes)
                 // 発言のたびにたまって入力が膨らみ、AIも解釈しにくいため記憶には入れない
                 return SpeakingUrge(
                     this, context, parsed.eagerness,

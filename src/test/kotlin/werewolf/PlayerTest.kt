@@ -49,11 +49,12 @@ class PlayerTest {
         name: String,
         private val playerToSet: Player,
     ) : NothingPlayer(role, name) {
-        override fun feelUrge(context: DiscussionContext) = SpeakingUrge(playerToSet, context, Eagerness.DEFAULT, "")
+        override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility) =
+            SpeakingUrge(playerToSet, context, Eagerness.DEFAULT, "")
     }
 
     private class UrgedPlayer(role: Role, name: String) : NothingPlayer(role, name) {
-        override fun feelUrge(context: DiscussionContext) = SpeakingUrge(this, context, Eagerness(3), "")
+        override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility) = SpeakingUrge(this, context, Eagerness(3), "")
     }
 
     private class CapturingSpeakerPlayer(role: Role, name: String) : ReceivingPlayer(role, name) {
