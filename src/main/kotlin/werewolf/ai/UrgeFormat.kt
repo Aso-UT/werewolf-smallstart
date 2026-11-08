@@ -8,21 +8,28 @@ data class ParsedUrge(val eagerness: Eagerness, val intent: String)
 
 class UrgeFormat {
     private enum class Level(val eagerness: Eagerness, val description: String) {
-        COUNTER_CLAIM(Eagerness.HIGH, "対抗COする（他の人の役職COに続いて、同じ役職をすぐさまCOする）") {
+        COUNTER_CLAIM(Eagerness.COUNTER_CLAIM, "対抗COする（他の人の役職COに続いて、同じ役職をすぐさまCOする）") {
             override fun isSelectable(selectableTypes: Set<StatementType>) = StatementType.ROLE_CLAIM in selectableTypes
         },
-        URGENT(Eagerness(3), "今すぐ言うべきことがある（役職CO、占い・霊媒結果の報告、自分への疑いへの反論、名指しで問われたことへの返答など）") {
+        ANNOUNCEMENT(Eagerness.ANNOUNCEMENT, "役職COや、占い・霊媒結果の報告をする") {
+            override fun isSelectable(selectableTypes: Set<StatementType>) = selectableTypes.any { it in ANNOUNCEMENT_TYPES }
+        },
+        URGENT(Eagerness.URGENT, "今すぐ言うべきことがある（自分への疑いへの反論、名指しで問われたことへの返答など）") {
             override fun isSelectable(selectableTypes: Set<StatementType>) = true
         },
-        OPINION(Eagerness.DEFAULT, "言いたい意見・質問がある") {
+        OPINION(Eagerness.OPINION, "言いたい意見・質問がある") {
             override fun isSelectable(selectableTypes: Set<StatementType>) = true
         },
-        NOTHING(Eagerness(1), "今は特に言うことがない") {
+        NOTHING(Eagerness.NOTHING, "今は特に言うことがない") {
             override fun isSelectable(selectableTypes: Set<StatementType>) = true
         },
         ;
 
         abstract fun isSelectable(selectableTypes: Set<StatementType>): Boolean
+    }
+
+    private companion object {
+        val ANNOUNCEMENT_TYPES = setOf(StatementType.ROLE_CLAIM, StatementType.DIVINATION_REPORT, StatementType.MEDIUM_REPORT)
     }
 
     fun buildInstruction(context: DiscussionContext, selectableTypes: Set<StatementType>): String {
