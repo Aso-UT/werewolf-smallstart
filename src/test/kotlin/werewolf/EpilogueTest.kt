@@ -17,9 +17,11 @@ class EpilogueTest {
     private open class WatchingPlayer(role: Role, name: String) : ReceivingPlayer(role, name) {
         var gameOver: GameEvent.GameOver? = null
         var gameResult: GameEvent.GameResult? = null
+        val received: MutableList<GameEvent> = mutableListOf()
         val watchedEvents: MutableList<ChronicleView> = mutableListOf()
 
         override fun onReceive(event: GameEvent) {
+            received += event
             when (event) {
                 is GameEvent.GameOver -> gameOver = event
                 is GameEvent.GameResult -> gameResult = event
@@ -77,6 +79,42 @@ class EpilogueTest {
 
         assertNull(villager.gameOver)
         assertNull(villager.gameResult)
+    }
+
+    @Test
+    fun `every player receives all players' roles`() {
+        val wolf = WatchingPlayer(Role.WEREWOLF, "Wolf")
+        val villager = WatchingPlayer(Role.VILLAGER, "Villager")
+        val setup = TestLodge(wolf to Role.WEREWOLF, villager to Role.VILLAGER).create()
+
+        Epilogue(setup.playerManager, setup.oracle, fakeCitizenWinSignal()).perform()
+
+        val expected = mapOf<Player, Role>(wolf to Role.WEREWOLF, villager to Role.VILLAGER)
+        assertEquals(expected, wolf.received.filterIsInstance<GameEvent.RolesRevealed>().single().roles)
+        assertEquals(expected, villager.received.filterIsInstance<GameEvent.RolesRevealed>().single().roles)
+    }
+
+    @Test
+    fun `roles are revealed between GameOver and GameResult`() {
+        val villager = WatchingPlayer(Role.VILLAGER, "Villager")
+        val setup = TestLodge(villager to Role.VILLAGER).create()
+
+        Epilogue(setup.playerManager, setup.oracle, fakeCitizenWinSignal()).perform()
+
+        assertEquals(
+            listOf(GameEvent.GameOver::class, GameEvent.RolesRevealed::class, GameEvent.GameResult::class),
+            villager.received.map { it::class },
+        )
+    }
+
+    @Test
+    fun `roles are revealed even when game is aborted`() {
+        val villager = WatchingPlayer(Role.VILLAGER, "Villager")
+        val setup = TestLodge(villager to Role.VILLAGER).create()
+
+        Epilogue(setup.playerManager, setup.oracle, fakeAbortedSignal()).perform()
+
+        assertEquals(mapOf<Player, Role>(villager to Role.VILLAGER), villager.received.filterIsInstance<GameEvent.RolesRevealed>().single().roles)
     }
 
     @Test

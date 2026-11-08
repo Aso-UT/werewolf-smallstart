@@ -23,10 +23,10 @@ sealed class GameEvent : Recallable() {
     }
 
     @ConsistentCopyVisibility
-    data class RoleAssigned private constructor(val role: Role, private val recipient: Player) : GameEvent() {
+    data class RoleAssigned private constructor(val role: Role, val assignee: Player) : GameEvent() {
         override val title = "役職通知"
         override fun body() = "あなたの役職は「${role.displayName}」です。"
-        override val recipients: Notifiable = recipient
+        override val recipients: Notifiable = assignee
         companion object {
             fun send(role: Role, recipient: Player) = RoleAssigned(role, recipient).dispatch()
         }
@@ -154,6 +154,16 @@ sealed class GameEvent : Recallable() {
         override val recipients: Notifiable = allPlayers
         companion object {
             fun send(winnerSide: Side, allPlayers: AllPlayers) = GameOver(winnerSide, allPlayers).dispatch()
+        }
+    }
+
+    @ConsistentCopyVisibility
+    data class RolesRevealed private constructor(val roles: Map<Player, Role>, private val allPlayers: AllPlayers) : GameEvent() {
+        override val title = "役職公表"
+        override fun body() = roles.entries.joinToString("、") { (player, role) -> "${player.name}：${role.displayName}" }
+        override val recipients: Notifiable = allPlayers
+        companion object {
+            fun send(roles: Map<Player, Role>, allPlayers: AllPlayers) = RolesRevealed(roles, allPlayers).dispatch()
         }
     }
 

@@ -34,15 +34,56 @@ class GameNoteTest {
         override fun onReceive(event: GameEvent) {}
     }
 
-    private fun createGameWithHuman(io: CapturingIO, vararg others: Pair<String, Role>): GameSetup {
-        val human = HumanPlayer(Role.VILLAGER, "V1", io)
+    private fun createGameWithHuman(io: CapturingIO, vararg others: Pair<String, Role>): GameSetup =
+        createGameWithHumanAs(io, "V1" to Role.VILLAGER, *others)
+
+    private fun createGameWithHumanAs(io: CapturingIO, self: Pair<String, Role>, vararg others: Pair<String, Role>): GameSetup {
+        val (humanName, humanRole) = self
+        val human = HumanPlayer(humanRole, humanName, io)
         val otherPlayers = others.map { (name, role) -> SilentPlayer(role, name) to role }
-        return TestLodge(*otherPlayers.toTypedArray(), human to Role.VILLAGER).create()
+        return TestLodge(*otherPlayers.toTypedArray(), human to humanRole).create()
     }
 
     private fun statusOf(view: PlayerStatusView, name: String): PlayerStatus = view.players.single { it.name == name }.status
 
     private fun claimedRoleOf(view: PlayerStatusView, name: String): String? = view.players.single { it.name == name }.claimedRole
+
+    private fun knownRoleOf(view: PlayerStatusView, name: String): String? = view.players.single { it.name == name }.knownRole
+
+    @Test
+    fun `own role is known and others are unknown at game start`() {
+        val io = CapturingIO()
+        val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
+
+        InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
+
+        assertEquals(Role.VILLAGER.displayName, knownRoleOf(io.panels.last(), "V1"))
+        assertEquals(null, knownRoleOf(io.panels.last(), "V2"))
+        assertEquals(null, knownRoleOf(io.panels.last(), "Wolf"))
+    }
+
+    @Test
+    fun `werewolf ally is known to a werewolf`() {
+        val io = CapturingIO()
+        val gameSetup = createGameWithHumanAs(io, "Wolf1" to Role.WEREWOLF, "Wolf2" to Role.WEREWOLF, "V1" to Role.VILLAGER)
+
+        InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
+
+        assertEquals(Role.WEREWOLF.displayName, knownRoleOf(io.panels.last(), "Wolf2"))
+        assertEquals(null, knownRoleOf(io.panels.last(), "V1"))
+    }
+
+    @Test
+    fun `all roles are known after roles are revealed`() {
+        val io = CapturingIO()
+        val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
+        InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
+
+        gameSetup.oracle.revealAllRoles(gameSetup.playerManager.allPlayers, AllPlayers(gameSetup.playerManager))
+
+        assertEquals(Role.VILLAGER.displayName, knownRoleOf(io.panels.last(), "V2"))
+        assertEquals(Role.WEREWOLF.displayName, knownRoleOf(io.panels.last(), "Wolf"))
+    }
 
     @Test
     fun `all players appear as alive at game start`() {

@@ -106,7 +106,8 @@ private fun ReportEntry.toJson(): String =
     """{"source":${source.jsonEncode()},"targetName":${targetName.jsonEncode()},"isWerewolf":$isWerewolf}"""
 
 private fun PlayerSummary.toJson(): String =
-    """{"name":${name.jsonEncode()},"status":${status.toJson()},"claimedRole":${claimedRole?.jsonEncode() ?: "null"}}"""
+    """{"name":${name.jsonEncode()},"status":${status.toJson()},""" +
+        """"claimedRole":${claimedRole?.jsonEncode() ?: "null"},"knownRole":${knownRole?.jsonEncode() ?: "null"}}"""
 
 private fun PlayerStatus.toJson(): String = when (this) {
     PlayerStatus.ALIVE -> "\"alive\""
