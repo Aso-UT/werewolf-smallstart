@@ -5,4 +5,5 @@ import werewolf.ai.poc.PocConsoleLanguageModel
 
 class PocAiLodge(humanConnection: HumanConnection) : AiLodge(humanConnection) {
     override fun createLanguageModel(): LanguageModel = PocConsoleLanguageModel()
+    override fun createUrgeLanguageModel(): LanguageModel = PocConsoleLanguageModel()
 }

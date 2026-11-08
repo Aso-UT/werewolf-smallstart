@@ -22,7 +22,7 @@ class AiPlayerTest {
     @Test
     fun `prompt includes received events`() {
         val lm = FakeLanguageModel("発言する：[真意]")
-        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
         GameEvent.RoleAssigned.send(Role.VILLAGER, villager)
         villager.discuss(openContext())
         assertContains(lm.prompts.first(), "役職通知")
@@ -31,7 +31,7 @@ class AiPlayerTest {
     @Test
     fun `choice recorded in memories appears in next prompt`() {
         val lm = FakeLanguageModel("怪しいから：Wolf", "発言する：hello[真意]")
-        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
         val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
         villager.selectTarget(SelectionContext.Vote(villager, listOf(villager, wolf)))
         villager.discuss(openContext())
@@ -42,7 +42,7 @@ class AiPlayerTest {
     @Test
     fun `claim recorded in memories appears in next prompt`() {
         val lm = FakeLanguageModel("発言する：hello[真意内容]", "怪しいから：Wolf")
-        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
         val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
         villager.discuss(openContext())
         villager.selectTarget(SelectionContext.Vote(villager, listOf(villager, wolf)))
@@ -54,7 +54,7 @@ class AiPlayerTest {
     @Test
     fun `another player's statement broadcast appears in next prompt with speaker name`() {
         val lm = FakeLanguageModel("発言する：[真意]")
-        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
         val alice = ReceivingPlayer(Role.VILLAGER, "Alice")
         val setup = TestLodge(villager to Role.VILLAGER, alice to Role.VILLAGER).create()
         val allPlayers = AllPlayers(setup.playerManager)
@@ -68,7 +68,7 @@ class AiPlayerTest {
     @Test
     fun `instruction appears in prompt`() {
         val lm = FakeLanguageModel("発言する：[真意]")
-        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, Instruction("Villager", "慎重に行動してください。"))
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, Instruction("Villager", "慎重に行動してください。"))
         villager.discuss(openContext())
         assertContains(lm.prompts.first(), "慎重に行動してください。")
     }
@@ -76,7 +76,7 @@ class AiPlayerTest {
     @Test
     fun `instruction is included in reveal`() {
         val lm = FakeLanguageModel()
-        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, Instruction("Villager", "慎重に行動してください。"))
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, Instruction("Villager", "慎重に行動してください。"))
         val memories = villager.reveal(fakeCitizenWinSignal())
         assertTrue(memories.filterIsInstance<Instruction>().any {
             (it.toChronicleView() as ChronicleView.Observation).content.contains("慎重に行動してください。")
@@ -86,7 +86,7 @@ class AiPlayerTest {
     @Test
     fun `instruction chronicle includes recipient name`() {
         val lm = FakeLanguageModel()
-        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, Instruction("Villager", "慎重に行動してください。"))
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, Instruction("Villager", "慎重に行動してください。"))
         val memories = villager.reveal(fakeCitizenWinSignal())
         assertTrue(memories.filterIsInstance<Instruction>().any {
             (it.toChronicleView() as ChronicleView.Observation).let { v ->
@@ -98,7 +98,7 @@ class AiPlayerTest {
     @Test
     fun `watchEpilogue does not call languageModel`() {
         val lm = FakeLanguageModel()
-        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
         villager.watchEpilogue(emptyList())
         assertTrue(lm.prompts.isEmpty())
     }
@@ -107,7 +107,7 @@ class AiPlayerTest {
     @Suppress("TooGenericExceptionThrown")
     fun `discuss throws GameOverSignal when languageModel throws`() {
         val lm = LanguageModel { _, _, _ -> throw Exception("API error") }
-        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, testInstruction())
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
         assertFailsWith<GameOverSignal> { villager.discuss(openContext()) }
     }
 }

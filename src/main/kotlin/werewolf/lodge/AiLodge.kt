@@ -9,12 +9,16 @@ import werewolf.game.Role
 
 abstract class AiLodge(humanConnection: HumanConnection) : Lodge(humanConnection) {
     protected abstract fun createLanguageModel(): LanguageModel
+    protected abstract fun createUrgeLanguageModel(): LanguageModel
 
     override fun assignments(): List<Pair<Player, Role>> {
         val roles = ROLES.shuffled()
         val personalities = AiPersonalities.list.shuffled()
         val aiPlayers = roles.drop(1).mapIndexed { i, role ->
-            AiPlayer(role, AI_NAMES[i], createLanguageModel(), Instruction(AI_NAMES[i], personalities[i])) to role
+            AiPlayer(
+                role, AI_NAMES[i], createLanguageModel(), createUrgeLanguageModel(),
+                Instruction(AI_NAMES[i], personalities[i]),
+            ) to role
         }
         return listOf(createPlayer(roles[0], "Ivan") to roles[0]) + aiPlayers
     }

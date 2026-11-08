@@ -26,6 +26,8 @@ class AiPlayer(
     role: Role,
     override val name: String,
     private val languageModel: LanguageModel,
+    // 発言意欲は発言のたびに全員へ聞くため、安価なモデルを使えるよう分けておく
+    private val urgeLanguageModel: LanguageModel,
     instruction: Instruction,
 ) : Player(role) {
     private val roleAdvice = RoleAdvice.random(role, name)
@@ -46,7 +48,7 @@ class AiPlayer(
         val selectableTypes = context.selectableTypes(claimableRoles, reportEligibility)
         val instruction = urgeFormat.buildInstruction(context, selectableTypes)
         repeat(2) {
-            val completion = prompt(instruction)
+            val completion = prompt(urgeLanguageModel, instruction)
             try {
                 val parsed = urgeFormat.parse(completion.text, selectableTypes)
                 // 発言のたびにたまって入力が膨らみ、AIも解釈しにくいため記憶には入れない
@@ -66,7 +68,7 @@ class AiPlayer(
     override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
         val instruction = statementFormat.buildInstruction(context, claimableRoles, reportEligibility)
         repeat(2) {
-            val completion = prompt(instruction)
+            val completion = prompt(languageModel, instruction)
             try {
                 val parsed = statementFormat.parse(completion.text)
                 val type = context.selectableTypes(claimableRoles, reportEligibility).singleOrNull { it.displayName == parsed.typeLabel }
@@ -132,7 +134,7 @@ class AiPlayer(
             例：最も怪しいと思うため：${candidates.first().name}
         """.trimIndent()
         repeat(2) {
-            val completion = prompt(instruction)
+            val completion = prompt(languageModel, instruction)
             try {
                 val (target, intent) = parseChoiceResponse(completion.text, candidates)
                 val choice = Choice(
@@ -163,7 +165,7 @@ class AiPlayer(
 
     override fun watchEpilogue(chronicles: List<ChronicleView>) = Unit
 
-    private fun prompt(instruction: String): Completion {
+    private fun prompt(model: LanguageModel, instruction: String): Completion {
         val history = _myMemories.map { it.toRecallView().toHistoryEntry() }
         val instructionText = buildString {
             appendLine("【指示】")
@@ -171,7 +173,7 @@ class AiPlayer(
         }
         @Suppress("TooGenericExceptionCaught")
         return try {
-            languageModel.ask(gameDescription, history, instructionText)
+            model.ask(gameDescription, history, instructionText)
         } catch (e: Exception) {
             GameOverSignal.throwAborted(e)
         }
