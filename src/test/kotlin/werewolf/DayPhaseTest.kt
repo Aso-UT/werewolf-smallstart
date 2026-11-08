@@ -16,7 +16,7 @@ class DayPhaseTest {
         var discussedCount = 0
         val receivedEvents = mutableListOf<GameEvent>()
         override fun onReceive(event: GameEvent) { receivedEvents += event }
-        override fun feelUrge(context: DiscussionContext) = SpeakingUrge(this, context, Eagerness.DEFAULT, "")
+        override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility) = SpeakingUrge(this, context, Eagerness.DEFAULT, "")
         override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
             discussedCount++
             return Claim(this, context, Statement.Plain(this, ""), claimableRoles, reportEligibility, "")

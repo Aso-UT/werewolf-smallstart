@@ -10,6 +10,7 @@ class AnthropicLodge(
     private val effort: AnthropicEffort,
 ) : AiLodge(humanConnection) {
     override fun createLanguageModel(): LanguageModel = AnthropicLanguageModel(model, effort)
+    override fun createUrgeLanguageModel(): LanguageModel = AnthropicLanguageModel(HAIKU_MODEL, AnthropicEffort.LOW)
 
     companion object {
         const val HAIKU_MODEL = "claude-haiku-5-5"
