@@ -15,8 +15,8 @@ class DayPhase(
     override fun proceed(): Phase {
         OpenDiscussion(playerManager, nightNumber).conduct()
         GameEvent.VoteStarted.send(nightNumber, AllPlayers(playerManager))
-        val votes = playerManager.players.map { it.selectTarget(SelectionContext.Vote(it, playerManager.players)) }
-        val mostVoted = MajorityVoteResolver.resolveNonEmpty(votes)
+        val votes = playerManager.players.askInParallel { it.selectTarget(SelectionContext.Vote(it, playerManager.players)) }
+        val mostVoted = MajorityVoteResolver.resolveNonEmpty(votes.values.toList())
         playerManager.execute(mostVoted)
         return nextNight()
     }

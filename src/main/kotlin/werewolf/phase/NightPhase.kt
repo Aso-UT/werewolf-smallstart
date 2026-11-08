@@ -17,10 +17,10 @@ class NightPhase(
     override fun proceed(): Phase {
         GameEvent.TimeChanged.send(TimeOfDay.Night(nightNumber), AllPlayers(playerManager))
         Conclave(oracle, playerManager, nightNumber).conduct()
-        val decisions = playerManager.players.map { it to it.buildNightAction(playerManager.players, nightNumber == 1) }
+        val decisions = playerManager.players.askInParallel { it.buildNightAction(playerManager.players, nightNumber == 1) }
 
-        val attacks = decisions.map { it.second }.filterIsInstance<NightAction.Attack>()
-        val guards = decisions.map { it.second }.filterIsInstance<NightAction.Guard>()
+        val attacks = decisions.values.filterIsInstance<NightAction.Attack>()
+        val guards = decisions.values.filterIsInstance<NightAction.Guard>()
         attackIfNotGuarded(attacks, guards)
 
         revealNightSecrets(decisions)
@@ -32,7 +32,7 @@ class NightPhase(
         if (guards.none { it.target === target }) playerManager.kill(target)
     }
 
-    private fun revealNightSecrets(decisions: List<Pair<Player, NightAction>>) {
+    private fun revealNightSecrets(decisions: Map<Player, NightAction>) {
         decisions.forEach { (player, decision) ->
             when (decision) {
                 is NightAction.None -> Unit
