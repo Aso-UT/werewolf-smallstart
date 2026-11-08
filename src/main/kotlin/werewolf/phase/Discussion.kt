@@ -2,9 +2,6 @@ package werewolf.phase
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.runBlocking
 import werewolf.game.AllPlayers
 import werewolf.game.DiscussionContext
 import werewolf.game.Eagerness
@@ -63,11 +60,8 @@ abstract class Discussion<R : Notifiable>(
         return eagerness.filterValues { it == highest }.keys
     }
 
-    private fun collectEagerness(contexts: Map<Player, DiscussionContext>): Map<Player, Eagerness> = runBlocking {
-        contexts.map { (player, context) ->
-            async(dispatcher) { player to player.eagerness(context) }
-        }.awaitAll().toMap()
-    }
+    private fun collectEagerness(contexts: Map<Player, DiscussionContext>): Map<Player, Eagerness> =
+        contexts.keys.askInParallel(dispatcher) { it.eagerness(contexts.getValue(it)) }
 
     companion object {
         private const val MAX_STATEMENTS_PER_SPEAKER = 4
