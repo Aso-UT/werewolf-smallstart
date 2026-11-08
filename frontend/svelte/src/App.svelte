@@ -22,7 +22,7 @@
   type EpilogueMood = 'citizenWin' | 'citizenLose' | 'werewolfWin' | 'werewolfLose'
 
   type PlayerStatus = 'alive' | 'executed' | 'attacked'
-  type PlayerEntry = { name: string; status: PlayerStatus; claimedRole: string | null }
+  type PlayerEntry = { name: string; status: PlayerStatus; claimedRole: string | null; knownRole: string | null }
 
   type ReportEntry = { source: string; targetName: string; isWerewolf: boolean }
   type DivinationData = {
@@ -250,7 +250,7 @@
     {:else}
       <table class="status-table">
         <thead>
-          <tr><th>プレイヤー</th><th>状態</th><th>CO</th></tr>
+          <tr><th>プレイヤー</th><th>状態</th><th>CO</th><th>役職</th></tr>
         </thead>
         <tbody>
           {#each players as p}
@@ -258,6 +258,7 @@
               <td class="row-label">{p.name}</td>
               <td><span class="player-status">{statusLabel(p.status)}</span></td>
               <td class:co-empty={!p.claimedRole}>{p.claimedRole ?? '-'}</td>
+              <td class:co-empty={!p.knownRole}>{p.knownRole ?? '-'}</td>
             </tr>
           {/each}
         </tbody>

@@ -25,8 +25,11 @@ class WebHumanIO : HumanIO {
         abortRequested = true
     }
 
+    // 中断の要求は一度だけ投げる。中断後のエピローグでも表示は続くため、要求が残っていると再び投げてしまう
     fun checkAbort() {
-        if (abortRequested) GameOverSignal.throwManualAbort()
+        if (!abortRequested) return
+        abortRequested = false
+        GameOverSignal.throwManualAbort()
     }
 
     override fun updateDivinationPanel(view: DivinationView) {
@@ -106,7 +109,8 @@ private fun ReportEntry.toJson(): String =
     """{"source":${source.jsonEncode()},"targetName":${targetName.jsonEncode()},"isWerewolf":$isWerewolf}"""
 
 private fun PlayerSummary.toJson(): String =
-    """{"name":${name.jsonEncode()},"status":${status.toJson()},"claimedRole":${claimedRole?.jsonEncode() ?: "null"}}"""
+    """{"name":${name.jsonEncode()},"status":${status.toJson()},""" +
+        """"claimedRole":${claimedRole?.jsonEncode() ?: "null"},"knownRole":${knownRole?.jsonEncode() ?: "null"}}"""
 
 private fun PlayerStatus.toJson(): String = when (this) {
     PlayerStatus.ALIVE -> "\"alive\""
