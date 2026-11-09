@@ -9,6 +9,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration
 
 class NightPhaseTest {
 
@@ -39,7 +40,7 @@ class NightPhaseTest {
             villager1 to Role.VILLAGER, villager2 to Role.VILLAGER, villager3 to Role.VILLAGER,
         ).create()
 
-        val next = NightPhase(setup.playerManager, setup.oracle, 2).proceed()
+        val next = NightPhase(setup.playerManager, setup.oracle, 2, Duration.ZERO).proceed()
 
         assertIs<MorningPhase>(next)
         assertEquals(villager1, setup.playerManager.nightDeath)
@@ -58,7 +59,7 @@ class NightPhaseTest {
             villager to Role.VILLAGER, extra to Role.VILLAGER,
         ).create()
 
-        NightPhase(setup.playerManager, setup.oracle, 2).proceed()
+        NightPhase(setup.playerManager, setup.oracle, 2, Duration.ZERO).proceed()
 
         assertNull(setup.playerManager.nightDeath)
         assertTrue(setup.playerManager.players.contains(villager))
@@ -71,7 +72,7 @@ class NightPhaseTest {
         val villager2 = ReceivingPlayer(Role.VILLAGER, "V2")
         val setup = TestLodge(wolf to Role.WEREWOLF, villager1 to Role.VILLAGER, villager2 to Role.VILLAGER).create()
 
-        NightPhase(setup.playerManager, setup.oracle, 1).proceed()
+        NightPhase(setup.playerManager, setup.oracle, 1, Duration.ZERO).proceed()
 
         assertNull(setup.playerManager.nightDeath)
     }
@@ -87,7 +88,7 @@ class NightPhaseTest {
             villager1 to Role.VILLAGER, villager2 to Role.VILLAGER,
         ).create()
 
-        NightPhase(setup.playerManager, setup.oracle, 1).proceed()
+        NightPhase(setup.playerManager, setup.oracle, 1, Duration.ZERO).proceed()
 
         assertTrue(wolf1.heardStatements.isNotEmpty())
     }
@@ -104,7 +105,7 @@ class NightPhaseTest {
             villager1 to Role.VILLAGER, villager2 to Role.VILLAGER, villager3 to Role.VILLAGER,
         ).create()
 
-        NightPhase(setup.playerManager, setup.oracle, 2).proceed()
+        NightPhase(setup.playerManager, setup.oracle, 2, Duration.ZERO).proceed()
 
         val divined = seer.received.filterIsInstance<GameEvent.Divined>()
         assertEquals(1, divined.size)
@@ -125,7 +126,7 @@ class NightPhaseTest {
         setup.oracle.divine(seer, villager1)
         setup.oracle.divine(seer, villager2)
 
-        NightPhase(setup.playerManager, setup.oracle, 3).proceed()
+        NightPhase(setup.playerManager, setup.oracle, 3, Duration.ZERO).proceed()
 
         val divined = seer.received.filterIsInstance<GameEvent.Divined>()
         assertEquals(3, divined.size)
@@ -143,7 +144,7 @@ class NightPhaseTest {
             villager1 to Role.VILLAGER, villager2 to Role.VILLAGER,
         ).create()
 
-        NightPhase(setup.playerManager, setup.oracle, 2).proceed()
+        NightPhase(setup.playerManager, setup.oracle, 2, Duration.ZERO).proceed()
 
         assertEquals(villager1, setup.playerManager.nightDeath)
         assertFalse(setup.playerManager.players.contains(villager1))
@@ -158,7 +159,7 @@ class NightPhaseTest {
             wolf to Role.WEREWOLF, seer to Role.SEER, villager to Role.VILLAGER,
         ).create()
 
-        NightPhase(setup.playerManager, setup.oracle, 1).proceed()
+        NightPhase(setup.playerManager, setup.oracle, 1, Duration.ZERO).proceed()
 
         val divined = seer.received.filterIsInstance<GameEvent.Divined>()
         assertEquals(1, divined.size)
@@ -178,7 +179,7 @@ class NightPhaseTest {
         ).create()
         setup.playerManager.execute(villager1)
 
-        NightPhase(setup.playerManager, setup.oracle, 2).proceed()
+        NightPhase(setup.playerManager, setup.oracle, 2, Duration.ZERO).proceed()
 
         val revealed = medium.received.filterIsInstance<GameEvent.MediumRevealed>()
         assertEquals(1, revealed.size)
