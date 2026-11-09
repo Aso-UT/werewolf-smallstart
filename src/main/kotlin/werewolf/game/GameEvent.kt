@@ -84,13 +84,14 @@ sealed class GameEvent : Recallable() {
 
     @ConsistentCopyVisibility
     data class StatementMade private constructor(val round: Int, val speakerName: String, val statement: Statement, private val allPlayers: AllPlayers) : GameEvent() {
-        override val title = "発言"
+        override val title = TITLE
         override fun body() = statement.text()
         override val recipients: Notifiable = allPlayers
         override fun toRecallView(): RecallView = RecallView.AttributedObservation(title, speakerName, body())
         override fun toChronicleView(): ChronicleView =
             error("StatementMade is excluded from chronicles by GameRecap.isRedundantWithClaim")
         companion object {
+            const val TITLE = "発言"
             fun send(round: Int, speakerName: String, statement: Statement, allPlayers: AllPlayers) =
                 StatementMade(round, speakerName, statement, allPlayers).dispatch()
         }
@@ -189,13 +190,14 @@ sealed class GameEvent : Recallable() {
 
     @ConsistentCopyVisibility
     data class WerewolfStatementMade private constructor(val round: Int, val speakerName: String, val statement: String, private val wolves: Wolves) : GameEvent() {
-        override val title = "密談"
+        override val title = TITLE
         override fun body() = statement
         override val recipients: Notifiable = wolves
         override fun toRecallView(): RecallView = RecallView.AttributedObservation(title, speakerName, body())
         override fun toChronicleView(): ChronicleView =
             error("WerewolfStatementMade is excluded from chronicles by GameRecap.isRedundantWithClaim")
         companion object {
+            const val TITLE = "密談"
             fun send(round: Int, speakerName: String, statement: String, wolves: Wolves) =
                 WerewolfStatementMade(round, speakerName, statement, wolves).dispatch()
         }

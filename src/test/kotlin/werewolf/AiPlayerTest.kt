@@ -13,6 +13,7 @@ import werewolf.game.Statement
 
 import kotlin.test.Test
 import kotlin.test.assertContains
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
@@ -46,9 +47,21 @@ class AiPlayerTest {
         val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
         villager.discuss(openContext())
         villager.selectTarget(SelectionContext.Vote(villager, listOf(villager, wolf)))
-        assertContains(lm.prompts[1], "議論")
-        assertContains(lm.prompts[1], "hello")
-        assertContains(lm.prompts[1], "真意内容")
+        assertContains(lm.histories[1], "<発言> Villager（あなた）: hello　〔あなたのメモ：真意内容〕")
+    }
+
+    @Test
+    fun `own statement broadcast is not recorded twice`() {
+        val lm = FakeLanguageModel("発言する：hello[真意内容]", "怪しいから：Wolf")
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
+        val wolf = ReceivingPlayer(Role.WEREWOLF, "Wolf")
+        val setup = TestLodge(villager to Role.VILLAGER, wolf to Role.WEREWOLF).create()
+
+        val statement = villager.discuss(openContext())
+        GameEvent.StatementMade.send(1, "Villager", statement, AllPlayers(setup.playerManager))
+        villager.selectTarget(SelectionContext.Vote(villager, listOf(villager, wolf)))
+
+        assertEquals(1, lm.histories[1].count { it.contains("hello") })
     }
 
     @Test
