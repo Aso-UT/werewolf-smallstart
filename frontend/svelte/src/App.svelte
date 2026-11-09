@@ -119,6 +119,11 @@
   function startGame() {
     if (ws.readyState !== WebSocket.OPEN) return
     ws.send(JSON.stringify({ type: 'start' }))
+    showLog()
+  }
+
+  // ルールを畳んでログを前に出す
+  function showLog() {
     started = true
     setTimeout(() => logEl?.scrollTo(0, logEl.scrollHeight), 0)
   }
@@ -160,6 +165,8 @@
     if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'abort' }))
     stopUrgeCountdown()
     input = { type: 'idle' }
+    // ゲームを始めずに中断したときも、ルール画面のままにせず終わる様子がわかるようにする
+    showLog()
   }
 
   function formatChronicle(c: Chronicle): string {
