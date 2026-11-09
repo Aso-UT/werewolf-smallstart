@@ -4,6 +4,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import werewolf.game.ChronicleView
 import werewolf.game.GameOverSignal
+import werewolf.game.GameRules
 import werewolf.game.RecallView
 import werewolf.human.HumanIO
 import werewolf.view.Atmosphere
@@ -20,9 +21,16 @@ class WebHumanIO : HumanIO {
     val outgoing = Channel<String>(Channel.UNLIMITED)
     val incoming = Channel<String>(Channel.UNLIMITED)
     @Volatile private var abortRequested = false
+    val rulesReading = RulesReading()
 
+    init {
+        enqueue("""{"type":"rules","text":${GameRules.description.jsonEncode()}}""")
+    }
+
+    // ルールを読んでいる間の中断も受け付けるため、読み終えるのを待っている問い合わせも進める
     fun requestAbort() {
         abortRequested = true
+        rulesReading.finish()
     }
 
     // 中断の要求は一度だけ投げる。中断後のエピローグでも表示は続くため、要求が残っていると再び投げてしまう
@@ -68,6 +76,7 @@ class WebHumanIO : HumanIO {
     }
 
     override fun promptChoice(view: ChoiceView): String {
+        rulesReading.waitUntilFinished()
         checkAbort()
         val optionsJson = view.options.joinToString(",") { it.jsonEncode() }
         enqueue("""{"type":"choose","title":${view.title.jsonEncode()},"description":${view.description.jsonEncode()},"candidates":[$optionsJson]}""")
@@ -78,6 +87,7 @@ class WebHumanIO : HumanIO {
     }
 
     override fun promptFreeText(title: String, description: String): String {
+        rulesReading.waitUntilFinished()
         checkAbort()
         enqueue("""{"type":"speak","title":${title.jsonEncode()},"description":${description.jsonEncode()}}""")
         val text = runBlocking { incoming.receive() }
@@ -86,6 +96,7 @@ class WebHumanIO : HumanIO {
     }
 
     override fun promptSpeakingUrge(title: String, seconds: Int): Boolean {
+        rulesReading.waitUntilFinished()
         checkAbort()
         val description = "発言したい場合は${seconds}秒以内に「発言する」を押してください"
         enqueue("""{"type":"urge","title":${title.jsonEncode()},"description":${description.jsonEncode()},"seconds":$seconds}""")
