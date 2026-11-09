@@ -63,6 +63,7 @@ class WebHumanConnection : HumanConnection {
                 if (frame is Frame.Text) {
                     val msg = Json.parseToJsonElement(frame.readText()).jsonObject
                     when (val type = getStringField(msg, "type", "client message")) {
+                        "start" -> webHumanIO.rulesReading.finish()
                         "abort" -> { webHumanIO.requestAbort(); webHumanIO.incoming.trySend("") }
                         "choose" -> webHumanIO.incoming.trySend(getStringField(msg, "value", "choose message"))
                         "speak" -> webHumanIO.incoming.trySend(getStringField(msg, "text", "speak message"))

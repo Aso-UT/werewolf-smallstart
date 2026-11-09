@@ -34,6 +34,8 @@
   }
 
   let status = '接続中...'
+  let rules = ''
+  let started = false
   let entries: LogEntry[] = []
   let input: InputState = { type: 'idle' }
   let atmosphere: Atmosphere | null = null
@@ -64,6 +66,9 @@
 
   function dispatch(msg: Record<string, unknown>) {
     switch (msg.type) {
+      case 'rules':
+        rules = msg.text as string
+        break
       case 'observation':
         push({ type: 'observation', title: msg.title as string, body: msg.body as string })
         break
@@ -108,6 +113,13 @@
 
   function push(entry: LogEntry) {
     entries = [...entries, entry]
+    setTimeout(() => logEl?.scrollTo(0, logEl.scrollHeight), 0)
+  }
+
+  function startGame() {
+    if (ws.readyState !== WebSocket.OPEN) return
+    ws.send(JSON.stringify({ type: 'start' }))
+    started = true
     setTimeout(() => logEl?.scrollTo(0, logEl.scrollHeight), 0)
   }
 
@@ -196,6 +208,20 @@
       {/if}
     </div>
 
+    <!-- ルールを読み終えるまでログを出さず、始めた後は畳んでいつでも開き直せるようにする -->
+    {#if !started}
+      <section class="rules-intro">
+        <h2>ルール</h2>
+        <pre class="rules-text">{rules}</pre>
+        <button class="start-button" on:click={startGame} disabled={!rules}>ゲームを始める</button>
+      </section>
+    {:else}
+      <details class="rules-folded">
+        <summary>ルール</summary>
+        <pre class="rules-text">{rules}</pre>
+      </details>
+    {/if}
+
     {#if input.type === 'choose'}
       <div class="input-area {selectionMood ? `mood-${selectionMood}` : ''}">
         <p class="input-title">{input.title}</p>
@@ -221,7 +247,7 @@
       </div>
     {/if}
 
-    <div class="log" bind:this={logEl}>
+    <div class="log" class:hidden={!started} bind:this={logEl}>
       {#each entries as entry}
         {#if entry.type === 'observation'}
           <div class="event"><span class="title">[{entry.title}]</span> {entry.body}</div>
@@ -369,6 +395,14 @@
   .controls { margin: 8px 0; display: flex; align-items: center; justify-content: space-between; }
   .urge { display: flex; align-items: center; }
   .log { border: 1px solid #ccc; height: 500px; overflow-y: auto; padding: 8px; background: #fafafa; color: #333; }
+  .log.hidden { display: none; }
+  .rules-intro { border: 1px solid #ccc; padding: 16px; background: #fafafa; color: #333; }
+  .rules-intro .rules-text { font-size: 1.05em; }
+  .start-button { display: block; margin: 16px auto 0; padding: 10px 32px; font-size: 1.1em; }
+  .rules-folded { margin-bottom: 8px; border: 1px solid #ccc; padding: 4px 8px; background: #fafafa; color: #333; }
+  .rules-folded summary { cursor: pointer; color: #444; }
+  .rules-folded .rules-text { max-height: 300px; overflow-y: auto; }
+  .rules-text { white-space: pre-wrap; font-family: inherit; line-height: 1.6; margin: 0; }
   .event { margin: 4px 0; line-height: 1.4; }
   .title { font-weight: bold; color: #444; }
   .intent { color: #888; font-size: 0.9em; }
