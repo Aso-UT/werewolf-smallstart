@@ -49,7 +49,7 @@ class HumanPlayerEpilogueTest {
         Epilogue(setup.playerManager, setup.oracle, fakeCitizenWinSignal()).perform()
 
         assertTrue(io.capturedChronicles.any { it is ChronicleView.Action && it.actor == "Speaker" && it.category == "議論" })
-        assertFalse(io.capturedChronicles.any { it is ChronicleView.Observation && it.category == "発言" })
+        assertFalse(io.capturedChronicles.any { it is ChronicleView.Observation && it.category == "議論" })
     }
 
     @Test

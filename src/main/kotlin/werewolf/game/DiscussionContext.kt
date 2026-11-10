@@ -15,7 +15,7 @@ sealed class DiscussionContext {
         override val players: List<Player>,
         override val allPlayers: List<Player>,
     ) : DiscussionContext() {
-        override val title = "議論"
+        override val title = GameEvent.StatementMade.TITLE
         override val description = "全プレイヤーに向けた議論です。"
         override val availableTypes = StatementType.entries.toSet()
     }
@@ -26,7 +26,7 @@ sealed class DiscussionContext {
         override val players: List<Player>,
         override val allPlayers: List<Player>,
     ) : DiscussionContext() {
-        override val title = "密談"
+        override val title = GameEvent.WerewolfStatementMade.TITLE
         override val description = "この会話は人狼にしか聞こえません。"
         override val availableTypes = setOf(StatementType.PLAIN)
     }

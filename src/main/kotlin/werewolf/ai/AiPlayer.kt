@@ -42,7 +42,14 @@ class AiPlayer(
     }
 
     override fun onReceive(event: GameEvent) {
+        if (isRedundantWithOwnClaim(event)) return
         _myMemories.add(event)
+    }
+
+    private fun isRedundantWithOwnClaim(event: GameEvent): Boolean = when (event) {
+        is GameEvent.StatementMade -> event.speakerName == name
+        is GameEvent.WerewolfStatementMade -> event.speakerName == name
+        else -> false
     }
 
     override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): SpeakingUrge {
@@ -167,7 +174,7 @@ class AiPlayer(
     override fun watchEpilogue(chronicles: List<ChronicleView>) = Unit
 
     private fun prompt(model: LanguageModel, instruction: String): Completion {
-        val history = _myMemories.map { it.toRecallView().toHistoryEntry() }
+        val history = _myMemories.map { toHistoryEntry(it.toRecallView()) }
         val instructionText = buildString {
             appendLine("【指示】")
             append(instruction)
@@ -186,14 +193,15 @@ class AiPlayer(
     private val gameDescription = buildString {
         appendLine("あなたはプレイヤー${name}です。あなたの役職はゲームの流れの「役職通知」をご確認ください。")
         appendLine("ゲームの流れの冒頭にある指示に従って行動してください。")
+        appendLine("ゲームの流れのうち〔あなたのメモ：…〕は、あなたが行動したときに書いた理由で、あなたにしか見えません。")
         append(GameRules.description)
     }
-}
 
-// Uses <> to avoid collision with AI response delimiters (: and [])
-private fun RecallView.toHistoryEntry(): String = when (this) {
-    is RecallView.Observation -> "<$category> $content"
-    is RecallView.AttributedObservation -> "<$category> $actor: $content"
-    is RecallView.SelfAction -> "<$category> $content <$intent>"
+    // Uses <> to avoid collision with AI response delimiters (: and [])
+    private fun toHistoryEntry(view: RecallView): String = when (view) {
+        is RecallView.Observation -> "<${view.category}> ${view.content}"
+        is RecallView.AttributedObservation -> "<${view.category}> ${view.actor}: ${view.content}"
+        is RecallView.SelfAction -> "<${view.category}> ${name}（あなた）: ${view.content}　〔あなたのメモ：${view.intent}〕"
+    }
 }
 
