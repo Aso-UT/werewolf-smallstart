@@ -27,7 +27,7 @@ sealed class Claim(
         }
     }
 
-    override fun toRecallView() = RecallView.SelfAction(context.statementTitle, statement.text(), intentForRecall)
+    override fun toRecallView() = RecallView.SelfAction(context.title,statement.text(), intentForRecall)
     override fun toChronicleView() = ChronicleView.Action(speaker.name, context.title, statement.text(), intentForChronicle)
 
     companion object {

@@ -91,7 +91,7 @@ sealed class GameEvent : Recallable() {
         override fun toChronicleView(): ChronicleView =
             error("StatementMade is excluded from chronicles by GameRecap.isRedundantWithClaim")
         companion object {
-            const val TITLE = "発言"
+            const val TITLE = "議論"
             fun send(round: Int, speakerName: String, statement: Statement, allPlayers: AllPlayers) =
                 StatementMade(round, speakerName, statement, allPlayers).dispatch()
         }

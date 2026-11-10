@@ -47,7 +47,7 @@ class AiPlayerTest {
         val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
         villager.discuss(openContext())
         villager.selectTarget(SelectionContext.Vote(villager, listOf(villager, wolf)))
-        assertContains(lm.histories[1], "<発言> Villager（あなた）: hello　〔あなたのメモ：真意内容〕")
+        assertContains(lm.histories[1], "<議論> Villager（あなた）: hello　〔あなたのメモ：真意内容〕")
     }
 
     @Test
