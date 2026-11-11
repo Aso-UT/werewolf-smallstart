@@ -25,7 +25,9 @@ class Epilogue(
     }
 
     private fun showRecap() {
-        val chronicles = GameRecap(playerManager, signal).chronicles()
-        playerManager.allPlayers.forEach { it.watchEpilogue(chronicles) }
+        val recap = GameRecap(playerManager, signal)
+        val chronicles = recap.chronicles()
+        val metadataTotals = recap.metadataTotals()
+        playerManager.allPlayers.forEach { it.watchEpilogue(chronicles, metadataTotals) }
     }
 }

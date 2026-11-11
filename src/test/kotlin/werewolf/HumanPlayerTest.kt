@@ -38,6 +38,7 @@ class HumanPlayerTest {
         val capturedSelectionMoods = mutableListOf<SelectionMood>()
         val capturedEpilogueMoods = mutableListOf<EpilogueMood>()
         var capturedChronicles: List<ChronicleView> = emptyList()
+        var capturedMetadataTotals: List<String> = emptyList()
 
         override fun display(view: RecallView) { displayedViews += view }
         override fun updatePlayerStatusPanel(view: PlayerStatusView) {}
@@ -50,7 +51,10 @@ class HumanPlayerTest {
             return queue.removeFirst()
         }
         override fun promptFreeText(title: String, description: String): String = freeTextAnswer
-        override fun watchEpilogue(chronicles: List<ChronicleView>) { capturedChronicles = chronicles }
+        override fun watchEpilogue(chronicles: List<ChronicleView>, metadataTotals: List<String>) {
+            capturedChronicles = chronicles
+            capturedMetadataTotals = metadataTotals
+        }
     }
 
     @Test
@@ -426,8 +430,9 @@ class HumanPlayerTest {
         val human = HumanPlayer(Role.VILLAGER, "Human", io)
         val chronicles = listOf(ChronicleView.Observation("Human", "発言", "hello"))
 
-        human.watchEpilogue(chronicles)
+        human.watchEpilogue(chronicles, listOf("集計"))
 
         assertEquals(chronicles, io.capturedChronicles)
+        assertEquals(listOf("集計"), io.capturedMetadataTotals)
     }
 }

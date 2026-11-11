@@ -12,9 +12,17 @@ import kotlin.test.assertTrue
 class GameRecapTest {
 
     private class SpeakingPlayer(role: Role, name: String) : ReceivingPlayer(role, name) {
-        override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility) = SpeakingUrge(this, context, Eagerness.DEFAULT, "")
+        override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility) =
+            SpeakingUrge(this, context, Eagerness.DEFAULT, "", UnimplementedActionMetadata)
         override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim =
-            Claim(this, context, Statement.Plain(this, "$name speaks"), claimableRoles, reportEligibility, "intent")
+            Claim(this, context, Statement.Plain(this, "$name speaks"), claimableRoles, reportEligibility, "intent", UnimplementedActionMetadata)
+    }
+
+    private class ChoosingPlayer(role: Role, name: String, vararg metadata: ActionMetadata) : ReceivingPlayer(role, name) {
+        private val metadataQueue = ArrayDeque(metadata.toList())
+        override fun choose(context: SelectionContext): Choice =
+            Choice(this, context, context.candidates().first(), "", metadataQueue.removeFirst())
+        fun chooseAll(candidates: List<Player>) = repeat(metadataQueue.size) { selectTarget(SelectionContext.Vote(this, candidates)) }
     }
 
     private fun playerManager(vararg players: Player): PlayerManager =
@@ -98,5 +106,70 @@ class GameRecapTest {
 
         val chronicles = GameRecap(setup.playerManager, anySignal()).chronicles()
         assertTrue(chronicles.any { it is ChronicleView.Action && it.category == "密談" })
+    }
+
+    @Test
+    fun `metadata totals sum actions by decision method and by player`() {
+        val p1 = ChoosingPlayer(
+            Role.VILLAGER, "P1",
+            FakeActionMetadata(decisionMethod = "A", tokens = 1),
+            FakeActionMetadata(decisionMethod = "A", tokens = 2),
+            FakeActionMetadata(decisionMethod = "B", tokens = 4),
+        )
+        val p2 = ChoosingPlayer(Role.VILLAGER, "P2", FakeActionMetadata(decisionMethod = "A", tokens = 8))
+        val pm = playerManager(p1, p2)
+        p1.chooseAll(pm.players)
+        p2.chooseAll(pm.players)
+
+        val totals = GameRecap(pm, anySignal()).metadataTotals()
+
+        assertEquals(
+            listOf(
+                "【判断方式別合計】",
+                "A 3件: tokens 11",
+                "B 1件: tokens 4",
+                "【判断方式・プレイヤー別合計】",
+                "A",
+                "  [P1] 2件: tokens 3",
+                "  [P2] 1件: tokens 8",
+                "B",
+                "  [P1] 1件: tokens 4",
+            ),
+            totals,
+        )
+    }
+
+    @Test
+    fun `metadata totals show only count when summable has no display`() {
+        val p1 = ChoosingPlayer(Role.VILLAGER, "P1", UnimplementedActionMetadata, FallbackActionMetadata, UnimplementedActionMetadata)
+        val pm = playerManager(p1, ReceivingPlayer(Role.VILLAGER, "P2"))
+        p1.chooseAll(pm.players)
+
+        val totals = GameRecap(pm, anySignal()).metadataTotals()
+
+        assertEquals(
+            listOf(
+                "【判断方式別合計】",
+                "未実装 2件",
+                "回答取得失敗 1件",
+                "【判断方式・プレイヤー別合計】",
+                "未実装",
+                "  [P1] 2件",
+                "回答取得失敗",
+                "  [P1] 1件",
+            ),
+            totals,
+        )
+    }
+
+    @Test
+    fun `metadata totals ignore events that are not player actions`() {
+        val v1 = ReceivingPlayer(Role.VILLAGER, "V1")
+        val pm = playerManager(v1)
+        GameEvent.RoleAssigned.send(Role.VILLAGER, v1)
+
+        val totals = GameRecap(pm, anySignal()).metadataTotals()
+
+        assertEquals(listOf("【判断方式別合計】", "【判断方式・プレイヤー別合計】"), totals)
     }
 }

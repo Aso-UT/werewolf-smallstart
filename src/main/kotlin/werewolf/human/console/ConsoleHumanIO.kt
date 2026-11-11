@@ -70,8 +70,9 @@ class ConsoleHumanIO : HumanIO {
         }
     }
 
-    override fun watchEpilogue(chronicles: List<ChronicleView>) {
+    override fun watchEpilogue(chronicles: List<ChronicleView>, metadataTotals: List<String>) {
         sendMessage("ゲーム振り返り", chronicles.joinToString("\n") { it.formatForConsole() })
+        sendMessage("行動の付随情報の集計", metadataTotals.joinToString("\n"))
     }
 }
 

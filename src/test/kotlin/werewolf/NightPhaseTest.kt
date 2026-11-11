@@ -16,14 +16,15 @@ class NightPhaseTest {
     private class FixedTargetPlayer(
         role: Role, name: String, private val target: Player
     ) : RecordingPlayer(role, name) {
-        override fun choose(context: SelectionContext): Choice = Choice(this, context, target, "固定ターゲット")
+        override fun choose(context: SelectionContext): Choice = Choice(this, context, target, "固定ターゲット", UnimplementedActionMetadata)
     }
 
     private class ConclaveWolf(name: String) : ReceivingPlayer(Role.WEREWOLF, name) {
         val heardStatements = mutableListOf<GameEvent.WerewolfStatementMade>()
-        override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility) = SpeakingUrge(this, context, Eagerness.DEFAULT, "")
+        override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility) =
+            SpeakingUrge(this, context, Eagerness.DEFAULT, "", UnimplementedActionMetadata)
         override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim =
-            Claim(this, context, Statement.Plain(this, ""), claimableRoles, reportEligibility, "")
+            Claim(this, context, Statement.Plain(this, ""), claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
         override fun onReceive(event: GameEvent) {
             if (event is GameEvent.WerewolfStatementMade) heardStatements.add(event)
         }

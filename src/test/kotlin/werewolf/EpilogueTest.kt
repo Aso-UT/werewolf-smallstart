@@ -29,7 +29,7 @@ class EpilogueTest {
             }
         }
 
-        override fun watchEpilogue(chronicles: List<ChronicleView>) {
+        override fun watchEpilogue(chronicles: List<ChronicleView>, metadataTotals: List<String>) {
             watchedEvents.addAll(chronicles)
         }
     }

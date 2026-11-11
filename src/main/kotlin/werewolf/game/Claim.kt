@@ -7,9 +7,9 @@ sealed class Claim(
     val statement: Statement,
     claimableRoles: Set<Role>,
     reportEligibility: ReportEligibility,
-    private val intentForRecall: String,
-    private val intentForChronicle: String,
-) : Recallable() {
+    private val intent: String,
+    override val metadata: ActionMetadata,
+) : Recallable(), PlayerAction {
     init {
         require(statement.type in context.availableTypes) {
             "${statement.type} is not available in ${context.title}"
@@ -27,8 +27,8 @@ sealed class Claim(
         }
     }
 
-    override fun toRecallView() = RecallView.SelfAction(context.title,statement.text(), intentForRecall)
-    override fun toChronicleView() = ChronicleView.Action(speaker.name, context.title, statement.text(), intentForChronicle)
+    override fun toRecallView() = RecallView.SelfAction(context.title, statement.text(), intent)
+    override fun toChronicleView() = ChronicleView.Action(speaker.name, context.title, statement.text(), intentWithMetadata(intent))
 
     companion object {
         @Suppress("LongParameterList")
@@ -39,18 +39,8 @@ sealed class Claim(
             claimableRoles: Set<Role>,
             reportEligibility: ReportEligibility,
             intent: String,
-        ): Claim = NormalClaim(speaker, context, statement, claimableRoles, reportEligibility, intent, intent)
-
-        @Suppress("LongParameterList")
-        operator fun invoke(
-            speaker: Player,
-            context: DiscussionContext,
-            statement: Statement,
-            claimableRoles: Set<Role>,
-            reportEligibility: ReportEligibility,
-            intentForRecall: String,
-            intentForChronicle: String,
-        ): Claim = NormalClaim(speaker, context, statement, claimableRoles, reportEligibility, intentForRecall, intentForChronicle)
+            metadata: ActionMetadata,
+        ): Claim = NormalClaim(speaker, context, statement, claimableRoles, reportEligibility, intent, metadata)
     }
 }
 
@@ -61,12 +51,12 @@ private class NormalClaim(
     statement: Statement,
     claimableRoles: Set<Role>,
     reportEligibility: ReportEligibility,
-    intentForRecall: String,
-    intentForChronicle: String,
-) : Claim(speaker, context, statement, claimableRoles, reportEligibility, intentForRecall, intentForChronicle)
+    intent: String,
+    metadata: ActionMetadata,
+) : Claim(speaker, context, statement, claimableRoles, reportEligibility, intent, metadata)
 
 class FallbackClaim(speaker: Player, context: DiscussionContext) : Claim(
     speaker, context, Statement.Plain(speaker, ""), emptySet(), ReportEligibility.Honest(),
-    intentForRecall = "回答取得に失敗したため空文字を返却",
-    intentForChronicle = "回答取得に失敗したため空文字を返却",
+    intent = "回答取得に失敗したため空文字を返却",
+    metadata = FallbackActionMetadata,
 )

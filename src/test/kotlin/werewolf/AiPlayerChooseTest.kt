@@ -2,7 +2,6 @@ package werewolf
 
 import werewolf.ai.AiPlayer
 import werewolf.ai.InvalidAiInput
-import werewolf.ai.ModelMetadata
 import werewolf.game.ChronicleView
 import werewolf.game.Choice
 import werewolf.game.Role
@@ -78,8 +77,8 @@ class AiPlayerChooseTest {
     }
 
     @Test
-    fun `choose metadata is included in intentForChronicle but not in recall`() {
-        val lm = FakeLanguageModel("怪しいから：Wolf", "発言する：[dummy]", metadata = ModelMetadata { "model=test" })
+    fun `choose metadata is included in chronicle intent but not in recall`() {
+        val lm = FakeLanguageModel("怪しいから：Wolf", "発言する：[dummy]", metadata = FakeActionMetadata("model=test"))
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
         val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
         val context = SelectionContext.Vote(villager, listOf(villager, wolf))
@@ -105,7 +104,7 @@ class AiPlayerChooseTest {
 
     @Test
     fun `choose records InvalidAiInput with raw response when format is invalid`() {
-        val lm = FakeLanguageModel("bad response", "怪しいから：Wolf", metadata = ModelMetadata { "model=test" })
+        val lm = FakeLanguageModel("bad response", "怪しいから：Wolf", metadata = FakeActionMetadata("model=test"))
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
         val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
         val context = SelectionContext.Vote(villager, listOf(villager, wolf))

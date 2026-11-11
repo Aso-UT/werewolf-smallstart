@@ -8,6 +8,7 @@ import werewolf.game.ReportEligibility
 import werewolf.game.Role
 import werewolf.game.SelectionContext
 import werewolf.game.Statement
+import werewolf.game.UnimplementedActionMetadata
 
 class HonestCpuPlayer(role: Role, override val name: String) : CpuPlayer(role) {
     private val unspoken = mutableListOf<GameEvent>()
@@ -19,11 +20,11 @@ class HonestCpuPlayer(role: Role, override val name: String) : CpuPlayer(role) {
 
     override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
         val statement = if (unspoken.isEmpty()) Statement.Plain(this, "") else Statement.Plain(this, unspoken.removeFirst().body())
-        return Claim(this, context, statement, claimableRoles, reportEligibility, "受け取った非公開情報を順番に開示")
+        return Claim(this, context, statement, claimableRoles, reportEligibility, "受け取った非公開情報を順番に開示", UnimplementedActionMetadata)
     }
 
     override fun choose(context: SelectionContext): Choice {
         val candidates = context.candidates()
-        return Choice(this, context, candidates[selectCount++ % candidates.size], "順番通りに選択")
+        return Choice(this, context, candidates[selectCount++ % candidates.size], "順番通りに選択", UnimplementedActionMetadata)
     }
 }

@@ -27,7 +27,7 @@ class PlayerTest {
         private val speakerToSet: Player,
     ) : NothingPlayer(role, name) {
         override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim =
-            Claim(speakerToSet, context, Statement.Plain(speakerToSet, ""), claimableRoles, reportEligibility, "")
+            Claim(speakerToSet, context, Statement.Plain(speakerToSet, ""), claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
     }
 
     private class ArbitraryClaimantSetter(
@@ -36,12 +36,12 @@ class PlayerTest {
         private val claimantToSet: Player,
     ) : NothingPlayer(role, name) {
         override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim =
-            Claim(this, context, Statement.Plain(claimantToSet, ""), claimableRoles, reportEligibility, "")
+            Claim(this, context, Statement.Plain(claimantToSet, ""), claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
     }
 
     private class SpeakingPlayer(role: Role, name: String) : NothingPlayer(role, name) {
         override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim =
-            Claim(this, context, Statement.Plain(this, ""), claimableRoles, reportEligibility, "")
+            Claim(this, context, Statement.Plain(this, ""), claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
     }
 
     private class ArbitraryUrgedPlayerSetter(
@@ -50,11 +50,12 @@ class PlayerTest {
         private val playerToSet: Player,
     ) : NothingPlayer(role, name) {
         override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility) =
-            SpeakingUrge(playerToSet, context, Eagerness.DEFAULT, "")
+            SpeakingUrge(playerToSet, context, Eagerness.DEFAULT, "", UnimplementedActionMetadata)
     }
 
     private class UrgedPlayer(role: Role, name: String) : NothingPlayer(role, name) {
-        override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility) = SpeakingUrge(this, context, Eagerness(3), "")
+        override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility) =
+            SpeakingUrge(this, context, Eagerness(3), "", UnimplementedActionMetadata)
     }
 
     private class CapturingSpeakerPlayer(role: Role, name: String) : ReceivingPlayer(role, name) {
@@ -63,7 +64,7 @@ class PlayerTest {
         override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
             receivedClaimableRoles = claimableRoles
             receivedReportEligibility = reportEligibility
-            return Claim(this, context, Statement.Plain(this, ""), claimableRoles, reportEligibility, "")
+            return Claim(this, context, Statement.Plain(this, ""), claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
         }
     }
 

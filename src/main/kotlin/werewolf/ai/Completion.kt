@@ -1,3 +1,5 @@
 package werewolf.ai
 
-data class Completion(val text: String, val metadata: ModelMetadata)
+import werewolf.game.ActionMetadata
+
+data class Completion(val text: String, val metadata: ActionMetadata)

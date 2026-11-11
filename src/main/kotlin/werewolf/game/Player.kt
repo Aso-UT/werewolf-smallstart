@@ -48,7 +48,7 @@ abstract class Player(private val role: Role) : Notifiable {
         return RoleClaimPolicy.claimableRoles(role, alreadyRevealed)
     }
 
-    abstract fun watchEpilogue(chronicles: List<ChronicleView>)
+    abstract fun watchEpilogue(chronicles: List<ChronicleView>, metadataTotals: List<String>)
 
     protected fun memorize(recallable: Recallable) {
         _memories.add(recallable)

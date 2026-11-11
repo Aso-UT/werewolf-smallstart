@@ -13,6 +13,7 @@ import werewolf.game.SelectionContext
 import werewolf.game.SpeakingUrge
 import werewolf.game.Statement
 import werewolf.game.StatementType
+import werewolf.game.UnimplementedActionMetadata
 import werewolf.game.selectableTypes
 import werewolf.view.ChoiceView
 
@@ -27,7 +28,7 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
     override fun choose(context: SelectionContext): Choice {
         screen.showSelectionMood(context)
         val selected = select(context.title, context.description, context.candidates()) { it.name }
-        val choice = Choice(this, context, selected, "プレイヤーが選択")
+        val choice = Choice(this, context, selected, "プレイヤーが選択", UnimplementedActionMetadata)
         io.display(choice.toRecallView())
         return choice
     }
@@ -39,9 +40,9 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
     override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): SpeakingUrge =
         if (io.promptSpeakingUrge(context.title, URGE_SECONDS)) {
             // 対抗COに間に合うよう、最上位の意欲にする（対抗COを分けて示せるようにするのは #320）
-            SpeakingUrge(this, context, Eagerness.COUNTER_CLAIM, "発言を希望")
+            SpeakingUrge(this, context, Eagerness.COUNTER_CLAIM, "発言を希望", UnimplementedActionMetadata)
         } else {
-            SpeakingUrge(this, context, Eagerness.UNWILLING, "発言を希望せず")
+            SpeakingUrge(this, context, Eagerness.UNWILLING, "発言を希望せず", UnimplementedActionMetadata)
         }
 
     override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
@@ -52,7 +53,7 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
             StatementType.MEDIUM_REPORT -> buildMediumReport(reportEligibility)
             StatementType.ROLE_CLAIM -> buildRoleClaim(claimableRoles)
         }
-        return Claim(this, context, statement, claimableRoles, reportEligibility, "プレイヤーが発言")
+        return Claim(this, context, statement, claimableRoles, reportEligibility, "プレイヤーが発言", UnimplementedActionMetadata)
     }
 
     private fun selectType(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): StatementType {
@@ -91,7 +92,7 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
         return candidates.single { label(it) == selected }
     }
 
-    override fun watchEpilogue(chronicles: List<ChronicleView>) {
-        io.watchEpilogue(chronicles)
+    override fun watchEpilogue(chronicles: List<ChronicleView>, metadataTotals: List<String>) {
+        io.watchEpilogue(chronicles, metadataTotals)
     }
 }

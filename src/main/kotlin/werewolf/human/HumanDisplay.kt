@@ -15,5 +15,5 @@ interface HumanDisplay {
     fun updateAtmosphere(atmosphere: Atmosphere)
     fun updateSelectionMood(mood: SelectionMood)
     fun updateEpilogueMood(mood: EpilogueMood)
-    fun watchEpilogue(chronicles: List<ChronicleView>)
+    fun watchEpilogue(chronicles: List<ChronicleView>, metadataTotals: List<String>)
 }

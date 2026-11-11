@@ -62,8 +62,8 @@ class AiPlayer(
                 // 発言のたびにたまって入力が膨らみ、AIも解釈しにくいため記憶には入れない
                 return SpeakingUrge(
                     this, context, parsed.eagerness,
-                    intentForRecall = parsed.intent,
-                    intentForChronicle = withMetadata(parsed.intent, completion.metadata),
+                    intent = parsed.intent,
+                    metadata = completion.metadata,
                 )
             } catch (_: InvalidAiInputException) {
                 // AI応答が不正な形式のため、記録して次のイテレーションでリトライする
@@ -87,8 +87,8 @@ class AiPlayer(
                 }
                 val claim = Claim(
                     this, context, statement, claimableRoles, reportEligibility,
-                    intentForRecall = parsed.intent,
-                    intentForChronicle = withMetadata(parsed.intent, completion.metadata),
+                    intent = parsed.intent,
+                    metadata = completion.metadata,
                 )
                 _myMemories.add(claim)
                 return claim
@@ -147,8 +147,8 @@ class AiPlayer(
                 val (target, intent) = parseChoiceResponse(completion.text, candidates)
                 val choice = Choice(
                     this, context, target,
-                    intentForRecall = intent,
-                    intentForChronicle = withMetadata(intent, completion.metadata),
+                    intent = intent,
+                    metadata = completion.metadata,
                 )
                 _myMemories.add(choice)
                 return choice
@@ -171,7 +171,7 @@ class AiPlayer(
         return target to intent
     }
 
-    override fun watchEpilogue(chronicles: List<ChronicleView>) = Unit
+    override fun watchEpilogue(chronicles: List<ChronicleView>, metadataTotals: List<String>) = Unit
 
     private fun prompt(model: LanguageModel, instruction: String): Completion {
         val history = _myMemories.map { toHistoryEntry(it.toRecallView()) }
@@ -186,9 +186,6 @@ class AiPlayer(
             GameOverSignal.throwAborted(e)
         }
     }
-
-    private fun withMetadata(intent: String, metadata: ModelMetadata) =
-        "$intent | ${metadata.toDisplayString()}"
 
     private val gameDescription = buildString {
         appendLine("あなたはプレイヤー${name}です。あなたの役職はゲームの流れの「役職通知」をご確認ください。")

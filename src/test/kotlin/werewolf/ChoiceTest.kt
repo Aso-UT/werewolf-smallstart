@@ -15,7 +15,7 @@ class ChoiceTest {
         val outsider = NothingPlayer(Role.VILLAGER, "Outsider")
         val context = SelectionContext.Vote(chooser, listOf(chooser, selectable))
         assertFailsWith<IllegalArgumentException> {
-            Choice(chooser, context, outsider, "理由")
+            Choice(chooser, context, outsider, "理由", UnimplementedActionMetadata)
         }
     }
 
@@ -24,6 +24,6 @@ class ChoiceTest {
         val chooser = NothingPlayer(Role.VILLAGER, "Chooser")
         val selectable = NothingPlayer(Role.VILLAGER, "Selectable")
         val context = SelectionContext.Vote(chooser, listOf(chooser, selectable))
-        assertNotNull(Choice(chooser, context, selectable, "理由"))
+        assertNotNull(Choice(chooser, context, selectable, "理由", UnimplementedActionMetadata))
     }
 }

@@ -26,14 +26,14 @@ class DiscussionTest {
 
         override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): SpeakingUrge {
             urgeCount++
-            return SpeakingUrge(this, context, eagernessOf(context), "")
+            return SpeakingUrge(this, context, eagernessOf(context), "", UnimplementedActionMetadata)
         }
 
         override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
             val statement = statements[statementIndex++]
             _log.add("$name:said:$statement")
             _rounds.add(context.round)
-            return Claim(this, context, Statement.Plain(this, statement), claimableRoles, reportEligibility, "")
+            return Claim(this, context, Statement.Plain(this, statement), claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
         }
 
         override fun onReceive(event: GameEvent) {

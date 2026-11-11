@@ -20,5 +20,5 @@ open class NothingHumanIO : HumanIO {
     override fun promptChoice(view: ChoiceView): String = error("promptChoice not expected")
     override fun promptFreeText(title: String, description: String): String = error("promptFreeText not expected")
     override fun promptSpeakingUrge(title: String, seconds: Int): Boolean = error("promptSpeakingUrge not expected")
-    override fun watchEpilogue(chronicles: List<ChronicleView>) { error("watchEpilogue not expected") }
+    override fun watchEpilogue(chronicles: List<ChronicleView>, metadataTotals: List<String>) { error("watchEpilogue not expected") }
 }

@@ -105,9 +105,10 @@ class WebHumanIO : HumanIO {
         return answer.toBooleanStrict()
     }
 
-    override fun watchEpilogue(chronicles: List<ChronicleView>) {
-        val json = chronicles.joinToString(",", "[", "]") { it.toJson() }
-        enqueue("""{"type":"epilogue","chronicles":$json}""")
+    override fun watchEpilogue(chronicles: List<ChronicleView>, metadataTotals: List<String>) {
+        val chroniclesJson = chronicles.joinToString(",", "[", "]") { it.toJson() }
+        val metadataTotalsJson = metadataTotals.joinToString(",", "[", "]") { it.jsonEncode() }
+        enqueue("""{"type":"epilogue","chronicles":$chroniclesJson,"metadataTotals":$metadataTotalsJson}""")
         outgoing.close()
     }
 

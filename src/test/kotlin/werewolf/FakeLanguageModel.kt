@@ -2,11 +2,11 @@ package werewolf
 
 import werewolf.ai.Completion
 import werewolf.ai.LanguageModel
-import werewolf.ai.ModelMetadata
+import werewolf.game.ActionMetadata
 
 class FakeLanguageModel(
     vararg responses: String,
-    private val metadata: ModelMetadata = ModelMetadata { "" },
+    private val metadata: ActionMetadata = FakeActionMetadata(),
 ) : LanguageModel {
     private val responseQueue = ArrayDeque(responses.toList())
     val histories = mutableListOf<List<String>>()
