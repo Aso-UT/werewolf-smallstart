@@ -112,7 +112,7 @@ class AiPlayerTest {
     fun `watchEpilogue does not call languageModel`() {
         val lm = FakeLanguageModel()
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
-        villager.watchEpilogue(emptyList())
+        villager.watchEpilogue(emptyList(), emptyList())
         assertTrue(lm.prompts.isEmpty())
     }
 

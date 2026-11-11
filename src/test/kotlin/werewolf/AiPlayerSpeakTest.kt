@@ -2,7 +2,6 @@ package werewolf
 
 import werewolf.ai.AiPlayer
 import werewolf.ai.InvalidAiInput
-import werewolf.ai.ModelMetadata
 import werewolf.game.AllPlayers
 import werewolf.game.ChronicleView
 import werewolf.game.Claim
@@ -88,10 +87,10 @@ class AiPlayerSpeakTest {
     }
 
     @Test
-    fun `speak metadata is included in intentForChronicle but not in recall`() {
+    fun `speak metadata is included in chronicle intent but not in recall`() {
         val lm = FakeLanguageModel(
             "発言する：hello[真意内容]", "発言する：dummy[dummy]",
-            metadata = ModelMetadata { "model=test" },
+            metadata = FakeActionMetadata("model=test"),
         )
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
         villager.discuss(openContext())
@@ -241,7 +240,7 @@ class AiPlayerSpeakTest {
 
     @Test
     fun `speak records InvalidAiInput with raw response when format is invalid`() {
-        val lm = FakeLanguageModel("bad response", "[valid]", metadata = ModelMetadata { "model=test" })
+        val lm = FakeLanguageModel("bad response", "[valid]", metadata = FakeActionMetadata("model=test"))
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
         villager.discuss(openContext())
         val memories = villager.reveal(fakeCitizenWinSignal())

@@ -9,7 +9,7 @@
     | { type: 'observation'; title: string; body: string }
     | { type: 'attributedObservation'; title: string; actor: string; body: string }
     | { type: 'action'; title: string; body: string; intent: string }
-    | { type: 'epilogue'; chronicles: Chronicle[] }
+    | { type: 'epilogue'; chronicles: Chronicle[]; metadataTotals: string[] }
 
   type InputState =
     | { type: 'idle' }
@@ -79,7 +79,7 @@
         push({ type: 'action', title: msg.title as string, body: msg.body as string, intent: msg.intent as string })
         break
       case 'epilogue':
-        push({ type: 'epilogue', chronicles: msg.chronicles as Chronicle[] })
+        push({ type: 'epilogue', chronicles: msg.chronicles as Chronicle[], metadataTotals: msg.metadataTotals as string[] })
         input = { type: 'idle' }
         break
       case 'choose':
@@ -270,7 +270,7 @@
             {#if entry.intent}<br /><span class="intent">  [{entry.intent}]</span>{/if}
           </div>
         {:else if entry.type === 'epilogue'}
-          <pre class="epilogue {epilogueMood ? `mood-${epilogueMood}` : ''}">{entry.chronicles.map(formatChronicle).join('\n')}</pre>
+          <pre class="epilogue {epilogueMood ? `mood-${epilogueMood}` : ''}">{[...entry.chronicles.map(formatChronicle), '', ...entry.metadataTotals].join('\n')}</pre>
         {/if}
       {/each}
     </div>

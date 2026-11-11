@@ -8,16 +8,17 @@ import werewolf.game.ReportEligibility
 import werewolf.game.Role
 import werewolf.game.SelectionContext
 import werewolf.game.Statement
+import werewolf.game.UnimplementedActionMetadata
 
 class RollerCpuPlayer(role: Role, override val name: String) : CpuPlayer(role) {
     private var selectCount = 0
 
     override fun choose(context: SelectionContext): Choice {
         val candidates = context.candidates()
-        return Choice(this, context, candidates[selectCount++ % candidates.size], "順番通りに選択")
+        return Choice(this, context, candidates[selectCount++ % candidates.size], "順番通りに選択", UnimplementedActionMetadata)
     }
 
     override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim =
-        Claim(this, context, Statement.Plain(this, ""), claimableRoles, reportEligibility, "発言戦略なし")
+        Claim(this, context, Statement.Plain(this, ""), claimableRoles, reportEligibility, "発言戦略なし", UnimplementedActionMetadata)
     override fun onReceive(event: GameEvent) { /* does not use received events */ }
 }

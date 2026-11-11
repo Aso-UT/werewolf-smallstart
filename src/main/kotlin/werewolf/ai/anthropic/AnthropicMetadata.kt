@@ -1,7 +1,9 @@
 package werewolf.ai.anthropic
 
 import com.anthropic.models.messages.Usage
-import werewolf.ai.ModelMetadata
+import werewolf.game.ActionMetadata
+import werewolf.game.SummableMetadata
+import java.util.Locale
 
 data class CacheDiagnostics(
     val cachedItemCount: Int,
@@ -14,6 +16,7 @@ data class TokenUsage(
     val output: Long,
     val cacheCreationInput: Long,
     val cacheReadInput: Long,
+    // output の内数
     val thinking: Long,
 ) {
     constructor(usage: Usage) : this(
@@ -23,6 +26,20 @@ data class TokenUsage(
         cacheReadInput = usage.cacheReadInputTokens().orElse(0L),
         thinking = usage.outputTokensDetails().map { it.thinkingTokens() }.orElse(0L),
     )
+
+    operator fun plus(other: TokenUsage) = TokenUsage(
+        input = input + other.input,
+        output = output + other.output,
+        cacheCreationInput = cacheCreationInput + other.cacheCreationInput,
+        cacheReadInput = cacheReadInput + other.cacheReadInput,
+        thinking = thinking + other.thinking,
+    )
+
+    fun toDisplayString(): String =
+        "input ${input.grouped()} / output ${output.grouped()}（うち thinking ${thinking.grouped()}）/" +
+            " cache create ${cacheCreationInput.grouped()} / cache read ${cacheReadInput.grouped()}"
+
+    private fun Long.grouped(): String = String.format(Locale.ROOT, "%,d", this)
 }
 
 class AnthropicMetadata(
@@ -32,7 +49,7 @@ class AnthropicMetadata(
     val stopReason: String,
     val effort: AnthropicEffort,
     val thinkingSummary: String,
-) : ModelMetadata {
+) : ActionMetadata {
     override fun toDisplayString(): String {
         val elapsed = cacheDiagnostics.timeSinceLastCallMs?.let { "elapsed=${it / MS_PER_SECOND}s" } ?: "elapsed=-"
         val stats = "model=$model in=${tokenUsage.input} out=${tokenUsage.output} thinking=${tokenUsage.thinking}" +
@@ -42,6 +59,8 @@ class AnthropicMetadata(
         return if (summary.isEmpty()) stats else "$stats | 思考要約: $summary"
     }
 
+    override fun toSummable() = AnthropicSummableMetadata(model, effort, tokenUsage, count = 1)
+
     // コンソールの「[...]」表示が崩れないよう、改行などの連続する空白を1つの空白にまとめる
     private fun singleLineThinkingSummary(): String = thinkingSummary.trim().replace(WHITESPACE, " ")
 
@@ -49,4 +68,23 @@ class AnthropicMetadata(
         private const val MS_PER_SECOND = 1000
         private val WHITESPACE = Regex("\\s+")
     }
+}
+
+// effort によってトークン数が大きく変わるため、model と effort の組み合わせを判断方式とする
+data class AnthropicSummableMetadata(
+    val model: String,
+    val effort: AnthropicEffort,
+    val tokenUsage: TokenUsage,
+    override val count: Int,
+) : SummableMetadata {
+    override val decisionMethod = "Anthropic $model effort=$effort"
+
+    override fun plus(other: SummableMetadata): SummableMetadata {
+        require(other is AnthropicSummableMetadata && other.decisionMethod == decisionMethod) {
+            "Cannot sum $decisionMethod with ${other.decisionMethod}"
+        }
+        return copy(tokenUsage = tokenUsage + other.tokenUsage, count = count + other.count)
+    }
+
+    override fun toDisplayString() = tokenUsage.toDisplayString()
 }

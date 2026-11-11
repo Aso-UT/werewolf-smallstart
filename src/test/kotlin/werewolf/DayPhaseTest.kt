@@ -16,13 +16,14 @@ class DayPhaseTest {
         var discussedCount = 0
         val receivedEvents = mutableListOf<GameEvent>()
         override fun onReceive(event: GameEvent) { receivedEvents += event }
-        override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility) = SpeakingUrge(this, context, Eagerness.DEFAULT, "")
+        override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility) =
+            SpeakingUrge(this, context, Eagerness.DEFAULT, "", UnimplementedActionMetadata)
         override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
             discussedCount++
-            return Claim(this, context, Statement.Plain(this, ""), claimableRoles, reportEligibility, "")
+            return Claim(this, context, Statement.Plain(this, ""), claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
         }
         override fun choose(context: SelectionContext): Choice =
-            Choice(this, context, voteTarget?.takeIf { it in context.candidates() } ?: context.candidates().first(), "テスト用投票")
+            Choice(this, context, voteTarget?.takeIf { it in context.candidates() } ?: context.candidates().first(), "テスト用投票", UnimplementedActionMetadata)
     }
 
     @Test

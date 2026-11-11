@@ -7,5 +7,5 @@ open class NothingPlayer(role: Role, override val name: String) : Player(role) {
     override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): SpeakingUrge = error("feelUrge not expected")
     override fun onReceive(event: GameEvent) { error("onReceive not expected") }
     override fun choose(context: SelectionContext): Choice = error("choose not expected")
-    override fun watchEpilogue(chronicles: List<ChronicleView>) { error("watchEpilogue not expected") }
+    override fun watchEpilogue(chronicles: List<ChronicleView>, metadataTotals: List<String>) { error("watchEpilogue not expected") }
 }

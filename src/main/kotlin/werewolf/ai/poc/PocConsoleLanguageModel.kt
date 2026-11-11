@@ -2,7 +2,7 @@ package werewolf.ai.poc
 
 import werewolf.ai.Completion
 import werewolf.ai.LanguageModel
-import werewolf.ai.ModelMetadata
+import werewolf.game.UnimplementedActionMetadata
 
 class PocConsoleLanguageModel : LanguageModel {
     override fun ask(system: String, history: List<String>, instruction: String): Completion {
@@ -22,7 +22,7 @@ class PocConsoleLanguageModel : LanguageModel {
         println(user)
         println("=".repeat(SEPARATOR_WIDTH))
         print("回答 > ")
-        return Completion(readLine()?.trim() ?: "", ModelMetadata { "不明（コンソール経由のため）" })
+        return Completion(readLine()?.trim() ?: "", UnimplementedActionMetadata)
     }
 
     companion object {

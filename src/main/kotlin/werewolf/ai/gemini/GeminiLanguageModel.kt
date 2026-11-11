@@ -6,7 +6,6 @@ import com.google.genai.types.GenerateContentConfig
 import com.google.genai.types.Part
 import werewolf.ai.Completion
 import werewolf.ai.LanguageModel
-import werewolf.ai.ModelMetadata
 
 class GeminiLanguageModel(
     private val model: String = DEFAULT_MODEL,
@@ -38,18 +37,6 @@ class GeminiLanguageModel(
             Completion(response.text() ?: "", metadata)
         } catch (e: Exception) {
             throw GeminiApiException("Gemini API call failed: ${e.javaClass.simpleName}")
-        }
-    }
-
-    private class GeminiMetadata(
-        val model: String,
-        val promptTokenCount: Int?,
-        val candidatesTokenCount: Int?,
-    ) : ModelMetadata {
-        override fun toDisplayString() = buildString {
-            append("model=$model")
-            if (promptTokenCount != null) append(" in=$promptTokenCount")
-            if (candidatesTokenCount != null) append(" out=$candidatesTokenCount")
         }
     }
 
