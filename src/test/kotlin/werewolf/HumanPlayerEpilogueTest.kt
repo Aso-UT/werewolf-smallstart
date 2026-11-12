@@ -24,6 +24,7 @@ class HumanPlayerEpilogueTest {
         override fun updateDivinationPanel(view: DivinationView) {}
         override fun updateAtmosphere(atmosphere: Atmosphere) {}
         override fun updateEpilogueMood(mood: EpilogueMood) {}
+        override fun waitUntilReady() {}
         override fun promptFreeText(title: String, description: String): String = "human speaks"
         override fun promptChoice(view: ChoiceView): String = view.options.first()
         override fun promptSpeakingUrge(title: String, seconds: Int): Boolean = false

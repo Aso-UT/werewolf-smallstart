@@ -31,7 +31,7 @@ data class FallbackSummableMetadata(override val count: Int) : SummableMetadata 
     override fun toDisplayString() = ""
 }
 
-// 付随情報の中身をまだ作っていない判断方式（人間・CPUなど）
+// 付随情報の中身をまだ作っていない判断方式（CPUなど）
 object UnimplementedActionMetadata : ActionMetadata {
     override fun toDisplayString() = ""
     override fun toSummable() = UnimplementedSummableMetadata(count = 1)

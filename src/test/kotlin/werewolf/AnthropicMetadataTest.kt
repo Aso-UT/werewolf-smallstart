@@ -5,6 +5,7 @@ import werewolf.ai.anthropic.AnthropicMetadata
 import werewolf.ai.anthropic.AnthropicSummableMetadata
 import werewolf.ai.anthropic.CacheDiagnostics
 import werewolf.ai.anthropic.TokenUsage
+import werewolf.game.ResponseTimeStats
 import werewolf.game.UnimplementedSummableMetadata
 
 import kotlin.test.Test
@@ -12,6 +13,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 class AnthropicMetadataTest {
 
@@ -22,7 +25,15 @@ class AnthropicMetadataTest {
         stopReason = "end_turn",
         effort = AnthropicEffort.HIGH,
         thinkingSummary = thinkingSummary,
+        responseTime = 2340.milliseconds,
     )
+
+    @Test
+    fun `response time is shown in seconds`() {
+        val display = metadata("").toDisplayString()
+
+        assertTrue(display.contains(" response=2.3s "))
+    }
 
     @Test
     fun `thinking summary is appended after stats`() {
@@ -59,6 +70,7 @@ class AnthropicMetadataTest {
             model = model,
             effort = effort,
             tokenUsage = TokenUsage(input = input, output = 0, cacheCreationInput = 0, cacheReadInput = 0, thinking = 0),
+            responseTime = ResponseTimeStats(1.seconds),
             count = 1,
         )
 
@@ -71,20 +83,23 @@ class AnthropicMetadataTest {
     }
 
     @Test
-    fun `plus adds token usages and counts`() {
+    fun `plus adds token usages, response times and counts`() {
         val a = AnthropicSummableMetadata(
             "m", AnthropicEffort.HIGH,
-            TokenUsage(input = 1, output = 2, cacheCreationInput = 3, cacheReadInput = 4, thinking = 5), count = 2,
+            TokenUsage(input = 1, output = 2, cacheCreationInput = 3, cacheReadInput = 4, thinking = 5),
+            ResponseTimeStats(total = 3.seconds, max = 2.seconds), count = 2,
         )
         val b = AnthropicSummableMetadata(
             "m", AnthropicEffort.HIGH,
-            TokenUsage(input = 10, output = 20, cacheCreationInput = 30, cacheReadInput = 40, thinking = 50), count = 3,
+            TokenUsage(input = 10, output = 20, cacheCreationInput = 30, cacheReadInput = 40, thinking = 50),
+            ResponseTimeStats(total = 6.seconds, max = 4.seconds), count = 3,
         )
 
         assertEquals(
             AnthropicSummableMetadata(
                 "m", AnthropicEffort.HIGH,
-                TokenUsage(input = 11, output = 22, cacheCreationInput = 33, cacheReadInput = 44, thinking = 55), count = 5,
+                TokenUsage(input = 11, output = 22, cacheCreationInput = 33, cacheReadInput = 44, thinking = 55),
+                ResponseTimeStats(total = 9.seconds, max = 4.seconds), count = 5,
             ),
             a + b,
         )
@@ -106,14 +121,16 @@ class AnthropicMetadataTest {
     }
 
     @Test
-    fun `summable display shows tokens with thinking as part of output`() {
+    fun `summable display shows tokens with thinking as part of output, followed by response times`() {
         val summable = AnthropicSummableMetadata(
             "m", AnthropicEffort.HIGH,
-            TokenUsage(input = 12345, output = 1200, cacheCreationInput = 0, cacheReadInput = 10000, thinking = 800), count = 1,
+            TokenUsage(input = 12345, output = 1200, cacheCreationInput = 0, cacheReadInput = 10000, thinking = 800),
+            ResponseTimeStats(total = 6.seconds, max = 4.seconds), count = 2,
         )
 
         assertEquals(
-            "input 12,345 / output 1,200（うち thinking 800）/ cache create 0 / cache read 10,000",
+            "input 12,345 / output 1,200（うち thinking 800）/ cache create 0 / cache read 10,000" +
+                " / response total 6.0s / avg 3.0s / max 4.0s",
             summable.toDisplayString(),
         )
     }

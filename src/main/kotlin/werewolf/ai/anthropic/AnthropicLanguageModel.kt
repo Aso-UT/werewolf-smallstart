@@ -11,6 +11,7 @@ import com.anthropic.models.messages.TextBlockParam
 import com.anthropic.models.messages.ThinkingConfigAdaptive
 import werewolf.ai.Completion
 import werewolf.ai.LanguageModel
+import kotlin.time.measureTimedValue
 
 class AnthropicLanguageModel(
     private val model: String = DEFAULT_MODEL,
@@ -43,7 +44,7 @@ class AnthropicLanguageModel(
         // Catch broadly and swallow cause to prevent API key leakage via exception messages or URLs
         @Suppress("TooGenericExceptionCaught", "SwallowedException")
         return try {
-            val message = client.messages().create(params)
+            val (message, responseTime) = measureTimedValue { client.messages().create(params) }
             lastCallTime = System.currentTimeMillis()
             val usage = message.usage()
             val metadata = AnthropicMetadata(
@@ -53,6 +54,7 @@ class AnthropicLanguageModel(
                 stopReason = message.stopReason().map { it.asString() }.orElse("unknown"),
                 effort = effort,
                 thinkingSummary = extractThinkingSummary(message),
+                responseTime = responseTime,
             )
             val text = message.content()
                 .mapNotNull { it.text().orElse(null) }

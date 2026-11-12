@@ -46,6 +46,7 @@ class HumanPlayerTest {
         override fun updateAtmosphere(atmosphere: Atmosphere) { capturedAtmospheres += atmosphere }
         override fun updateSelectionMood(mood: SelectionMood) { capturedSelectionMoods += mood }
         override fun updateEpilogueMood(mood: EpilogueMood) { capturedEpilogueMoods += mood }
+        override fun waitUntilReady() {}
         override fun promptChoice(view: ChoiceView): String {
             promptedChoices += view
             return queue.removeFirst()

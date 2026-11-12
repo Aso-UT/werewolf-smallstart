@@ -17,6 +17,7 @@ open class NothingHumanIO : HumanIO {
     override fun updateAtmosphere(atmosphere: Atmosphere) { error("updateAtmosphere not expected") }
     override fun updateSelectionMood(mood: SelectionMood) { error("updateSelectionMood not expected") }
     override fun updateEpilogueMood(mood: EpilogueMood) { error("updateEpilogueMood not expected") }
+    override fun waitUntilReady() { error("waitUntilReady not expected") }
     override fun promptChoice(view: ChoiceView): String = error("promptChoice not expected")
     override fun promptFreeText(title: String, description: String): String = error("promptFreeText not expected")
     override fun promptSpeakingUrge(title: String, seconds: Int): Boolean = error("promptSpeakingUrge not expected")
