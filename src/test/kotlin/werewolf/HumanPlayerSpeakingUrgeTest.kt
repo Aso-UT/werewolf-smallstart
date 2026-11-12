@@ -11,6 +11,7 @@ import werewolf.human.HumanPlayer
 class HumanPlayerSpeakingUrgeTest {
 
     private class UrgeAnsweringIO(private val wantsToSpeak: Boolean) : NothingHumanIO() {
+        override fun waitUntilReady() {}
         override fun promptSpeakingUrge(title: String, seconds: Int): Boolean = wantsToSpeak
     }
 
