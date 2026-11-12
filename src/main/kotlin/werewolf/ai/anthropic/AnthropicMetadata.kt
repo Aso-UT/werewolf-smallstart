@@ -51,10 +51,10 @@ class AnthropicMetadata(
     val thinkingSummary: String,
 ) : ActionMetadata {
     override fun toDisplayString(): String {
-        val elapsed = cacheDiagnostics.timeSinceLastCallMs?.let { "elapsed=${it / MS_PER_SECOND}s" } ?: "elapsed=-"
+        val sinceLast = cacheDiagnostics.timeSinceLastCallMs?.let { "since_last=${it / MS_PER_SECOND}s" } ?: "since_last=-"
         val stats = "model=$model in=${tokenUsage.input} out=${tokenUsage.output} thinking=${tokenUsage.thinking}" +
             " cache_create=${tokenUsage.cacheCreationInput} cache_read=${tokenUsage.cacheReadInput}" +
-            " cached=${cacheDiagnostics.cachedItemCount} new=${cacheDiagnostics.newItemCount} $elapsed stop=$stopReason effort=$effort"
+            " cached=${cacheDiagnostics.cachedItemCount} new=${cacheDiagnostics.newItemCount} $sinceLast stop=$stopReason effort=$effort"
         val summary = singleLineThinkingSummary()
         return if (summary.isEmpty()) stats else "$stats | 思考要約: $summary"
     }
