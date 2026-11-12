@@ -8,6 +8,7 @@ import werewolf.game.Oracle
 import werewolf.game.PlayerManager
 import werewolf.game.Statement
 import werewolf.game.Wolves
+import kotlin.time.Duration
 
 open class Conclave(
     oracle: Oracle,
@@ -26,4 +27,5 @@ open class Conclave(
         GameEvent.WerewolfStatementMade.send(round, speakerName, statement.text(), recipients)
     override fun buildContext(round: Int) = DiscussionContext.Conclave(round, day, speakers, allPlayers)
     override fun sendDiscussionStarted() = GameEvent.ConclaveStarted.send(day, recipients)
+    override fun sendDiscussionEnded(elapsed: Duration) = GameEvent.ConclaveEnded.send(day, elapsed, recipients)
 }

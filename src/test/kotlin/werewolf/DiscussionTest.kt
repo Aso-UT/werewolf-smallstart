@@ -20,6 +20,8 @@ class DiscussionTest {
         private val _rounds = mutableListOf<Int>()
         val rounds: List<Int> get() = _rounds
         var receivedStartedDay: Int? = null
+        var receivedEndedDay: Int? = null
+        var heardCountWhenEnded: Int? = null
         var urgeCount = 0
             private set
         private var statementIndex = 0
@@ -39,6 +41,10 @@ class DiscussionTest {
         override fun onReceive(event: GameEvent) {
             when {
                 event is GameEvent.DiscussionStarted -> receivedStartedDay = event.day
+                event is GameEvent.DiscussionEnded -> {
+                    receivedEndedDay = event.day
+                    heardCountWhenEnded = _log.count { it.contains(":heard:") }
+                }
                 event is GameEvent.StatementMade -> _log.add("$name:heard:${event.speakerName}:${event.statement.text()}")
                 receivesExecutionEvent && event is GameEvent.PlayerExecuted -> {}
                 else -> error("unexpected event in discussion test: $event")
@@ -63,6 +69,19 @@ class DiscussionTest {
 
         assertEquals(1, alice.receivedStartedDay)
         assertEquals(1, bob.receivedStartedDay)
+    }
+
+    @Test
+    fun `all players receive discussion ended notification after all statements`() {
+        val alice = ScriptedPlayer(Role.VILLAGER, "Alice", listOf("a", "b", "c"), takingTurns(0))
+        val bob = ScriptedPlayer(Role.WEREWOLF, "Bob", listOf("d", "e", "f"), takingTurns(1))
+        val playerManager = TestLodge(alice to Role.VILLAGER, bob to Role.WEREWOLF).create().playerManager
+
+        OpenDiscussion(playerManager, 2).conduct()
+
+        assertEquals(2, alice.receivedEndedDay)
+        assertEquals(2, bob.receivedEndedDay)
+        assertEquals(6, alice.heardCountWhenEnded)
     }
 
     @Test
