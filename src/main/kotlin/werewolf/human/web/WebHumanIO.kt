@@ -75,8 +75,11 @@ class WebHumanIO : HumanIO {
         enqueue(view.toJson())
     }
 
-    override fun promptChoice(view: ChoiceView): String {
+    override fun waitUntilReady() {
         rulesReading.waitUntilFinished()
+    }
+
+    override fun promptChoice(view: ChoiceView): String {
         checkAbort()
         val optionsJson = view.options.joinToString(",") { it.jsonEncode() }
         enqueue("""{"type":"choose","title":${view.title.jsonEncode()},"description":${view.description.jsonEncode()},"candidates":[$optionsJson]}""")
@@ -87,7 +90,6 @@ class WebHumanIO : HumanIO {
     }
 
     override fun promptFreeText(title: String, description: String): String {
-        rulesReading.waitUntilFinished()
         checkAbort()
         enqueue("""{"type":"speak","title":${title.jsonEncode()},"description":${description.jsonEncode()}}""")
         val text = runBlocking { incoming.receive() }
@@ -96,7 +98,6 @@ class WebHumanIO : HumanIO {
     }
 
     override fun promptSpeakingUrge(title: String, seconds: Int): Boolean {
-        rulesReading.waitUntilFinished()
         checkAbort()
         val description = "発言したい場合は${seconds}秒以内に「発言する」を押してください"
         enqueue("""{"type":"urge","title":${title.jsonEncode()},"description":${description.jsonEncode()},"seconds":$seconds}""")

@@ -49,6 +49,10 @@ class ConsoleHumanIO : HumanIO {
 
     private fun readInput(): String = readLine() ?: ""
 
+    override fun waitUntilReady() {
+        // Console shows no rules screen before the game; prompts can be answered right away
+    }
+
     override fun promptFreeText(title: String, description: String): String {
         sendMessage(title, description)
         return readInput()

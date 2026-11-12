@@ -13,9 +13,9 @@ import werewolf.game.SelectionContext
 import werewolf.game.SpeakingUrge
 import werewolf.game.Statement
 import werewolf.game.StatementType
-import werewolf.game.UnimplementedActionMetadata
 import werewolf.game.selectableTypes
 import werewolf.view.ChoiceView
+import kotlin.time.measureTimedValue
 
 class HumanPlayer(role: Role, override val name: String, private val io: HumanIO) : Player(role) {
     companion object {
@@ -27,8 +27,10 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
 
     override fun choose(context: SelectionContext): Choice {
         screen.showSelectionMood(context)
-        val selected = select(context.title, context.description, context.candidates()) { it.name }
-        val choice = Choice(this, context, selected, "プレイヤーが選択", UnimplementedActionMetadata)
+        val (selected, metadata) = measured(HumanActionKind.CHOICE) {
+            select(context.title, context.description, context.candidates()) { it.name }
+        }
+        val choice = Choice(this, context, selected, "プレイヤーが選択", metadata)
         io.display(choice.toRecallView())
         return choice
     }
@@ -37,24 +39,39 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
         screen.show(event)
     }
 
-    override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): SpeakingUrge =
-        if (io.promptSpeakingUrge(context.title, URGE_SECONDS)) {
-            // 対抗COに間に合うよう、最上位の意欲にする（対抗COを分けて示せるようにするのは #320）
-            SpeakingUrge(this, context, Eagerness.COUNTER_CLAIM, "発言を希望", UnimplementedActionMetadata)
-        } else {
-            SpeakingUrge(this, context, Eagerness.UNWILLING, "発言を希望せず", UnimplementedActionMetadata)
+    override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): SpeakingUrge {
+        val (wantsToSpeak, metadata) = measured(HumanActionKind.SPEAKING_URGE) {
+            io.promptSpeakingUrge(context.title, URGE_SECONDS)
         }
+        return if (wantsToSpeak) {
+            // 対抗COに間に合うよう、最上位の意欲にする（対抗COを分けて示せるようにするのは #320）
+            SpeakingUrge(this, context, Eagerness.COUNTER_CLAIM, "発言を希望", metadata)
+        } else {
+            SpeakingUrge(this, context, Eagerness.UNWILLING, "発言を希望せず", metadata)
+        }
+    }
 
     override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
-        val type = selectType(context, claimableRoles, reportEligibility)
-        val statement = when (type) {
+        val (statement, metadata) = measured(HumanActionKind.STATEMENT) {
+            buildStatement(context, claimableRoles, reportEligibility)
+        }
+        return Claim(this, context, statement, claimableRoles, reportEligibility, "プレイヤーが発言", metadata)
+    }
+
+    // 問い合わせに答えられるようになってから、行動が決まるまでの時間を測る
+    private fun <T> measured(kind: HumanActionKind, decide: () -> T): Pair<T, HumanActionMetadata> {
+        io.waitUntilReady()
+        val (decided, responseTime) = measureTimedValue(decide)
+        return decided to HumanActionMetadata(kind, responseTime)
+    }
+
+    private fun buildStatement(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Statement =
+        when (selectType(context, claimableRoles, reportEligibility)) {
             StatementType.PLAIN -> buildPlain(context)
             StatementType.DIVINATION_REPORT -> buildDivinationReport(reportEligibility)
             StatementType.MEDIUM_REPORT -> buildMediumReport(reportEligibility)
             StatementType.ROLE_CLAIM -> buildRoleClaim(claimableRoles)
         }
-        return Claim(this, context, statement, claimableRoles, reportEligibility, "プレイヤーが発言", UnimplementedActionMetadata)
-    }
 
     private fun selectType(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): StatementType {
         val types = StatementType.entries.filter { it in context.selectableTypes(claimableRoles, reportEligibility) }
