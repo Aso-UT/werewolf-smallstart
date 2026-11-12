@@ -10,6 +10,8 @@ import werewolf.game.Notifiable
 import werewolf.game.Player
 import werewolf.game.PlayerManager
 import werewolf.game.Statement
+import kotlin.time.Duration
+import kotlin.time.measureTime
 
 abstract class Discussion<R : Notifiable>(
     protected val speakers: List<Player>,
@@ -21,10 +23,16 @@ abstract class Discussion<R : Notifiable>(
     protected abstract fun sendStatement(round: Int, speakerName: String, statement: Statement, recipients: R)
     protected abstract fun buildContext(round: Int): DiscussionContext
     protected abstract fun sendDiscussionStarted()
+    protected abstract fun sendDiscussionEnded(elapsed: Duration)
 
     fun conduct() {
         if (speakers.size <= 1) return
         sendDiscussionStarted()
+        val elapsed = measureTime { exchangeStatements() }
+        sendDiscussionEnded(elapsed)
+    }
+
+    private fun exchangeStatements() {
         val history = SpeakingHistory()
         while (!reachedTotalLimit(history)) {
             val contexts = eligibleSpeakerContexts(history)
@@ -85,4 +93,5 @@ open class OpenDiscussion(
         GameEvent.StatementMade.send(round, speakerName, statement, recipients)
     override fun buildContext(round: Int) = DiscussionContext.Open(round, day, speakers, allPlayers)
     override fun sendDiscussionStarted() = GameEvent.DiscussionStarted.send(day, recipients)
+    override fun sendDiscussionEnded(elapsed: Duration) = GameEvent.DiscussionEnded.send(day, elapsed, recipients)
 }

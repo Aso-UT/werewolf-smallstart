@@ -19,6 +19,8 @@ class ConclaveTest {
         private val _log = mutableListOf<String>()
         val log: List<String> get() = _log
         var receivedStartedDay: Int? = null
+        var receivedEndedDay: Int? = null
+        var heardCountWhenEnded: Int? = null
         private var statementIndex = 0
 
         override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility) =
@@ -33,6 +35,10 @@ class ConclaveTest {
         override fun onReceive(event: GameEvent) {
             when {
                 event is GameEvent.ConclaveStarted -> receivedStartedDay = event.day
+                event is GameEvent.ConclaveEnded -> {
+                    receivedEndedDay = event.day
+                    heardCountWhenEnded = _log.count { it.contains(":heard:") }
+                }
                 event is GameEvent.WerewolfStatementMade -> _log.add("$name:heard:${event.speakerName}:${event.statement}")
                 event is GameEvent.PlayerExecuted && receivesExecutionEvent -> {}
                 else -> error("unexpected event in conclave test: $event")
@@ -51,6 +57,20 @@ class ConclaveTest {
 
         assertEquals(1, wolf1.receivedStartedDay)
         assertEquals(1, wolf2.receivedStartedDay)
+    }
+
+    @Test
+    fun `werewolves receive conclave ended notification after all statements`() {
+        val wolf1 = ScriptedPlayer(Role.WEREWOLF, "Wolf1", listOf("a", "b", "c"), eagerness = 1)
+        val wolf2 = ScriptedPlayer(Role.WEREWOLF, "Wolf2", listOf("d", "e", "f"))
+        val villager = NothingPlayer(Role.VILLAGER, "Villager")
+        val setup = TestLodge(wolf1 to Role.WEREWOLF, wolf2 to Role.WEREWOLF, villager to Role.VILLAGER).create()
+
+        Conclave(setup.oracle, setup.playerManager, 2).conduct()
+
+        assertEquals(2, wolf1.receivedEndedDay)
+        assertEquals(2, wolf2.receivedEndedDay)
+        assertEquals(6, wolf1.heardCountWhenEnded)
     }
 
     @Test
@@ -97,6 +117,7 @@ class ConclaveTest {
 
         assertEquals(emptyList(), wolf1.log)
         assertNull(wolf1.receivedStartedDay)
+        assertNull(wolf1.receivedEndedDay)
     }
 
     @Test

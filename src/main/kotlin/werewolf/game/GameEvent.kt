@@ -1,5 +1,7 @@
 package werewolf.game
 
+import kotlin.time.Duration
+
 // Each subclass must have a private constructor and a companion send() function
 // that creates and dispatches atomically. This ensures notification targets are
 // always defined explicitly at the point of creation.
@@ -108,6 +110,16 @@ sealed class GameEvent : Recallable() {
     }
 
     @ConsistentCopyVisibility
+    data class DiscussionEnded private constructor(val day: Int, val elapsed: Duration, private val allPlayers: AllPlayers) : GameEvent() {
+        override val title = "議論終了"
+        override fun body() = "${day}日目の議論が終わりました。（${elapsed.toMinutesSecondsString()}）"
+        override val recipients: Notifiable = allPlayers
+        companion object {
+            fun send(day: Int, elapsed: Duration, allPlayers: AllPlayers) = DiscussionEnded(day, elapsed, allPlayers).dispatch()
+        }
+    }
+
+    @ConsistentCopyVisibility
     data class VoteStarted private constructor(val day: Int, private val allPlayers: AllPlayers) : GameEvent() {
         override val title = "投票開始"
         override fun body() = "${day}日目の投票が始まります。"
@@ -124,6 +136,16 @@ sealed class GameEvent : Recallable() {
         override val recipients: Notifiable = wolves
         companion object {
             fun send(day: Int, wolves: Wolves) = ConclaveStarted(day, wolves).dispatch()
+        }
+    }
+
+    @ConsistentCopyVisibility
+    data class ConclaveEnded private constructor(val day: Int, val elapsed: Duration, private val wolves: Wolves) : GameEvent() {
+        override val title = "密談終了"
+        override fun body() = "${day}日目の密談が終わりました。（${elapsed.toMinutesSecondsString()}）"
+        override val recipients: Notifiable = wolves
+        companion object {
+            fun send(day: Int, elapsed: Duration, wolves: Wolves) = ConclaveEnded(day, elapsed, wolves).dispatch()
         }
     }
 
