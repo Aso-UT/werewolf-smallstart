@@ -2,8 +2,11 @@ package werewolf.ai.anthropic
 
 import com.anthropic.models.messages.Usage
 import werewolf.game.ActionMetadata
+import werewolf.game.ResponseTimeStats
 import werewolf.game.SummableMetadata
+import werewolf.game.toSecondsString
 import java.util.Locale
+import kotlin.time.Duration
 
 data class CacheDiagnostics(
     val cachedItemCount: Int,
@@ -42,6 +45,7 @@ data class TokenUsage(
     private fun Long.grouped(): String = String.format(Locale.ROOT, "%,d", this)
 }
 
+@Suppress("LongParameterList")
 class AnthropicMetadata(
     val model: String,
     val tokenUsage: TokenUsage,
@@ -49,17 +53,19 @@ class AnthropicMetadata(
     val stopReason: String,
     val effort: AnthropicEffort,
     val thinkingSummary: String,
+    val responseTime: Duration,
 ) : ActionMetadata {
     override fun toDisplayString(): String {
         val sinceLast = cacheDiagnostics.timeSinceLastCallMs?.let { "since_last=${it / MS_PER_SECOND}s" } ?: "since_last=-"
         val stats = "model=$model in=${tokenUsage.input} out=${tokenUsage.output} thinking=${tokenUsage.thinking}" +
             " cache_create=${tokenUsage.cacheCreationInput} cache_read=${tokenUsage.cacheReadInput}" +
-            " cached=${cacheDiagnostics.cachedItemCount} new=${cacheDiagnostics.newItemCount} $sinceLast stop=$stopReason effort=$effort"
+            " cached=${cacheDiagnostics.cachedItemCount} new=${cacheDiagnostics.newItemCount} $sinceLast" +
+            " response=${responseTime.toSecondsString()} stop=$stopReason effort=$effort"
         val summary = singleLineThinkingSummary()
         return if (summary.isEmpty()) stats else "$stats | 思考要約: $summary"
     }
 
-    override fun toSummable() = AnthropicSummableMetadata(model, effort, tokenUsage, count = 1)
+    override fun toSummable() = AnthropicSummableMetadata(model, effort, tokenUsage, ResponseTimeStats(responseTime), count = 1)
 
     // コンソールの「[...]」表示が崩れないよう、改行などの連続する空白を1つの空白にまとめる
     private fun singleLineThinkingSummary(): String = thinkingSummary.trim().replace(WHITESPACE, " ")
@@ -75,6 +81,7 @@ data class AnthropicSummableMetadata(
     val model: String,
     val effort: AnthropicEffort,
     val tokenUsage: TokenUsage,
+    val responseTime: ResponseTimeStats,
     override val count: Int,
 ) : SummableMetadata {
     override val decisionMethod = "Anthropic $model effort=$effort"
@@ -83,8 +90,12 @@ data class AnthropicSummableMetadata(
         require(other is AnthropicSummableMetadata && other.decisionMethod == decisionMethod) {
             "Cannot sum $decisionMethod with ${other.decisionMethod}"
         }
-        return copy(tokenUsage = tokenUsage + other.tokenUsage, count = count + other.count)
+        return copy(
+            tokenUsage = tokenUsage + other.tokenUsage,
+            responseTime = responseTime + other.responseTime,
+            count = count + other.count,
+        )
     }
 
-    override fun toDisplayString() = tokenUsage.toDisplayString()
+    override fun toDisplayString() = "${tokenUsage.toDisplayString()} / ${responseTime.toDisplayString(count)}"
 }
