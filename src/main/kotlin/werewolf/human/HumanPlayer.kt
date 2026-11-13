@@ -38,10 +38,14 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
 
     override fun feelUrge(context: DiscussionContext, eligibility: UrgeEligibility): SpeakingUrge {
         val buttons = UrgeButton.available(eligibility)
-        val (pressed, metadata) = measured(HumanActionKind.SPEAKING_URGE) {
-            io.pressedUrgeButton(context.title, URGE_SECONDS, buttons)
-        }
+        val (pressed, metadata) = measured(HumanActionKind.SPEAKING_URGE) { pressedButton(context, buttons) }
         return pressed.press(this, context, metadata)
+    }
+
+    private fun pressedButton(context: DiscussionContext, buttons: List<UrgeButton>): UrgeButton {
+        val (hidden, shown) = buttons.partition { it.isHidden }
+        val label = io.promptSpeakingUrge(context.title, URGE_SECONDS, shown.map { it.label }, hidden.single().label)
+        return buttons.single { it.label == label }
     }
 
     override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {

@@ -45,9 +45,3 @@ sealed class UrgeButton(val label: String, val isHidden: Boolean) {
         )
     }
 }
-
-fun HumanPrompt.pressedUrgeButton(title: String, seconds: Int, buttons: List<UrgeButton>): UrgeButton {
-    val (hidden, shown) = buttons.partition { it.isHidden }
-    val label = promptSpeakingUrge(title, seconds, shown.map { it.label }, hidden.single().label)
-    return buttons.single { it.label == label }
-}
