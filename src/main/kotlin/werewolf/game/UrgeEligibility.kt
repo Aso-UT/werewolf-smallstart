@@ -1,6 +1,5 @@
 package werewolf.game
 
-// 発言意欲のうち、発言の内容が決まっている段階（対抗CO、CO・結果報告）を今選べるかを決める
 class UrgeEligibility(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility) {
     private val selectableTypes = context.selectableTypes(claimableRoles, reportEligibility)
 

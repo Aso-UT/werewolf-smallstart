@@ -32,7 +32,6 @@ private class NormalSpeakingUrge(
     metadata: ActionMetadata,
 ) : SpeakingUrge(player, context, eagerness, intent, metadata) {
     init {
-        // 対抗COの意欲は、どの役職への対抗かを持たせるため CounterClaimSpeakingUrge で作る
         require(eagerness != Eagerness.COUNTER_CLAIM) { "Use CounterClaimSpeakingUrge for counter claims" }
     }
 
