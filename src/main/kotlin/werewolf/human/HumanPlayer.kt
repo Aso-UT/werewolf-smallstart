@@ -41,15 +41,13 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
     }
 
     override fun feelUrge(context: DiscussionContext, eligibility: UrgeEligibility): SpeakingUrge {
-        val (wantsToSpeak, metadata) = measured(HumanActionKind.SPEAKING_URGE) {
-            io.promptSpeakingUrge(context.title, URGE_SECONDS)
+        val buttons = UrgeButton.available(eligibility)
+        val (pressed, metadata) = measured(HumanActionKind.SPEAKING_URGE) {
+            io.promptSpeakingUrge(context.title, URGE_SECONDS, buttons.map { it.label })
+                ?.let { label -> buttons.single { it.label == label } }
         }
-        return if (wantsToSpeak) {
-            // 対抗COに間に合うよう、最上位の意欲にする（対抗COを分けて示せるようにするのは #320）
-            SpeakingUrge(this, context, Eagerness.COUNTER_CLAIM, "発言を希望", metadata)
-        } else {
-            SpeakingUrge(this, context, Eagerness.UNWILLING, "発言を希望せず", metadata)
-        }
+        return pressed?.press(this, context, metadata)
+            ?: SpeakingUrge(this, context, Eagerness.UNWILLING, "発言を希望せず", metadata)
     }
 
     override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
