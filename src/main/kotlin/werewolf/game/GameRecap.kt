@@ -39,7 +39,7 @@ class GameRecap(private val playerManager: PlayerManager, private val signal: Ga
         playerManager.allPlayers
             .flatMap { it.reveal(signal) }
             .distinct()
-            .sortedBy { it.sequenceId }
+            .sortedBy { it.occurredAt }
 
     private fun isRedundantWithClaim(recallable: Recallable): Boolean =
         recallable is GameEvent.StatementMade || recallable is GameEvent.WerewolfStatementMade
