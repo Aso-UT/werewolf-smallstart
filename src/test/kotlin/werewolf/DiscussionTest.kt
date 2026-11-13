@@ -19,6 +19,8 @@ class DiscussionTest {
         val log: List<String> get() = _log
         private val _rounds = mutableListOf<Int>()
         val rounds: List<Int> get() = _rounds
+        private val _previousStatements = mutableListOf<String?>()
+        val previousStatements: List<String?> get() = _previousStatements
         var receivedStartedDay: Int? = null
         var receivedEndedDay: Int? = null
         var heardCountWhenEnded: Int? = null
@@ -35,6 +37,7 @@ class DiscussionTest {
             val statement = statements[statementIndex++]
             _log.add("$name:said:$statement")
             _rounds.add(context.round)
+            _previousStatements.add(context.previousStatement?.text())
             return Claim(this, context, Statement.Plain(this, statement), claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
         }
 
@@ -229,6 +232,18 @@ class DiscussionTest {
 
         assertEquals(listOf(1, 2, 3), alice.rounds)
         assertEquals(listOf(1, 2, 3), bob.rounds)
+    }
+
+    @Test
+    fun `context carries the statement made just before`() {
+        val alice = ScriptedPlayer(Role.VILLAGER, "Alice", listOf("a", "b", "c"), takingTurns(0))
+        val bob = ScriptedPlayer(Role.WEREWOLF, "Bob", listOf("d", "e", "f"), takingTurns(1))
+        val playerManager = TestLodge(alice to Role.VILLAGER, bob to Role.WEREWOLF).create().playerManager
+
+        OpenDiscussion(playerManager, 1).conduct()
+
+        assertEquals(listOf(null, "d", "e"), alice.previousStatements)
+        assertEquals(listOf("a", "b", "c"), bob.previousStatements)
     }
 
     private fun speakingOrderHeardBy(listener: ScriptedPlayer): List<String> =
