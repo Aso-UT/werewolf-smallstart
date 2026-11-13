@@ -8,9 +8,5 @@ class UrgeEligibility(context: DiscussionContext, claimableRoles: Set<Role>, rep
         ?.claimedRole
         ?.takeIf { StatementType.ROLE_CLAIM in selectableTypes && it in claimableRoles }
 
-    val canAnnounce: Boolean = selectableTypes.any { it in ANNOUNCEMENT_TYPES }
-
-    private companion object {
-        val ANNOUNCEMENT_TYPES = setOf(StatementType.ROLE_CLAIM, StatementType.DIVINATION_REPORT, StatementType.MEDIUM_REPORT)
-    }
+    val canAnnounce: Boolean = selectableTypes.any { it in Eagerness.ANNOUNCEMENT.statementTypes }
 }
