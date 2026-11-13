@@ -7,11 +7,14 @@ import werewolf.game.ChronicleView
 import werewolf.game.Claim
 import werewolf.game.DiscussionContext
 import werewolf.game.DivineResult
+import werewolf.game.Eagerness
 import werewolf.game.GameEvent
 import werewolf.game.MediumResult
 import werewolf.game.Role
 import werewolf.game.SpeakingRight
+import werewolf.game.SpeakingUrge
 import werewolf.game.Statement
+import werewolf.game.UnimplementedActionMetadata
 
 import kotlin.test.Test
 import kotlin.test.assertContains
@@ -38,6 +41,30 @@ class AiPlayerSpeakTest {
         val result = villager.discuss(openContext(), SpeakingRight.Uncontested(villager))
         assertIs<Statement.Plain>(result)
         assertEquals("", result.text())
+    }
+
+    @Test
+    fun `discuss retries a plain statement after winning with an announcement`() {
+        val lm = FakeLanguageModel("発言する：hello[真意]", "役職を開示する：占い師[真意]")
+        val madman = AiPlayer(Role.MADMAN, "Madman", lm, lm, testInstruction())
+        val context = openContext(listOf(madman))
+        val urge = SpeakingUrge(madman, context, Eagerness.ANNOUNCEMENT, "", UnimplementedActionMetadata)
+
+        val result = madman.discuss(context, SpeakingRight.Won(urge))
+
+        assertEquals(Statement.RoleClaim(madman, Role.SEER), result)
+    }
+
+    @Test
+    fun `discuss falls back to an empty statement even after winning with an announcement`() {
+        val lm = FakeLanguageModel("発言する：hello[真意]", "発言する：hello[真意]")
+        val madman = AiPlayer(Role.MADMAN, "Madman", lm, lm, testInstruction())
+        val context = openContext(listOf(madman))
+        val urge = SpeakingUrge(madman, context, Eagerness.ANNOUNCEMENT, "", UnimplementedActionMetadata)
+
+        val result = madman.discuss(context, SpeakingRight.Won(urge))
+
+        assertEquals(Statement.Plain(madman, ""), result)
     }
 
     @Test
