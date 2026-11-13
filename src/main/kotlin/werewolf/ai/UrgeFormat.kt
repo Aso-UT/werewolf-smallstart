@@ -67,13 +67,23 @@ class UrgeFormat {
 
     fun parse(input: String, eligibility: UrgeEligibility): ParsedUrge {
         val (intent, answer) = splitReason(input)
-        val (levelString, roleName) = LEVEL_PATTERN.matchEntire(answer)?.destructured
-            ?: throw InvalidAiInputException("段階の数字ではありません: $answer")
-        val level = selectableLevels(eligibility).singleOrNull { it.eagerness.value.toString() == levelString }
-            ?: throw InvalidAiInputException("選択できない段階です: $levelString")
-        val counterClaimRole = if (level == Level.COUNTER_CLAIM) counterClaimRoleOf(roleName, eligibility) else rejectRole(roleName)
-        return ParsedUrge(level.eagerness, intent, counterClaimRole)
+        val (levelNumber, roleName) = splitLevelAndRole(answer)
+        val level = selectableLevelOf(levelNumber, eligibility)
+        return ParsedUrge(level.eagerness, intent, roleOf(level, roleName, eligibility))
     }
+
+    private fun splitLevelAndRole(answer: String): Pair<String, String> {
+        val (levelNumber, roleName) = LEVEL_PATTERN.matchEntire(answer)?.destructured
+            ?: throw InvalidAiInputException("段階の数字ではありません: $answer")
+        return levelNumber to roleName
+    }
+
+    private fun selectableLevelOf(levelNumber: String, eligibility: UrgeEligibility): Level =
+        selectableLevels(eligibility).singleOrNull { it.eagerness.value.toString() == levelNumber }
+            ?: throw InvalidAiInputException("選択できない段階です: $levelNumber")
+
+    private fun roleOf(level: Level, roleName: String, eligibility: UrgeEligibility): Role? =
+        if (level == Level.COUNTER_CLAIM) counterClaimRoleOf(roleName, eligibility) else rejectRole(roleName)
 
     private fun splitReason(input: String): Pair<String, String> {
         val separatorIdx = maxOf(input.lastIndexOf("："), input.lastIndexOf(":"))
