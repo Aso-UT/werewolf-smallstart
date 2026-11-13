@@ -62,13 +62,13 @@ abstract class Discussion<R : Notifiable>(
         contexts.keys.singleOrNull()?.let { SpeakingRight.Uncontested(it) }
             ?: SpeakingRight.Won(mostEagerUrges(collectUrges(contexts)).random())
 
-    private fun mostEagerUrges(urges: Collection<SpeakingUrge>): List<SpeakingUrge> {
+    private fun mostEagerUrges(urges: List<SpeakingUrge>): List<SpeakingUrge> {
         val highest = urges.maxOf { it.eagerness }
         return urges.filter { it.eagerness == highest }
     }
 
-    private fun collectUrges(contexts: Map<Player, DiscussionContext>): Collection<SpeakingUrge> =
-        contexts.keys.askInParallel(dispatcher) { it.speakingUrge(contexts.getValue(it)) }.values
+    private fun collectUrges(contexts: Map<Player, DiscussionContext>): List<SpeakingUrge> =
+        contexts.keys.askInParallel(dispatcher) { it.speakingUrge(contexts.getValue(it)) }.values.toList()
 
     companion object {
         private const val MAX_STATEMENTS_PER_SPEAKER = 4
