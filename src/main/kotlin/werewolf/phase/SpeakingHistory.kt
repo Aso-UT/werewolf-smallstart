@@ -1,19 +1,22 @@
 package werewolf.phase
 
 import werewolf.game.Player
+import werewolf.game.Statement
 
 class SpeakingHistory {
-    private val speakers = mutableListOf<Player>()
+    private val statements = mutableListOf<Statement>()
 
-    val totalCount: Int get() = speakers.size
+    val totalCount: Int get() = statements.size
 
-    fun countOf(player: Player): Int = speakers.count { it === player }
+    val lastStatement: Statement? get() = statements.lastOrNull()
+
+    fun countOf(player: Player): Int = statements.count { it.claimant === player }
 
     fun nextRoundOf(player: Player): Int = countOf(player) + 1
 
-    fun isLastSpeaker(player: Player): Boolean = speakers.lastOrNull() === player
+    fun isLastSpeaker(player: Player): Boolean = lastStatement?.claimant === player
 
-    fun record(speaker: Player) {
-        speakers.add(speaker)
+    fun record(statement: Statement) {
+        statements.add(statement)
     }
 }

@@ -58,9 +58,12 @@ class ConsoleHumanIO : HumanIO {
         return readInput()
     }
 
-    override fun promptSpeakingUrge(title: String, seconds: Int): Boolean {
-        sendMessage(title, "発言しますか？(y/N)")
-        return readInput().trim().equals("y", ignoreCase = true)
+    // コンソールでは時間を区切れないため、番号以外の入力は発言を希望しないものとする
+    override fun promptSpeakingUrge(title: String, seconds: Int, buttons: List<String>): String? {
+        val buttonsText = buttons.mapIndexed { i, button -> "${i + 1}: $button" }.joinToString("\n")
+        sendMessage(title, "発言を希望する場合は番号を入力してください（希望しない場合はそのままEnter）\n$buttonsText")
+        val number = readInput().trim().toIntOrNull() ?: return null
+        return buttons.getOrNull(number - 1)
     }
 
     override fun promptChoice(view: ChoiceView): String {

@@ -1,10 +1,13 @@
 package werewolf.ai
 
+import werewolf.game.ActionMetadata
 import werewolf.game.Choice
 import werewolf.game.ChronicleView
 import werewolf.game.Claim
+import werewolf.game.CounterClaimSpeakingUrge
 import werewolf.game.DiscussionContext
 import werewolf.game.DivineResult
+import werewolf.game.Eagerness
 import werewolf.game.FallbackChoice
 import werewolf.game.FallbackClaim
 import werewolf.game.FallbackSpeakingUrge
@@ -21,6 +24,7 @@ import werewolf.game.SelectionContext
 import werewolf.game.SpeakingUrge
 import werewolf.game.Statement
 import werewolf.game.StatementType
+import werewolf.game.UrgeEligibility
 import werewolf.game.selectableTypes
 
 class AiPlayer(
@@ -52,19 +56,14 @@ class AiPlayer(
         else -> false
     }
 
-    override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): SpeakingUrge {
-        val selectableTypes = context.selectableTypes(claimableRoles, reportEligibility)
-        val instruction = urgeFormat.buildInstruction(context, selectableTypes)
+    override fun feelUrge(context: DiscussionContext, eligibility: UrgeEligibility): SpeakingUrge {
+        val instruction = urgeFormat.buildInstruction(context, eligibility)
         repeat(2) {
             val completion = prompt(urgeLanguageModel, instruction)
             try {
-                val parsed = urgeFormat.parse(completion.text, selectableTypes)
+                val parsed = urgeFormat.parse(completion.text, eligibility)
                 // 発言のたびにたまって入力が膨らみ、AIも解釈しにくいため記憶には入れない
-                return SpeakingUrge(
-                    this, context, parsed.eagerness,
-                    intent = parsed.intent,
-                    metadata = completion.metadata,
-                )
+                return buildUrge(context, eligibility, parsed, completion.metadata)
             } catch (_: InvalidAiInputException) {
                 // AI応答が不正な形式のため、記録して次のイテレーションでリトライする
                 memorize(InvalidAiInput(this, completion.text, completion.metadata))
@@ -72,6 +71,15 @@ class AiPlayer(
         }
         return FallbackSpeakingUrge(this, context)
     }
+
+    // 対抗COする役職はAIに選ばせず、直前のCOから決まる役職にする
+    private fun buildUrge(context: DiscussionContext, eligibility: UrgeEligibility, parsed: ParsedUrge, metadata: ActionMetadata): SpeakingUrge =
+        if (parsed.eagerness == Eagerness.COUNTER_CLAIM) {
+            val role = checkNotNull(eligibility.counterClaimRole) { "Counter claim level is selectable only with a counter claim role" }
+            CounterClaimSpeakingUrge(this, context, role, parsed.intent, metadata)
+        } else {
+            SpeakingUrge(this, context, parsed.eagerness, parsed.intent, metadata)
+        }
 
     override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
         val instruction = statementFormat.buildInstruction(context, claimableRoles, reportEligibility)

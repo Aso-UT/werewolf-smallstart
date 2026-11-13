@@ -7,5 +7,6 @@ interface HumanPrompt {
     fun waitUntilReady()
     fun promptChoice(view: ChoiceView): String
     fun promptFreeText(title: String, description: String): String
-    fun promptSpeakingUrge(title: String, seconds: Int): Boolean
+    // 押されたボタンの名前を返す。時間内に押されなければ null
+    fun promptSpeakingUrge(title: String, seconds: Int, buttons: List<String>): String?
 }
