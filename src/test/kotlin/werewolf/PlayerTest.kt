@@ -49,13 +49,18 @@ class PlayerTest {
         name: String,
         private val playerToSet: Player,
     ) : NothingPlayer(role, name) {
-        override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility) =
+        override fun feelUrge(context: DiscussionContext, eligibility: UrgeEligibility) =
             SpeakingUrge(playerToSet, context, Eagerness.DEFAULT, "", UnimplementedActionMetadata)
     }
 
     private class UrgedPlayer(role: Role, name: String) : NothingPlayer(role, name) {
-        override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility) =
+        override fun feelUrge(context: DiscussionContext, eligibility: UrgeEligibility) =
             SpeakingUrge(this, context, Eagerness(3), "", UnimplementedActionMetadata)
+    }
+
+    private class CounterClaimingPlayer(role: Role, name: String, private val counterRole: Role) : NothingPlayer(role, name) {
+        override fun feelUrge(context: DiscussionContext, eligibility: UrgeEligibility) =
+            CounterClaimSpeakingUrge(this, context, counterRole, "", UnimplementedActionMetadata)
     }
 
     private class CapturingSpeakerPlayer(role: Role, name: String) : ReceivingPlayer(role, name) {
@@ -122,6 +127,14 @@ class PlayerTest {
         val eagerness = player.eagerness(openContext(listOf(player)))
         assertEquals(Eagerness(3), eagerness)
         assertTrue(player.reveal(fakeCitizenWinSignal()).any { it is SpeakingUrge })
+    }
+
+    @Test
+    fun `eagerness throws when counter claiming a role other than the one just claimed`() {
+        val claimer = NothingPlayer(Role.SEER, "Claimer")
+        val player = CounterClaimingPlayer(Role.MADMAN, "Player", counterRole = Role.MEDIUM)
+        val context = openContext(listOf(player, claimer), previousStatement = Statement.RoleClaim(claimer, Role.SEER))
+        assertFailsWith<IllegalArgumentException> { player.eagerness(context) }
     }
 
     @Test

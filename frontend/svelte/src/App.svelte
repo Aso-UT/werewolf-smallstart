@@ -15,7 +15,7 @@
     | { type: 'idle' }
     | { type: 'choose'; title: string; description: string; candidates: string[] }
     | { type: 'speak'; title: string; description: string }
-    | { type: 'urge'; title: string; description: string }
+    | { type: 'urge'; title: string; description: string; buttons: string[]; timeoutButton: string }
 
   type Atmosphere = 'morning' | 'day' | 'night' | 'vote'
   type SelectionMood = 'attack' | 'divine' | 'guard' | 'vote'
@@ -90,7 +90,10 @@
         speakText = ''
         break
       case 'urge':
-        input = { type: 'urge', title: msg.title as string, description: msg.description as string }
+        input = {
+          type: 'urge', title: msg.title as string, description: msg.description as string,
+          buttons: msg.buttons as string[], timeoutButton: msg.timeoutButton as string,
+        }
         startUrgeCountdown(msg.seconds as number)
         break
       case 'playerStatus':
@@ -144,7 +147,8 @@
     urgeRemaining = seconds
     urgeTimer = setInterval(() => {
       urgeRemaining -= 1
-      if (urgeRemaining <= 0) answerUrge(false)
+      // 時間切れは、画面に出していない時間切れ用のボタンを押したことにする
+      if (urgeRemaining <= 0 && input.type === 'urge') answerUrge(input.timeoutButton)
     }, 1000)
   }
 
@@ -154,10 +158,10 @@
   }
 
   // 押した／時間切れのどちらか一方だけを、必ず1回サーバーへ返す
-  function answerUrge(wantsToSpeak: boolean) {
+  function answerUrge(button: string) {
     if (input.type !== 'urge') return
     stopUrgeCountdown()
-    ws.send(JSON.stringify({ type: 'urge', value: wantsToSpeak }))
+    ws.send(JSON.stringify({ type: 'urge', value: button }))
     input = { type: 'idle' }
   }
 
@@ -210,7 +214,9 @@
       {#if input.type === 'urge'}
         <div class="urge">
           <span class="countdown">残り {urgeRemaining} 秒</span>
-          <button on:click={() => answerUrge(true)}>発言する</button>
+          {#each input.buttons as button}
+            <button on:click={() => answerUrge(button)}>{button}</button>
+          {/each}
         </div>
       {/if}
     </div>

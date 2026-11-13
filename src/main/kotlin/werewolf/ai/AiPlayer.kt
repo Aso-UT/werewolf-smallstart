@@ -1,8 +1,10 @@
 package werewolf.ai
 
+import werewolf.game.ActionMetadata
 import werewolf.game.Choice
 import werewolf.game.ChronicleView
 import werewolf.game.Claim
+import werewolf.game.CounterClaimSpeakingUrge
 import werewolf.game.DiscussionContext
 import werewolf.game.DivineResult
 import werewolf.game.FallbackChoice
@@ -21,6 +23,7 @@ import werewolf.game.SelectionContext
 import werewolf.game.SpeakingUrge
 import werewolf.game.Statement
 import werewolf.game.StatementType
+import werewolf.game.UrgeEligibility
 import werewolf.game.selectableTypes
 
 class AiPlayer(
@@ -52,19 +55,14 @@ class AiPlayer(
         else -> false
     }
 
-    override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): SpeakingUrge {
-        val selectableTypes = context.selectableTypes(claimableRoles, reportEligibility)
-        val instruction = urgeFormat.buildInstruction(context, selectableTypes)
+    override fun feelUrge(context: DiscussionContext, eligibility: UrgeEligibility): SpeakingUrge {
+        val instruction = urgeFormat.buildInstruction(context, eligibility)
         repeat(2) {
             val completion = prompt(urgeLanguageModel, instruction)
             try {
-                val parsed = urgeFormat.parse(completion.text, selectableTypes)
+                val parsed = urgeFormat.parse(completion.text, eligibility)
                 // 発言のたびにたまって入力が膨らみ、AIも解釈しにくいため記憶には入れない
-                return SpeakingUrge(
-                    this, context, parsed.eagerness,
-                    intent = parsed.intent,
-                    metadata = completion.metadata,
-                )
+                return buildUrge(context, parsed, completion.metadata)
             } catch (_: InvalidAiInputException) {
                 // AI応答が不正な形式のため、記録して次のイテレーションでリトライする
                 memorize(InvalidAiInput(this, completion.text, completion.metadata))
@@ -72,6 +70,11 @@ class AiPlayer(
         }
         return FallbackSpeakingUrge(this, context)
     }
+
+    private fun buildUrge(context: DiscussionContext, parsed: ParsedUrge, metadata: ActionMetadata): SpeakingUrge =
+        parsed.counterClaimRole
+            ?.let { CounterClaimSpeakingUrge(this, context, it, parsed.intent, metadata) }
+            ?: SpeakingUrge(this, context, parsed.eagerness, parsed.intent, metadata)
 
     override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
         val instruction = statementFormat.buildInstruction(context, claimableRoles, reportEligibility)

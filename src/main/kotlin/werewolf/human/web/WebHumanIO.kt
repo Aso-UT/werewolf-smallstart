@@ -97,13 +97,18 @@ class WebHumanIO : HumanIO {
         return text
     }
 
-    override fun promptSpeakingUrge(title: String, seconds: Int): Boolean {
+    override fun promptSpeakingUrge(title: String, seconds: Int, buttons: List<String>, timeoutButton: String): String {
         checkAbort()
-        val description = "発言したい場合は${seconds}秒以内に「発言する」を押してください"
-        enqueue("""{"type":"urge","title":${title.jsonEncode()},"description":${description.jsonEncode()},"seconds":$seconds}""")
+        val description = "発言したい場合は${seconds}秒以内にボタンを押してください"
+        val buttonsJson = buttons.joinToString(",") { it.jsonEncode() }
+        enqueue(
+            """{"type":"urge","title":${title.jsonEncode()},"description":${description.jsonEncode()},""" +
+                """"seconds":$seconds,"buttons":[$buttonsJson],"timeoutButton":${timeoutButton.jsonEncode()}}"""
+        )
         val answer = runBlocking { incoming.receive() }
         checkAbort()
-        return answer.toBooleanStrict()
+        check(answer in buttons || answer == timeoutButton) { "Unexpected urge button from web client: $answer" }
+        return answer
     }
 
     override fun watchEpilogue(chronicles: List<ChronicleView>, metadataTotals: List<String>) {

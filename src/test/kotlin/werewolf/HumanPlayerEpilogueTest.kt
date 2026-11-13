@@ -27,14 +27,14 @@ class HumanPlayerEpilogueTest {
         override fun waitUntilReady() {}
         override fun promptFreeText(title: String, description: String): String = "human speaks"
         override fun promptChoice(view: ChoiceView): String = view.options.first()
-        override fun promptSpeakingUrge(title: String, seconds: Int): Boolean = false
+        override fun promptSpeakingUrge(title: String, seconds: Int, buttons: List<String>, timeoutButton: String): String = timeoutButton
         override fun watchEpilogue(chronicles: List<ChronicleView>, metadataTotals: List<String>) { capturedChronicles = chronicles }
     }
 
     private class SpeakingPlayer(role: Role, name: String) : NothingPlayer(role, name) {
         override fun onReceive(event: GameEvent) {}
         override fun watchEpilogue(chronicles: List<ChronicleView>, metadataTotals: List<String>) {}
-        override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility) =
+        override fun feelUrge(context: DiscussionContext, eligibility: UrgeEligibility) =
             SpeakingUrge(this, context, Eagerness.DEFAULT, "", UnimplementedActionMetadata)
         override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim =
             Claim(this, context, Statement.Plain(this, "$name speaks"), claimableRoles, reportEligibility, "intent", UnimplementedActionMetadata)

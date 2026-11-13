@@ -4,31 +4,28 @@ import werewolf.game.Choice
 import werewolf.game.Claim
 import werewolf.game.ChronicleView
 import werewolf.game.DiscussionContext
-import werewolf.game.Eagerness
 import werewolf.game.GameEvent
 import werewolf.game.Player
 import werewolf.game.ReportEligibility
 import werewolf.game.Role
 import werewolf.game.SelectionContext
 import werewolf.game.SpeakingUrge
-import werewolf.game.Statement
-import werewolf.game.StatementType
-import werewolf.game.selectableTypes
-import werewolf.view.ChoiceView
+import werewolf.game.UrgeEligibility
 import kotlin.time.measureTimedValue
 
 class HumanPlayer(role: Role, override val name: String, private val io: HumanIO) : Player(role) {
     companion object {
-        private const val COMMENT_PROMPT = "補足があれば入力してください"
         private const val URGE_SECONDS = 5
     }
 
     private val screen = HumanScreen(io)
+    private val selection = HumanSelection(io)
+    private val composer = StatementComposer(io, selection)
 
     override fun choose(context: SelectionContext): Choice {
         screen.showSelectionMood(context)
         val (selected, metadata) = measured(HumanActionKind.CHOICE) {
-            select(context.title, context.description, context.candidates()) { it.name }
+            selection.select(context.title, context.description, context.candidates()) { it.name }
         }
         val choice = Choice(this, context, selected, "プレイヤーが選択", metadata)
         io.display(choice.toRecallView())
@@ -39,21 +36,21 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
         screen.show(event)
     }
 
-    override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): SpeakingUrge {
-        val (wantsToSpeak, metadata) = measured(HumanActionKind.SPEAKING_URGE) {
-            io.promptSpeakingUrge(context.title, URGE_SECONDS)
-        }
-        return if (wantsToSpeak) {
-            // 対抗COに間に合うよう、最上位の意欲にする（対抗COを分けて示せるようにするのは #320）
-            SpeakingUrge(this, context, Eagerness.COUNTER_CLAIM, "発言を希望", metadata)
-        } else {
-            SpeakingUrge(this, context, Eagerness.UNWILLING, "発言を希望せず", metadata)
-        }
+    override fun feelUrge(context: DiscussionContext, eligibility: UrgeEligibility): SpeakingUrge {
+        val buttons = UrgeButton.available(eligibility)
+        val (pressed, metadata) = measured(HumanActionKind.SPEAKING_URGE) { pressedButton(context, buttons) }
+        return pressed.press(this, context, metadata)
+    }
+
+    private fun pressedButton(context: DiscussionContext, buttons: List<UrgeButton>): UrgeButton {
+        val (hidden, shown) = buttons.partition { it.isHidden }
+        val label = io.promptSpeakingUrge(context.title, URGE_SECONDS, shown.map { it.label }, hidden.single().label)
+        return buttons.single { it.label == label }
     }
 
     override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
         val (statement, metadata) = measured(HumanActionKind.STATEMENT) {
-            buildStatement(context, claimableRoles, reportEligibility)
+            composer.compose(this, context, claimableRoles, reportEligibility)
         }
         return Claim(this, context, statement, claimableRoles, reportEligibility, "プレイヤーが発言", metadata)
     }
@@ -63,50 +60,6 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
         io.waitUntilReady()
         val (decided, responseTime) = measureTimedValue(decide)
         return decided to HumanActionMetadata(kind, responseTime)
-    }
-
-    private fun buildStatement(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Statement =
-        when (selectType(context, claimableRoles, reportEligibility)) {
-            StatementType.PLAIN -> buildPlain(context)
-            StatementType.DIVINATION_REPORT -> buildDivinationReport(reportEligibility)
-            StatementType.MEDIUM_REPORT -> buildMediumReport(reportEligibility)
-            StatementType.ROLE_CLAIM -> buildRoleClaim(claimableRoles)
-        }
-
-    private fun selectType(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): StatementType {
-        val types = StatementType.entries.filter { it in context.selectableTypes(claimableRoles, reportEligibility) }
-        return select(context.title, context.description, types) { it.displayName }
-    }
-
-    private fun buildPlain(context: DiscussionContext): Statement =
-        Statement.Plain(this, io.promptFreeText(context.title, "発言してください"))
-
-    private fun buildDivinationReport(reportEligibility: ReportEligibility): Statement {
-        val target = select("占い報告 - 対象", "誰の占い結果を報告しますか？", reportEligibility.divinationCandidates()) { it.name }
-        val result = select("占い報告 - 結果", "占い結果を選んでください", reportEligibility.divinationResults(target)) { it.displayName }
-        val comment = io.promptFreeText("占い報告 - 補足", COMMENT_PROMPT)
-        return Statement.DivinationReport(this, target, result, comment)
-    }
-
-    private fun buildMediumReport(reportEligibility: ReportEligibility): Statement {
-        val target = select("霊媒報告 - 対象", "誰の霊媒結果を報告しますか？", reportEligibility.mediumCandidates()) { it.name }
-        val result = select("霊媒報告 - 結果", "霊媒結果を選んでください", reportEligibility.mediumResults(target)) { it.displayName }
-        val comment = io.promptFreeText("霊媒報告 - 補足", COMMENT_PROMPT)
-        return Statement.MediumReport(this, target, result, comment)
-    }
-
-    private fun buildRoleClaim(claimableRoles: Set<Role>): Statement {
-        val role = select("役職申告 - 役職", "申告する役職を選んでください", claimableRoles.toList()) { it.displayName }
-        val comment = io.promptFreeText("役職申告 - 補足", COMMENT_PROMPT)
-        return Statement.RoleClaim(this, role, comment)
-    }
-
-    private fun <T> select(title: String, description: String, candidates: List<T>, label: (T) -> String): T =
-        if (candidates.size == 1) candidates.single() else promptChoice(title, description, candidates, label)
-
-    private fun <T> promptChoice(title: String, description: String, candidates: List<T>, label: (T) -> String): T {
-        val selected = io.promptChoice(ChoiceView(title, description, candidates.map(label)))
-        return candidates.single { label(it) == selected }
     }
 
     override fun watchEpilogue(chronicles: List<ChronicleView>, metadataTotals: List<String>) {

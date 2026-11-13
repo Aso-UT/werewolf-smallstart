@@ -5,6 +5,7 @@ sealed class DiscussionContext {
     abstract val day: Int
     abstract val players: List<Player>
     abstract val allPlayers: List<Player>
+    abstract val previousStatement: Statement?
     abstract val title: String
     abstract val description: String
     abstract val availableTypes: Set<StatementType>
@@ -14,6 +15,7 @@ sealed class DiscussionContext {
         override val day: Int,
         override val players: List<Player>,
         override val allPlayers: List<Player>,
+        override val previousStatement: Statement? = null,
     ) : DiscussionContext() {
         override val title = GameEvent.StatementMade.TITLE
         override val description = "全プレイヤーに向けた議論です。"
@@ -25,6 +27,7 @@ sealed class DiscussionContext {
         override val day: Int,
         override val players: List<Player>,
         override val allPlayers: List<Player>,
+        override val previousStatement: Statement? = null,
     ) : DiscussionContext() {
         override val title = GameEvent.WerewolfStatementMade.TITLE
         override val description = "この会話は人狼にしか聞こえません。"

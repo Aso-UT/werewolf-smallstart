@@ -40,16 +40,12 @@ class GameNote {
     }
 
     private fun noteStatement(speakerName: String, statement: Statement) {
+        statement.claimedRole?.let { claimedRoles[speakerName] = it.displayName }
         when (statement) {
-            is Statement.DivinationReport -> {
+            is Statement.DivinationReport ->
                 divineReports += ReportEntry(speakerName, statement.target.name, statement.result == DivineResult.WEREWOLF)
-                claimedRoles[speakerName] = Role.SEER.displayName
-            }
-            is Statement.MediumReport -> {
+            is Statement.MediumReport ->
                 mediumReports += ReportEntry(speakerName, statement.target.name, statement.result == MediumResult.WEREWOLF)
-                claimedRoles[speakerName] = Role.MEDIUM.displayName
-            }
-            is Statement.RoleClaim -> claimedRoles[speakerName] = statement.role.displayName
             else -> Unit
         }
     }
