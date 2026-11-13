@@ -2,6 +2,7 @@ package werewolf
 
 import werewolf.ai.AiPlayer
 import werewolf.game.AllPlayers
+import werewolf.game.CounterClaimSpeakingUrge
 import werewolf.game.DiscussionContext
 import werewolf.game.DivineResult
 import werewolf.game.Eagerness
@@ -36,6 +37,8 @@ class AiPlayerSpeakingUrgeTest {
         val lm = FakeLanguageModel("占い師COしたZoeに対抗COするため：5")
         val madman = AiPlayer(Role.MADMAN, "Madman", lm, lm, testInstruction("Madman"))
         assertEquals(Eagerness.COUNTER_CLAIM, madman.eagerness(afterSeerClaim(madman)))
+        val urge = madman.reveal(fakeCitizenWinSignal()).filterIsInstance<CounterClaimSpeakingUrge>().single()
+        assertEquals(Role.SEER, urge.role)
     }
 
     @Test

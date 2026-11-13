@@ -8,7 +8,7 @@ sealed class SpeakingUrge(
     override val metadata: ActionMetadata,
 ) : Recallable(), PlayerAction {
     private val title get() = "${context.title} - 発言欲求"
-    private val content get() = "意欲 ${eagerness.value}"
+    protected abstract val content: String
 
     override fun toRecallView() = RecallView.SelfAction(title, content, intent)
     override fun toChronicleView() = ChronicleView.Action(player.name, title, content, intentWithMetadata(intent))
@@ -30,10 +30,24 @@ private class NormalSpeakingUrge(
     eagerness: Eagerness,
     intent: String,
     metadata: ActionMetadata,
-) : SpeakingUrge(player, context, eagerness, intent, metadata)
+) : SpeakingUrge(player, context, eagerness, intent, metadata) {
+    override val content get() = "意欲 ${eagerness.value}"
+}
+
+class CounterClaimSpeakingUrge(
+    player: Player,
+    context: DiscussionContext,
+    val role: Role,
+    intent: String,
+    metadata: ActionMetadata,
+) : SpeakingUrge(player, context, Eagerness.COUNTER_CLAIM, intent, metadata) {
+    override val content get() = "意欲 ${eagerness.value}（${role.displayName}で対抗CO）"
+}
 
 class FallbackSpeakingUrge(player: Player, context: DiscussionContext) : SpeakingUrge(
     player, context, Eagerness.DEFAULT,
     intent = "回答取得に失敗したため既定の意欲を返却",
     metadata = FallbackActionMetadata,
-)
+) {
+    override val content get() = "意欲 ${eagerness.value}"
+}

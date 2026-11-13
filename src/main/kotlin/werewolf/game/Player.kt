@@ -35,6 +35,9 @@ abstract class Player(private val role: Role) : Notifiable {
         val eligibility = UrgeEligibility(context, claimableRoles(), ReportEligibility.forRole(role, _memories, this))
         val urge = feelUrge(context, eligibility)
         require(urge.player === this) { "${urge.player.name} is not the urged player" }
+        if (urge is CounterClaimSpeakingUrge) {
+            require(urge.role == eligibility.counterClaimRole) { "${urge.player.name} cannot counter claim ${urge.role}" }
+        }
         _memories.add(urge)
         return urge.eagerness
     }
