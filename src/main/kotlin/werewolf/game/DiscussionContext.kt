@@ -10,16 +10,19 @@ sealed class DiscussionContext {
     abstract val description: String
     abstract val availableTypes: Set<StatementType>
 
+    abstract fun narrowedTo(types: Set<StatementType>): DiscussionContext
+
     data class Open(
         override val round: Int,
         override val day: Int,
         override val players: List<Player>,
         override val allPlayers: List<Player>,
         override val previousStatement: Statement? = null,
+        override val availableTypes: Set<StatementType> = StatementType.entries.toSet(),
     ) : DiscussionContext() {
         override val title = GameEvent.StatementMade.TITLE
         override val description = "全プレイヤーに向けた議論です。"
-        override val availableTypes = StatementType.entries.toSet()
+        override fun narrowedTo(types: Set<StatementType>) = copy(availableTypes = availableTypes intersect types)
     }
 
     data class Conclave(
@@ -28,10 +31,11 @@ sealed class DiscussionContext {
         override val players: List<Player>,
         override val allPlayers: List<Player>,
         override val previousStatement: Statement? = null,
+        override val availableTypes: Set<StatementType> = setOf(StatementType.PLAIN),
     ) : DiscussionContext() {
         override val title = GameEvent.WerewolfStatementMade.TITLE
         override val description = "この会話は人狼にしか聞こえません。"
-        override val availableTypes = setOf(StatementType.PLAIN)
+        override fun narrowedTo(types: Set<StatementType>) = copy(availableTypes = availableTypes intersect types)
     }
 }
 

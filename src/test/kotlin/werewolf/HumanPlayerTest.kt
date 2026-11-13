@@ -12,6 +12,7 @@ import werewolf.game.MediumResult
 import werewolf.game.RecallView
 import werewolf.game.Role
 import werewolf.game.SelectionContext
+import werewolf.game.SpeakingRight
 import werewolf.game.Side
 import werewolf.game.Statement
 import werewolf.game.StatementType
@@ -154,7 +155,7 @@ class HumanPlayerTest {
         val human = HumanPlayer(Role.WEREWOLF, "Human", io)
         val context = DiscussionContext.Conclave(1, 1, listOf(human), listOf(human))
 
-        val statement = human.discuss(context)
+        val statement = human.discuss(context, SpeakingRight.Uncontested(human))
 
         assertEquals(Statement.Plain(human, "hello"), statement)
         assertTrue(io.promptedChoices.isEmpty())
@@ -166,7 +167,7 @@ class HumanPlayerTest {
         val human = HumanPlayer(Role.WEREWOLF, "Human", io)
         val context = DiscussionContext.Open(1, 1, listOf(human), listOf(human))
 
-        val statement = human.discuss(context)
+        val statement = human.discuss(context, SpeakingRight.Uncontested(human))
 
         assertEquals(Statement.Plain(human, "hello"), statement)
         assertTrue(io.promptedChoices.single().options.contains(StatementType.PLAIN.displayName))
@@ -182,7 +183,7 @@ class HumanPlayerTest {
         GameEvent.Divined.send(villager, DivineResult.NOT_WEREWOLF, human)
         val context = DiscussionContext.Open(1, 1, listOf(human), listOf(human, wolf, villager))
 
-        val statement = human.discuss(context)
+        val statement = human.discuss(context, SpeakingRight.Uncontested(human))
 
         assertEquals(Statement.DivinationReport(human, wolf, DivineResult.WEREWOLF), statement)
         assertEquals(2, io.promptedChoices.size)
@@ -198,7 +199,7 @@ class HumanPlayerTest {
         GameEvent.MediumRevealed.send(villager, MediumResult.NOT_WEREWOLF, human)
         val context = DiscussionContext.Open(1, 1, listOf(human), listOf(human, wolf, villager))
 
-        val statement = human.discuss(context)
+        val statement = human.discuss(context, SpeakingRight.Uncontested(human))
 
         assertEquals(Statement.MediumReport(human, wolf, MediumResult.WEREWOLF), statement)
         assertEquals(2, io.promptedChoices.size)
@@ -215,7 +216,7 @@ class HumanPlayerTest {
         GameEvent.Divined.send(wolf, DivineResult.WEREWOLF, human)
         val context = DiscussionContext.Open(1, 1, listOf(human), listOf(human, wolf))
 
-        val statement = human.discuss(context)
+        val statement = human.discuss(context, SpeakingRight.Uncontested(human))
 
         assertEquals(
             Statement.DivinationReport(human, wolf, DivineResult.WEREWOLF, "昨日の議論で怪しいと思っていました"),
@@ -234,7 +235,7 @@ class HumanPlayerTest {
         GameEvent.MediumRevealed.send(villager, MediumResult.NOT_WEREWOLF, human)
         val context = DiscussionContext.Open(1, 1, listOf(human), listOf(human, villager))
 
-        val statement = human.discuss(context)
+        val statement = human.discuss(context, SpeakingRight.Uncontested(human))
 
         assertEquals(
             Statement.MediumReport(human, villager, MediumResult.NOT_WEREWOLF, "無実の方を処刑してしまい申し訳ない気持ちです"),
@@ -258,7 +259,7 @@ class HumanPlayerTest {
         GameEvent.PlayersAnnounced.send(listOf(wolf, villager1, villager2), allPlayers)
         val context = DiscussionContext.Open(1, 1, listOf(wolf), listOf(wolf, villager1, villager2))
 
-        val statement = wolf.discuss(context)
+        val statement = wolf.discuss(context, SpeakingRight.Uncontested(wolf))
 
         assertEquals(Statement.DivinationReport(wolf, villager1, DivineResult.WEREWOLF), statement)
         assertEquals(3, io.promptedChoices.size)
@@ -270,7 +271,7 @@ class HumanPlayerTest {
         val human = HumanPlayer(Role.MADMAN, "Human", io)
         val context = DiscussionContext.Open(1, 1, listOf(human), listOf(human))
 
-        val statement = human.discuss(context)
+        val statement = human.discuss(context, SpeakingRight.Uncontested(human))
 
         assertEquals(Statement.RoleClaim(human, Role.SEER), statement)
         assertEquals(2, io.promptedChoices.size)
@@ -282,7 +283,7 @@ class HumanPlayerTest {
         val human = HumanPlayer(Role.VILLAGER, "Human", io)
         val context = DiscussionContext.Open(1, 1, listOf(human), listOf(human))
 
-        val statement = human.discuss(context)
+        val statement = human.discuss(context, SpeakingRight.Uncontested(human))
 
         assertEquals(Statement.Plain(human, "hello"), statement)
         assertTrue(io.promptedChoices.isEmpty())
@@ -294,7 +295,7 @@ class HumanPlayerTest {
         val human = HumanPlayer(Role.SEER, "Human", io)
         val context = DiscussionContext.Open(1, 1, listOf(human), listOf(human))
 
-        val statement = human.discuss(context)
+        val statement = human.discuss(context, SpeakingRight.Uncontested(human))
 
         assertEquals(Statement.RoleClaim(human, Role.SEER), statement)
         assertEquals(1, io.promptedChoices.size)
@@ -308,7 +309,7 @@ class HumanPlayerTest {
         GameEvent.StatementMade.send(1, human.name, Statement.RoleClaim(human, Role.SEER), allPlayers)
         val context = DiscussionContext.Open(2, 1, listOf(human), listOf(human))
 
-        val statement = human.discuss(context)
+        val statement = human.discuss(context, SpeakingRight.Uncontested(human))
 
         assertEquals(Statement.Plain(human, "hello"), statement)
         assertTrue(io.promptedChoices.isEmpty())
@@ -324,7 +325,7 @@ class HumanPlayerTest {
         val human = HumanPlayer(Role.MADMAN, "Human", io)
         val context = DiscussionContext.Open(1, 1, listOf(human), listOf(human))
 
-        val statement = human.discuss(context)
+        val statement = human.discuss(context, SpeakingRight.Uncontested(human))
 
         assertEquals(Statement.RoleClaim(human, Role.SEER, "信じてください"), statement)
     }

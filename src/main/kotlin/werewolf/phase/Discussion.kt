@@ -4,11 +4,12 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import werewolf.game.AllPlayers
 import werewolf.game.DiscussionContext
-import werewolf.game.Eagerness
 import werewolf.game.GameEvent
 import werewolf.game.Notifiable
 import werewolf.game.Player
 import werewolf.game.PlayerManager
+import werewolf.game.SpeakingRight
+import werewolf.game.SpeakingUrge
 import werewolf.game.Statement
 import kotlin.time.Duration
 import kotlin.time.measureTime
@@ -37,10 +38,10 @@ abstract class Discussion<R : Notifiable>(
         while (!reachedTotalLimit(history)) {
             val contexts = eligibleSpeakerContexts(history)
             if (contexts.isEmpty()) return
-            val speaker = nextSpeaker(contexts)
-            val context = contexts.getValue(speaker)
-            val statement = speaker.discuss(context)
-            sendStatement(context.round, speaker.name, statement, recipients)
+            val right = grantSpeakingRight(contexts)
+            val context = contexts.getValue(right.speaker)
+            val statement = right.speaker.discuss(context, right)
+            sendStatement(context.round, right.speaker.name, statement, recipients)
             history.record(statement)
         }
     }
@@ -57,19 +58,17 @@ abstract class Discussion<R : Notifiable>(
     private fun reachedPersonalLimit(player: Player, history: SpeakingHistory): Boolean =
         history.countOf(player) >= MAX_STATEMENTS_PER_SPEAKER
 
-    private fun nextSpeaker(contexts: Map<Player, DiscussionContext>): Player =
-        contexts.keys.singleOrNull() ?: mostEager(contexts)
+    private fun grantSpeakingRight(contexts: Map<Player, DiscussionContext>): SpeakingRight =
+        contexts.keys.singleOrNull()?.let { SpeakingRight.Uncontested(it) }
+            ?: SpeakingRight.Won(mostEagerUrges(collectUrges(contexts)).random())
 
-    private fun mostEager(contexts: Map<Player, DiscussionContext>): Player =
-        playersWithHighestEagerness(collectEagerness(contexts)).random()
-
-    private fun playersWithHighestEagerness(eagerness: Map<Player, Eagerness>): Set<Player> {
-        val highest = eagerness.values.max()
-        return eagerness.filterValues { it == highest }.keys
+    private fun mostEagerUrges(urges: List<SpeakingUrge>): List<SpeakingUrge> {
+        val highest = urges.maxOf { it.eagerness }
+        return urges.filter { it.eagerness == highest }
     }
 
-    private fun collectEagerness(contexts: Map<Player, DiscussionContext>): Map<Player, Eagerness> =
-        contexts.keys.askInParallel(dispatcher) { it.eagerness(contexts.getValue(it)) }
+    private fun collectUrges(contexts: Map<Player, DiscussionContext>): List<SpeakingUrge> =
+        contexts.keys.askInParallel(dispatcher) { it.speakingUrge(contexts.getValue(it)) }.values.toList()
 
     companion object {
         private const val MAX_STATEMENTS_PER_SPEAKER = 4

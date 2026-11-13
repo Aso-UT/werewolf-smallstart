@@ -6,6 +6,7 @@ import werewolf.game.ChronicleView
 import werewolf.game.Choice
 import werewolf.game.Role
 import werewolf.game.SelectionContext
+import werewolf.game.SpeakingRight
 
 import kotlin.test.Test
 import kotlin.test.assertContains
@@ -83,7 +84,7 @@ class AiPlayerChooseTest {
         val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
         val context = SelectionContext.Vote(villager, listOf(villager, wolf))
         villager.selectTarget(context)
-        villager.discuss(openContext())
+        villager.discuss(openContext(), SpeakingRight.Uncontested(villager))
         val memories = villager.reveal(fakeCitizenWinSignal())
         val choiceChronicle = memories.filterIsInstance<Choice>().first().toChronicleView()
         assertIs<ChronicleView.Action>(choiceChronicle)

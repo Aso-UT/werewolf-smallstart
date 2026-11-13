@@ -8,6 +8,7 @@ import werewolf.game.DivineResult
 import werewolf.game.Eagerness
 import werewolf.game.GameEvent
 import werewolf.game.Role
+import werewolf.game.SpeakingRight
 import werewolf.game.Statement
 
 import kotlin.test.Test
@@ -23,7 +24,7 @@ class AiPlayerSpeakingUrgeTest {
     fun `eagerness uses the last separator when the reason contains a colon`() {
         val lm = FakeLanguageModel("Zackの質問：「Yuriは沈黙していますが、何か意見はないですか？」に答えるため：3")
         val yuri = AiPlayer(Role.VILLAGER, "Yuri", lm, lm, testInstruction("Yuri"))
-        assertEquals(Eagerness.URGENT, yuri.eagerness(openContext(listOf(yuri))))
+        assertEquals(Eagerness.URGENT, yuri.speakingUrge(openContext(listOf(yuri))).eagerness)
     }
 
     private val zoe = ReceivingPlayer(Role.SEER, "Zoe")
@@ -36,7 +37,7 @@ class AiPlayerSpeakingUrgeTest {
     fun `eagerness returns counter claim level with the role the player answered`() {
         val lm = FakeLanguageModel("占い師COしたZoeに対抗COするため：5（占い師）")
         val madman = AiPlayer(Role.MADMAN, "Madman", lm, lm, testInstruction("Madman"))
-        assertEquals(Eagerness.COUNTER_CLAIM, madman.eagerness(afterSeerClaim(madman)))
+        assertEquals(Eagerness.COUNTER_CLAIM, madman.speakingUrge(afterSeerClaim(madman)).eagerness)
         val urge = madman.reveal(fakeCitizenWinSignal()).filterIsInstance<CounterClaimSpeakingUrge>().single()
         assertEquals(Role.SEER, urge.role)
     }
@@ -45,7 +46,7 @@ class AiPlayerSpeakingUrgeTest {
     fun `eagerness retries when counter claiming without a role`() {
         val lm = FakeLanguageModel("占い師COしたZoeに対抗COするため：5", "占い師COしたZoeに対抗COするため：5（占い師）")
         val madman = AiPlayer(Role.MADMAN, "Madman", lm, lm, testInstruction("Madman"))
-        assertEquals(Eagerness.COUNTER_CLAIM, madman.eagerness(afterSeerClaim(madman)))
+        assertEquals(Eagerness.COUNTER_CLAIM, madman.speakingUrge(afterSeerClaim(madman)).eagerness)
         assertEquals(2, lm.instructions.size)
     }
 
@@ -53,7 +54,7 @@ class AiPlayerSpeakingUrgeTest {
     fun `eagerness retries when counter claiming a role other than the one just claimed`() {
         val lm = FakeLanguageModel("霊能者として対抗COするため：5（霊能者）", "占い師COしたZoeに対抗COするため：5（占い師）")
         val madman = AiPlayer(Role.MADMAN, "Madman", lm, lm, testInstruction("Madman"))
-        assertEquals(Eagerness.COUNTER_CLAIM, madman.eagerness(afterSeerClaim(madman)))
+        assertEquals(Eagerness.COUNTER_CLAIM, madman.speakingUrge(afterSeerClaim(madman)).eagerness)
         assertEquals(2, lm.instructions.size)
     }
 
@@ -61,7 +62,7 @@ class AiPlayerSpeakingUrgeTest {
     fun `eagerness retries when a role is added to a level other than counter claim`() {
         val lm = FakeLanguageModel("占い師COするため：4（占い師）", "占い師COするため：4")
         val madman = AiPlayer(Role.MADMAN, "Madman", lm, lm, testInstruction("Madman"))
-        assertEquals(Eagerness.ANNOUNCEMENT, madman.eagerness(afterSeerClaim(madman)))
+        assertEquals(Eagerness.ANNOUNCEMENT, madman.speakingUrge(afterSeerClaim(madman)).eagerness)
         assertEquals(2, lm.instructions.size)
     }
 
@@ -69,7 +70,7 @@ class AiPlayerSpeakingUrgeTest {
     fun `counter claim level cannot be chosen when the previous statement claims no role`() {
         val lm = FakeLanguageModel("占い師COしたZoeに対抗COするため：5（占い師）", "占い師COするため：4")
         val madman = AiPlayer(Role.MADMAN, "Madman", lm, lm, testInstruction("Madman"))
-        assertEquals(Eagerness.ANNOUNCEMENT, madman.eagerness(openContext(listOf(madman, zoe))))
+        assertEquals(Eagerness.ANNOUNCEMENT, madman.speakingUrge(openContext(listOf(madman, zoe))).eagerness)
         assertFalse(lm.instructions.first().contains("対抗COする（"))
         assertFalse(lm.instructions.first().contains("対抗COする場合は"))
     }
@@ -78,14 +79,14 @@ class AiPlayerSpeakingUrgeTest {
     fun `eagerness retries when level is out of the scale`() {
         val lm = FakeLanguageModel("理由：6", "理由：1")
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
-        assertEquals(Eagerness.NOTHING, villager.eagerness(openContext(listOf(villager))))
+        assertEquals(Eagerness.NOTHING, villager.speakingUrge(openContext(listOf(villager))).eagerness)
     }
 
     @Test
     fun `eagerness falls back to default after two invalid responses`() {
         val lm = FakeLanguageModel("no separator", "理由：たくさん")
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
-        assertEquals(Eagerness.DEFAULT, villager.eagerness(openContext(listOf(villager))))
+        assertEquals(Eagerness.DEFAULT, villager.speakingUrge(openContext(listOf(villager))).eagerness)
     }
 
     @Test
@@ -93,7 +94,7 @@ class AiPlayerSpeakingUrgeTest {
         val lm = FakeLanguageModel("対抗COするため：5", "仲間と相談したいため：2")
         val wolf = AiPlayer(Role.WEREWOLF, "Wolf", lm, lm, testInstruction("Wolf"))
         val context = conclaveContext(listOf(wolf))
-        assertEquals(Eagerness.OPINION, wolf.eagerness(context))
+        assertEquals(Eagerness.OPINION, wolf.speakingUrge(context).eagerness)
         assertFalse(lm.instructions.first().contains("対抗COする（"))
     }
 
@@ -101,7 +102,7 @@ class AiPlayerSpeakingUrgeTest {
     fun `counter claim and announcement levels cannot be chosen by a player who can neither claim nor report`() {
         val lm = FakeLanguageModel("占い師COしたZoeに対抗COするため：5", "Zoeの占い結果に意見したいため：2")
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
-        assertEquals(Eagerness.OPINION, villager.eagerness(afterSeerClaim(villager)))
+        assertEquals(Eagerness.OPINION, villager.speakingUrge(afterSeerClaim(villager)).eagerness)
         assertFalse(lm.instructions.first().contains("対抗COする（"))
         assertFalse(lm.instructions.first().contains("役職COや、"))
     }
@@ -110,7 +111,7 @@ class AiPlayerSpeakingUrgeTest {
     fun `eagerness prompt lists counter claim level with the role that can be counter claimed`() {
         val lm = FakeLanguageModel("占い師COしたZoeに、真の占い師として対抗COするため：5（占い師）")
         val seer = AiPlayer(Role.SEER, "Seer", lm, lm, testInstruction("Seer"))
-        seer.eagerness(afterSeerClaim(seer))
+        seer.speakingUrge(afterSeerClaim(seer))
         assertContains(lm.instructions.first(), "5：対抗COする（")
         assertContains(lm.instructions.first(), "対抗COできる役職：占い師）")
         assertContains(lm.instructions.first(), "対抗COする場合は「理由：5（役職名）」の形式で答えてください。")
@@ -124,7 +125,7 @@ class AiPlayerSpeakingUrgeTest {
         val allPlayers = AllPlayers(TestLodge(seer to Role.SEER, wolf to Role.WEREWOLF).create().playerManager)
         GameEvent.StatementMade.send(1, seer.name, Statement.RoleClaim(seer, Role.SEER), allPlayers)
         GameEvent.Divined.send(wolf, DivineResult.WEREWOLF, seer)
-        assertEquals(Eagerness.ANNOUNCEMENT, seer.eagerness(openContext(listOf(seer, wolf))))
+        assertEquals(Eagerness.ANNOUNCEMENT, seer.speakingUrge(openContext(listOf(seer, wolf))).eagerness)
         assertFalse(lm.instructions.first().contains("対抗COする（"))
     }
 
@@ -136,8 +137,8 @@ class AiPlayerSpeakingUrgeTest {
         )
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
         val context = openContext(listOf(villager))
-        villager.eagerness(context)
-        villager.discuss(context)
+        villager.speakingUrge(context)
+        villager.discuss(context, SpeakingRight.Uncontested(villager))
         assertFalse(lm.histories[1].any { it.contains("Zackの発言の矛盾を指摘したいため") })
     }
 
@@ -147,8 +148,8 @@ class AiPlayerSpeakingUrgeTest {
         val urgeLm = FakeLanguageModel("Zackの発言の矛盾を指摘したいため：2")
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, urgeLm, testInstruction())
         val context = openContext(listOf(villager))
-        villager.eagerness(context)
-        villager.discuss(context)
+        villager.speakingUrge(context)
+        villager.discuss(context, SpeakingRight.Uncontested(villager))
         assertEquals(1, urgeLm.instructions.size)
         assertEquals(1, lm.instructions.size)
     }
