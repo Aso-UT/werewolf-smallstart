@@ -12,7 +12,7 @@ class UrgeFormat {
         COUNTER_CLAIM(Eagerness.COUNTER_CLAIM) {
             override fun isSelectable(eligibility: UrgeEligibility) = eligibility.counterClaimRole != null
             override fun description(eligibility: UrgeEligibility) =
-                "対抗COする（他の人の役職COに続いて、同じ役職をすぐさまCOする。対抗COできる役職：${eligibility.counterClaimRole?.displayName}）"
+                "対抗COする（他の人の役職COに続いて、同じ役職をすぐさまCOする。対抗COできる役職：${checkNotNull(eligibility.counterClaimRole).displayName}）"
         },
         ANNOUNCEMENT(Eagerness.ANNOUNCEMENT) {
             override fun isSelectable(eligibility: UrgeEligibility) = eligibility.canAnnounce
@@ -49,18 +49,21 @@ class UrgeFormat {
             "最も高い段階を選んだ人が発言します（同じ段階の人が複数いればランダム）。",
             levels.joinToString("\n") { "${it.eagerness.value}：${it.description(eligibility)}" },
             "",
-            "「理由（50文字以内）：段階の数字」の形式で答えてください。" + counterClaimFormat(levels),
-            "例：占い師COしたZoeに、狂人として対抗COするため：${Level.COUNTER_CLAIM.eagerness.value}（占い師）",
-            "例：Zackからの質問に答えるため：${Level.URGENT.eagerness.value}",
-        ).joinToString("\n")
+        ).plus(answerFormat(levels)).joinToString("\n")
     }
 
-    private fun counterClaimFormat(levels: List<Level>): String =
-        if (Level.COUNTER_CLAIM in levels) {
+    private fun answerFormat(levels: List<Level>): List<String> {
+        val counterClaimFormat = if (Level.COUNTER_CLAIM in levels) {
             "対抗COする場合は「理由：${Level.COUNTER_CLAIM.eagerness.value}（役職名）」の形式で答えてください。"
         } else {
             ""
         }
+        return listOf(
+            "「理由（50文字以内）：段階の数字」の形式で答えてください。$counterClaimFormat",
+            "例：占い師COしたZoeに、狂人として対抗COするため：${Level.COUNTER_CLAIM.eagerness.value}（占い師）",
+            "例：Zackからの質問に答えるため：${Level.URGENT.eagerness.value}",
+        )
+    }
 
     fun parse(input: String, eligibility: UrgeEligibility): ParsedUrge {
         val (intent, answer) = splitReason(input)
