@@ -28,7 +28,7 @@ class DiscussionTest {
             private set
         private var statementIndex = 0
 
-        override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): SpeakingUrge {
+        override fun feelUrge(context: DiscussionContext, eligibility: UrgeEligibility): SpeakingUrge {
             urgeCount++
             return SpeakingUrge(this, context, eagernessOf(context), "", UnimplementedActionMetadata)
         }

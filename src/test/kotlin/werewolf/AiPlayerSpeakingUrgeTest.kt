@@ -25,11 +25,25 @@ class AiPlayerSpeakingUrgeTest {
         assertEquals(Eagerness.URGENT, yuri.eagerness(openContext(listOf(yuri))))
     }
 
+    private val zoe = ReceivingPlayer(Role.SEER, "Zoe")
+
+    // 直前にZoeが占い師COした議論
+    private fun afterSeerClaim(player: AiPlayer) =
+        openContext(listOf(player, zoe), previousStatement = Statement.RoleClaim(zoe, Role.SEER))
+
     @Test
     fun `eagerness returns counter claim level when the player chooses to counter claim`() {
         val lm = FakeLanguageModel("占い師COしたZoeに対抗COするため：5")
         val madman = AiPlayer(Role.MADMAN, "Madman", lm, lm, testInstruction("Madman"))
-        assertEquals(Eagerness.COUNTER_CLAIM, madman.eagerness(openContext(listOf(madman))))
+        assertEquals(Eagerness.COUNTER_CLAIM, madman.eagerness(afterSeerClaim(madman)))
+    }
+
+    @Test
+    fun `counter claim level cannot be chosen when the previous statement claims no role`() {
+        val lm = FakeLanguageModel("占い師COしたZoeに対抗COするため：5", "占い師COするため：4")
+        val madman = AiPlayer(Role.MADMAN, "Madman", lm, lm, testInstruction("Madman"))
+        assertEquals(Eagerness.ANNOUNCEMENT, madman.eagerness(openContext(listOf(madman, zoe))))
+        assertFalse(lm.instructions.first().contains("対抗COする（"))
     }
 
     @Test
@@ -59,7 +73,7 @@ class AiPlayerSpeakingUrgeTest {
     fun `counter claim and announcement levels cannot be chosen by a player who can neither claim nor report`() {
         val lm = FakeLanguageModel("占い師COしたZoeに対抗COするため：5", "Zoeの占い結果に意見したいため：2")
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
-        assertEquals(Eagerness.OPINION, villager.eagerness(openContext(listOf(villager))))
+        assertEquals(Eagerness.OPINION, villager.eagerness(afterSeerClaim(villager)))
         assertFalse(lm.instructions.first().contains("対抗COする（"))
         assertFalse(lm.instructions.first().contains("役職COや、"))
     }
@@ -68,7 +82,7 @@ class AiPlayerSpeakingUrgeTest {
     fun `eagerness prompt lists counter claim level when the player can claim a role`() {
         val lm = FakeLanguageModel("占い師COしたZoeに、真の占い師として対抗COするため：5")
         val seer = AiPlayer(Role.SEER, "Seer", lm, lm, testInstruction("Seer"))
-        seer.eagerness(openContext(listOf(seer)))
+        seer.eagerness(afterSeerClaim(seer))
         assertContains(lm.instructions.first(), "5：対抗COする（")
     }
 

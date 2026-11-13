@@ -23,7 +23,7 @@ class ConclaveTest {
         var heardCountWhenEnded: Int? = null
         private var statementIndex = 0
 
-        override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility) =
+        override fun feelUrge(context: DiscussionContext, eligibility: UrgeEligibility) =
             SpeakingUrge(this, context, Eagerness(eagerness), "", UnimplementedActionMetadata)
 
         override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {

@@ -21,6 +21,7 @@ import werewolf.game.SelectionContext
 import werewolf.game.SpeakingUrge
 import werewolf.game.Statement
 import werewolf.game.StatementType
+import werewolf.game.UrgeEligibility
 import werewolf.game.selectableTypes
 
 class AiPlayer(
@@ -52,13 +53,12 @@ class AiPlayer(
         else -> false
     }
 
-    override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): SpeakingUrge {
-        val selectableTypes = context.selectableTypes(claimableRoles, reportEligibility)
-        val instruction = urgeFormat.buildInstruction(context, selectableTypes)
+    override fun feelUrge(context: DiscussionContext, eligibility: UrgeEligibility): SpeakingUrge {
+        val instruction = urgeFormat.buildInstruction(context, eligibility)
         repeat(2) {
             val completion = prompt(urgeLanguageModel, instruction)
             try {
-                val parsed = urgeFormat.parse(completion.text, selectableTypes)
+                val parsed = urgeFormat.parse(completion.text, eligibility)
                 // 発言のたびにたまって入力が膨らみ、AIも解釈しにくいため記憶には入れない
                 return SpeakingUrge(
                     this, context, parsed.eagerness,

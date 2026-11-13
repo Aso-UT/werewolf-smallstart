@@ -13,6 +13,7 @@ import werewolf.game.SelectionContext
 import werewolf.game.SpeakingUrge
 import werewolf.game.Statement
 import werewolf.game.StatementType
+import werewolf.game.UrgeEligibility
 import werewolf.game.selectableTypes
 import werewolf.view.ChoiceView
 import kotlin.time.measureTimedValue
@@ -39,7 +40,7 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
         screen.show(event)
     }
 
-    override fun feelUrge(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): SpeakingUrge {
+    override fun feelUrge(context: DiscussionContext, eligibility: UrgeEligibility): SpeakingUrge {
         val (wantsToSpeak, metadata) = measured(HumanActionKind.SPEAKING_URGE) {
             io.promptSpeakingUrge(context.title, URGE_SECONDS)
         }
