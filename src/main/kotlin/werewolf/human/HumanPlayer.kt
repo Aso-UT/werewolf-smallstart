@@ -42,8 +42,7 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
     override fun feelUrge(context: DiscussionContext, eligibility: UrgeEligibility): SpeakingUrge {
         val buttons = UrgeButton.available(eligibility)
         val (pressed, metadata) = measured(HumanActionKind.SPEAKING_URGE) {
-            val label = io.promptSpeakingUrge(context.title, URGE_SECONDS, buttons.map { it.label }, UrgeButton.Pass.label)
-            (buttons + UrgeButton.Pass).single { it.label == label }
+            io.pressedUrgeButton(context.title, URGE_SECONDS, buttons)
         }
         return pressed.press(this, context, metadata)
     }
