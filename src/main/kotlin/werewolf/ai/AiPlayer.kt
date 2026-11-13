@@ -176,6 +176,8 @@ class AiPlayer(
 
     override fun watchEpilogue(chronicles: List<ChronicleView>, metadataTotals: List<String>) = Unit
 
+    override fun onRevealing(signal: GameOverSignal) { /* AI players record everything as they act */ }
+
     private fun prompt(model: LanguageModel, instruction: String): Completion {
         val history = _myMemories.map { toHistoryEntry(it.toRecallView()) }
         val instructionText = buildString {

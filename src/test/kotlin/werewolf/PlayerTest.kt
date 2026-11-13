@@ -85,6 +85,19 @@ class PlayerTest {
         }
     }
 
+    // 明かされる直前に、まだ記録していなかった行動を記録する
+    private class LateRecordingPlayer(role: Role, name: String) : NothingPlayer(role, name) {
+        override fun onRevealing(signal: GameOverSignal) {
+            memorize(FallbackChoice(this, SelectionContext.Vote(this, listOf(this, NothingPlayer(Role.VILLAGER, "Other")))))
+        }
+    }
+
+    @Test
+    fun `reveal includes what the player records when told the game is over`() {
+        val player = LateRecordingPlayer(Role.VILLAGER, "Player")
+        assertTrue(player.reveal(fakeCitizenWinSignal()).any { it is Choice })
+    }
+
     @Test
     fun `selectTarget throws when choose returns a choice with wrong chooser`() {
         val otherPlayer = NothingPlayer(Role.VILLAGER, "OtherPlayer")

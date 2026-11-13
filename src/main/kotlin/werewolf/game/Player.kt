@@ -55,8 +55,14 @@ abstract class Player(private val role: Role) : Notifiable {
     }
 
     // signal is a capability token: only callers who hold a GameOverSignal (i.e., after game over) can access memories
-    @Suppress("UnusedParameter")
-    fun reveal(signal: GameOverSignal): List<Recallable> = _memories.toList()
+    fun reveal(signal: GameOverSignal): List<Recallable> {
+        onRevealing(signal)
+        return _memories.toList()
+    }
+
+    // 記録を明かす前に、ゲームが終わったことをプレイヤー自身に伝える。まだ記録していないものがあれば、ここで記録する。
+    // reveal は振り返りのために何度も呼ばれるので、2回目以降は何もしないようにすること
+    protected abstract fun onRevealing(signal: GameOverSignal)
 
     fun buildNightAction(players: List<Player>, isFirstNight: Boolean): NightAction =
         role.buildNightAction(this, players, isFirstNight, _memories.filterIsInstance<GameEvent>())

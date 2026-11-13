@@ -8,4 +8,5 @@ open class NothingPlayer(role: Role, override val name: String) : Player(role) {
     override fun onReceive(event: GameEvent) { error("onReceive not expected") }
     override fun choose(context: SelectionContext): Choice = error("choose not expected")
     override fun watchEpilogue(chronicles: List<ChronicleView>, metadataTotals: List<String>) { error("watchEpilogue not expected") }
+    override fun onRevealing(signal: GameOverSignal) { /* tests record everything as the player acts */ }
 }
