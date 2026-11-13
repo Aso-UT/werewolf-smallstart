@@ -20,7 +20,7 @@ sealed class Statement {
         val comment: String = "",
     ) : Statement() {
         override val type = StatementType.DIVINATION_REPORT
-        override val claimedRole = Role.SEER
+        override val claimedRole = type.reporterRole
         override fun text() = "${target.name}を占ったところ、「${result.displayName}」でした。".withComment(comment)
     }
 
@@ -31,7 +31,7 @@ sealed class Statement {
         val comment: String = "",
     ) : Statement() {
         override val type = StatementType.MEDIUM_REPORT
-        override val claimedRole = Role.MEDIUM
+        override val claimedRole = type.reporterRole
         override fun text() = "${target.name}の霊能結果は、「${result.displayName}」でした。".withComment(comment)
     }
 
