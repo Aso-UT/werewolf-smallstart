@@ -8,6 +8,7 @@ import werewolf.game.DivineResult
 import werewolf.game.Eagerness
 import werewolf.game.GameEvent
 import werewolf.game.Role
+import werewolf.game.SpeakingRight
 import werewolf.game.Statement
 
 import kotlin.test.Test
@@ -137,7 +138,7 @@ class AiPlayerSpeakingUrgeTest {
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
         val context = openContext(listOf(villager))
         villager.speakingUrge(context)
-        villager.discuss(context)
+        villager.discuss(context, SpeakingRight.Uncontested(villager))
         assertFalse(lm.histories[1].any { it.contains("Zackの発言の矛盾を指摘したいため") })
     }
 
@@ -148,7 +149,7 @@ class AiPlayerSpeakingUrgeTest {
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, urgeLm, testInstruction())
         val context = openContext(listOf(villager))
         villager.speakingUrge(context)
-        villager.discuss(context)
+        villager.discuss(context, SpeakingRight.Uncontested(villager))
         assertEquals(1, urgeLm.instructions.size)
         assertEquals(1, lm.instructions.size)
     }

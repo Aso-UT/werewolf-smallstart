@@ -21,8 +21,10 @@ abstract class Player(private val role: Role) : Notifiable {
         return choice.selected
     }
     protected abstract fun choose(context: SelectionContext): Choice
-    fun discuss(context: DiscussionContext): Statement {
-        val claim = speak(context, claimableRoles(), ReportEligibility.forRole(role, _memories, this))
+    fun discuss(context: DiscussionContext, right: SpeakingRight): Statement {
+        require(right.speaker === this) { "${right.speaker.name} has the right to speak, not $name" }
+        val reportEligibility = ReportEligibility.forRole(role, _memories, this)
+        val claim = speak(right.narrow(context), right.narrowClaimableRoles(claimableRoles()), reportEligibility)
         require(claim.speaker === this) { "${claim.speaker.name} is not the speaking player" }
         require(claim.statement.claimant === this) { "${claim.statement.claimant.name} is not the statement's claimant" }
         _memories.add(claim)

@@ -8,6 +8,7 @@ import werewolf.game.GameEvent
 import werewolf.game.Notifiable
 import werewolf.game.Player
 import werewolf.game.PlayerManager
+import werewolf.game.SpeakingRight
 import werewolf.game.SpeakingUrge
 import werewolf.game.Statement
 import kotlin.time.Duration
@@ -37,10 +38,10 @@ abstract class Discussion<R : Notifiable>(
         while (!reachedTotalLimit(history)) {
             val contexts = eligibleSpeakerContexts(history)
             if (contexts.isEmpty()) return
-            val speaker = nextSpeaker(contexts)
-            val context = contexts.getValue(speaker)
-            val statement = speaker.discuss(context)
-            sendStatement(context.round, speaker.name, statement, recipients)
+            val right = grantSpeakingRight(contexts)
+            val context = contexts.getValue(right.speaker)
+            val statement = right.speaker.discuss(context, right)
+            sendStatement(context.round, right.speaker.name, statement, recipients)
             history.record(statement)
         }
     }
@@ -57,11 +58,9 @@ abstract class Discussion<R : Notifiable>(
     private fun reachedPersonalLimit(player: Player, history: SpeakingHistory): Boolean =
         history.countOf(player) >= MAX_STATEMENTS_PER_SPEAKER
 
-    private fun nextSpeaker(contexts: Map<Player, DiscussionContext>): Player =
-        contexts.keys.singleOrNull() ?: mostEager(contexts)
-
-    private fun mostEager(contexts: Map<Player, DiscussionContext>): Player =
-        mostEagerUrges(collectUrges(contexts)).random().player
+    private fun grantSpeakingRight(contexts: Map<Player, DiscussionContext>): SpeakingRight =
+        contexts.keys.singleOrNull()?.let { SpeakingRight.Uncontested(it) }
+            ?: SpeakingRight.Won(mostEagerUrges(collectUrges(contexts)).random())
 
     private fun mostEagerUrges(urges: Collection<SpeakingUrge>): List<SpeakingUrge> {
         val highest = urges.maxOf { it.eagerness }

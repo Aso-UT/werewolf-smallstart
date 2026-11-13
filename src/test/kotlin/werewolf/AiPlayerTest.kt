@@ -9,6 +9,7 @@ import werewolf.game.GameEvent
 import werewolf.game.GameOverSignal
 import werewolf.game.Role
 import werewolf.game.SelectionContext
+import werewolf.game.SpeakingRight
 import werewolf.game.Statement
 
 import kotlin.test.Test
@@ -25,7 +26,7 @@ class AiPlayerTest {
         val lm = FakeLanguageModel("発言する：[真意]")
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
         GameEvent.RoleAssigned.send(Role.VILLAGER, villager)
-        villager.discuss(openContext())
+        villager.discuss(openContext(), SpeakingRight.Uncontested(villager))
         assertContains(lm.prompts.first(), "役職通知")
     }
 
@@ -35,7 +36,7 @@ class AiPlayerTest {
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
         val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
         villager.selectTarget(SelectionContext.Vote(villager, listOf(villager, wolf)))
-        villager.discuss(openContext())
+        villager.discuss(openContext(), SpeakingRight.Uncontested(villager))
         assertContains(lm.prompts[1], "投票")
         assertContains(lm.prompts[1], "Wolf")
     }
@@ -45,7 +46,7 @@ class AiPlayerTest {
         val lm = FakeLanguageModel("発言する：hello[真意内容]", "怪しいから：Wolf")
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
         val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
-        villager.discuss(openContext())
+        villager.discuss(openContext(), SpeakingRight.Uncontested(villager))
         villager.selectTarget(SelectionContext.Vote(villager, listOf(villager, wolf)))
         assertContains(lm.histories[1], "<議論> Villager（あなた）: hello　〔あなたのメモ：真意内容〕")
     }
@@ -57,7 +58,7 @@ class AiPlayerTest {
         val wolf = ReceivingPlayer(Role.WEREWOLF, "Wolf")
         val setup = TestLodge(villager to Role.VILLAGER, wolf to Role.WEREWOLF).create()
 
-        val statement = villager.discuss(openContext())
+        val statement = villager.discuss(openContext(), SpeakingRight.Uncontested(villager))
         GameEvent.StatementMade.send(1, "Villager", statement, AllPlayers(setup.playerManager))
         villager.selectTarget(SelectionContext.Vote(villager, listOf(villager, wolf)))
 
@@ -73,7 +74,7 @@ class AiPlayerTest {
         val allPlayers = AllPlayers(setup.playerManager)
 
         GameEvent.StatementMade.send(1, "Alice", Statement.Plain(alice, "怪しい人がいます"), allPlayers)
-        villager.discuss(openContext())
+        villager.discuss(openContext(), SpeakingRight.Uncontested(villager))
 
         assertContains(lm.prompts.first(), "Alice: 怪しい人がいます")
     }
@@ -82,7 +83,7 @@ class AiPlayerTest {
     fun `instruction appears in prompt`() {
         val lm = FakeLanguageModel("発言する：[真意]")
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, Instruction("Villager", "慎重に行動してください。"))
-        villager.discuss(openContext())
+        villager.discuss(openContext(), SpeakingRight.Uncontested(villager))
         assertContains(lm.prompts.first(), "慎重に行動してください。")
     }
 
@@ -121,6 +122,6 @@ class AiPlayerTest {
     fun `discuss throws GameOverSignal when languageModel throws`() {
         val lm = LanguageModel { _, _, _ -> throw Exception("API error") }
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
-        assertFailsWith<GameOverSignal> { villager.discuss(openContext()) }
+        assertFailsWith<GameOverSignal> { villager.discuss(openContext(), SpeakingRight.Uncontested(villager)) }
     }
 }

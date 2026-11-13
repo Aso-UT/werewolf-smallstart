@@ -55,6 +55,20 @@ class DiscussionTest {
         }
     }
 
+    // いつもCO・結果報告を希望し、選べる発言の種類を記録して占い師COする
+    private class AnnouncingPlayer(role: Role, name: String) : ReceivingPlayer(role, name) {
+        val receivedTypes = mutableListOf<Set<StatementType>>()
+
+        override fun feelUrge(context: DiscussionContext, eligibility: UrgeEligibility) =
+            SpeakingUrge(this, context, Eagerness.ANNOUNCEMENT, "", UnimplementedActionMetadata)
+
+        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
+            receivedTypes.add(context.selectableTypes(claimableRoles, reportEligibility))
+            val statement = Statement.RoleClaim(this, Role.SEER)
+            return Claim(this, context, statement, claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
+        }
+    }
+
     // 発言するほど意欲が下がり、同じ発言回数なら priority が小さい方が意欲が高い。
     // priority を 0, 1, 2... と割り振ると、その順に1回ずつ発言が回る
     private fun takingTurns(priority: Int): (DiscussionContext) -> Eagerness =
@@ -244,6 +258,20 @@ class DiscussionTest {
 
         assertEquals(listOf(null, "d", "e"), alice.previousStatements)
         assertEquals(listOf("a", "b", "c"), bob.previousStatements)
+    }
+
+    @Test
+    fun `statement types are narrowed only when the speaker won with an urge`() {
+        val madman = AnnouncingPlayer(Role.MADMAN, "Madman")
+        val bob = ScriptedPlayer(Role.VILLAGER, "Bob", listOf("1", "2", "3"), constant(0))
+        val playerManager = TestLodge(madman to Role.MADMAN, bob to Role.VILLAGER).create().playerManager
+
+        OpenDiscussion(playerManager, 1).conduct()
+
+        // 2人では、最初の1回だけ意欲で発言者を決め、その後は交互に競争なしで発言する
+        val announcementTypes = setOf(StatementType.ROLE_CLAIM, StatementType.DIVINATION_REPORT, StatementType.MEDIUM_REPORT)
+        val allTypes = StatementType.entries.toSet()
+        assertEquals(listOf(announcementTypes, allTypes, allTypes), madman.receivedTypes)
     }
 
     private fun speakingOrderHeardBy(listener: ScriptedPlayer): List<String> =

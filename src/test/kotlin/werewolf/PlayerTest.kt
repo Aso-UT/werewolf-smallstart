@@ -73,6 +73,18 @@ class PlayerTest {
         }
     }
 
+    // 選べる発言の種類とCOできる役職を記録し、COできる役職の一つをCOする
+    private class RecordingClaimer(role: Role, name: String) : ReceivingPlayer(role, name) {
+        var receivedTypes: Set<StatementType>? = null
+        var receivedClaimableRoles: Set<Role>? = null
+        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
+            receivedTypes = context.selectableTypes(claimableRoles, reportEligibility)
+            receivedClaimableRoles = claimableRoles
+            val statement = Statement.RoleClaim(this, claimableRoles.first())
+            return Claim(this, context, statement, claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
+        }
+    }
+
     @Test
     fun `selectTarget throws when choose returns a choice with wrong chooser`() {
         val otherPlayer = NothingPlayer(Role.VILLAGER, "OtherPlayer")
@@ -95,7 +107,7 @@ class PlayerTest {
         val otherPlayer = NothingPlayer(Role.VILLAGER, "OtherPlayer")
         val player = ArbitrarySpeakerSetter(Role.VILLAGER, "Player", speakerToSet = otherPlayer)
         val context = openContext(listOf(player, otherPlayer))
-        assertFailsWith<IllegalArgumentException> { player.discuss(context) }
+        assertFailsWith<IllegalArgumentException> { player.discuss(context, SpeakingRight.Uncontested(player)) }
     }
 
     @Test
@@ -103,14 +115,61 @@ class PlayerTest {
         val otherPlayer = NothingPlayer(Role.VILLAGER, "OtherPlayer")
         val player = ArbitraryClaimantSetter(Role.VILLAGER, "Player", claimantToSet = otherPlayer)
         val context = openContext(listOf(player, otherPlayer))
-        assertFailsWith<IllegalArgumentException> { player.discuss(context) }
+        assertFailsWith<IllegalArgumentException> { player.discuss(context, SpeakingRight.Uncontested(player)) }
     }
 
     @Test
     fun `discuss records claim in player memories`() {
         val player = SpeakingPlayer(Role.VILLAGER, "Player")
-        player.discuss(openContext(listOf(player)))
+        player.discuss(openContext(listOf(player)), SpeakingRight.Uncontested(player))
         assertTrue(player.reveal(fakeCitizenWinSignal()).any { it is Claim })
+    }
+
+    @Test
+    fun `discuss throws when another player has the right to speak`() {
+        val otherPlayer = NothingPlayer(Role.VILLAGER, "OtherPlayer")
+        val player = SpeakingPlayer(Role.VILLAGER, "Player")
+        val context = openContext(listOf(player, otherPlayer))
+        assertFailsWith<IllegalArgumentException> { player.discuss(context, SpeakingRight.Uncontested(otherPlayer)) }
+    }
+
+    @Test
+    fun `uncontested speaker can make any statement`() {
+        val player = RecordingClaimer(Role.MADMAN, "Player")
+        player.discuss(openContext(listOf(player)), SpeakingRight.Uncontested(player))
+        assertEquals(StatementType.entries.toSet(), player.receivedTypes)
+    }
+
+    @Test
+    fun `speaker who won with an announcement can only claim a role or report results`() {
+        val player = RecordingClaimer(Role.MADMAN, "Player")
+        val context = openContext(listOf(player))
+        val urge = SpeakingUrge(player, context, Eagerness.ANNOUNCEMENT, "", UnimplementedActionMetadata)
+
+        player.discuss(context, SpeakingRight.Won(urge))
+
+        assertEquals(setOf(StatementType.ROLE_CLAIM, StatementType.DIVINATION_REPORT, StatementType.MEDIUM_REPORT), player.receivedTypes)
+    }
+
+    @Test
+    fun `speaker who won with an announcement cannot make a plain statement`() {
+        val player = SpeakingPlayer(Role.MADMAN, "Player")
+        val context = openContext(listOf(player))
+        val urge = SpeakingUrge(player, context, Eagerness.ANNOUNCEMENT, "", UnimplementedActionMetadata)
+
+        assertFailsWith<IllegalArgumentException> { player.discuss(context, SpeakingRight.Won(urge)) }
+    }
+
+    @Test
+    fun `speaker who won with a counter claim can only claim that role or report its results`() {
+        val player = RecordingClaimer(Role.MADMAN, "Player")
+        val context = openContext(listOf(player))
+        val urge = CounterClaimSpeakingUrge(player, context, Role.SEER, "", UnimplementedActionMetadata)
+
+        player.discuss(context, SpeakingRight.Won(urge))
+
+        assertEquals(setOf(StatementType.ROLE_CLAIM, StatementType.DIVINATION_REPORT), player.receivedTypes)
+        assertEquals(setOf(Role.SEER), player.receivedClaimableRoles)
     }
 
     @Test
@@ -140,14 +199,14 @@ class PlayerTest {
     @Test
     fun `villager cannot claim any role`() {
         val player = CapturingSpeakerPlayer(Role.VILLAGER, "Player")
-        player.discuss(openContext(listOf(player)))
+        player.discuss(openContext(listOf(player)), SpeakingRight.Uncontested(player))
         assertEquals(emptySet(), player.receivedClaimableRoles)
     }
 
     @Test
     fun `seer can claim own role when not yet revealed`() {
         val player = CapturingSpeakerPlayer(Role.SEER, "Player")
-        player.discuss(openContext(listOf(player)))
+        player.discuss(openContext(listOf(player)), SpeakingRight.Uncontested(player))
         assertEquals(setOf(Role.SEER), player.receivedClaimableRoles)
     }
 
@@ -157,7 +216,7 @@ class PlayerTest {
         val allPlayers = AllPlayers(TestLodge(player to Role.SEER).create().playerManager)
         GameEvent.StatementMade.send(1, player.name, Statement.RoleClaim(player, Role.SEER), allPlayers)
 
-        player.discuss(openContext(listOf(player)))
+        player.discuss(openContext(listOf(player)), SpeakingRight.Uncontested(player))
 
         assertEquals(emptySet(), player.receivedClaimableRoles)
     }
@@ -168,7 +227,7 @@ class PlayerTest {
         val allPlayers = AllPlayers(TestLodge(player to Role.WEREWOLF).create().playerManager)
         GameEvent.StatementMade.send(1, player.name, Statement.RoleClaim(player, Role.SEER), allPlayers)
 
-        player.discuss(openContext(listOf(player)))
+        player.discuss(openContext(listOf(player)), SpeakingRight.Uncontested(player))
 
         assertEquals(Role.entries.toSet() - Role.VILLAGER, player.receivedClaimableRoles)
     }
