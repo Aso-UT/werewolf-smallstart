@@ -32,7 +32,7 @@ class HumanPlayerSpeakingUrgeTest {
         val io = ButtonPressingIO(pressing = null)
         val villager = HumanPlayer(Role.VILLAGER, "Human", io)
 
-        villager.eagerness(afterSeerClaim(villager))
+        villager.speakingUrge(afterSeerClaim(villager))
 
         assertEquals(listOf("発言を希望"), io.offeredButtons)
     }
@@ -42,7 +42,7 @@ class HumanPlayerSpeakingUrgeTest {
         val io = ButtonPressingIO(pressing = null)
         val madman = HumanPlayer(Role.MADMAN, "Human", io)
 
-        madman.eagerness(afterSeerClaim(madman))
+        madman.speakingUrge(afterSeerClaim(madman))
 
         assertEquals(listOf("対抗CO（占い師）", "CO・結果報告", "発言を希望"), io.offeredButtons)
     }
@@ -51,7 +51,7 @@ class HumanPlayerSpeakingUrgeTest {
     fun `pressing the counter claim button gives the highest eagerness with the role to counter`() {
         val madman = HumanPlayer(Role.MADMAN, "Human", ButtonPressingIO(pressing = "対抗CO（占い師）"))
 
-        assertEquals(Eagerness.COUNTER_CLAIM, madman.eagerness(afterSeerClaim(madman)))
+        assertEquals(Eagerness.COUNTER_CLAIM, madman.speakingUrge(afterSeerClaim(madman)).eagerness)
         val urge = madman.reveal(fakeCitizenWinSignal()).filterIsInstance<CounterClaimSpeakingUrge>().single()
         assertEquals(Role.SEER, urge.role)
     }
@@ -59,19 +59,19 @@ class HumanPlayerSpeakingUrgeTest {
     @Test
     fun `pressing the announcement button gives the announcement eagerness`() {
         val madman = HumanPlayer(Role.MADMAN, "Human", ButtonPressingIO(pressing = "CO・結果報告"))
-        assertEquals(Eagerness.ANNOUNCEMENT, madman.eagerness(afterSeerClaim(madman)))
+        assertEquals(Eagerness.ANNOUNCEMENT, madman.speakingUrge(afterSeerClaim(madman)).eagerness)
     }
 
     @Test
     fun `pressing the speak button gives an eagerness below announcements and counter claims`() {
         val madman = HumanPlayer(Role.MADMAN, "Human", ButtonPressingIO(pressing = "発言を希望"))
-        assertEquals(Eagerness.URGENT, madman.eagerness(afterSeerClaim(madman)))
+        assertEquals(Eagerness.URGENT, madman.speakingUrge(afterSeerClaim(madman)).eagerness)
     }
 
     @Test
     fun `timing out without pressing any button gives lower eagerness than the default`() {
         val villager = HumanPlayer(Role.VILLAGER, "Human", ButtonPressingIO(pressing = null))
-        assertEquals(Eagerness.UNWILLING, villager.eagerness(afterSeerClaim(villager)))
+        assertEquals(Eagerness.UNWILLING, villager.speakingUrge(afterSeerClaim(villager)).eagerness)
     }
 
     private class CallRecordingIO : NothingHumanIO() {
@@ -86,7 +86,7 @@ class HumanPlayerSpeakingUrgeTest {
         val io = CallRecordingIO()
         val player = HumanPlayer(Role.VILLAGER, "Human", io)
 
-        player.eagerness(DiscussionContext.Open(1, 1, listOf(player), listOf(player)))
+        player.speakingUrge(DiscussionContext.Open(1, 1, listOf(player), listOf(player)))
 
         assertEquals(listOf("waitUntilReady", "promptSpeakingUrge"), io.calls)
     }

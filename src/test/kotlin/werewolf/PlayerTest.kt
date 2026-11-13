@@ -114,27 +114,27 @@ class PlayerTest {
     }
 
     @Test
-    fun `eagerness throws when feelUrge returns an urge of another player`() {
+    fun `speakingUrge throws when feelUrge returns an urge of another player`() {
         val otherPlayer = NothingPlayer(Role.VILLAGER, "OtherPlayer")
         val player = ArbitraryUrgedPlayerSetter(Role.VILLAGER, "Player", playerToSet = otherPlayer)
         val context = openContext(listOf(player, otherPlayer))
-        assertFailsWith<IllegalArgumentException> { player.eagerness(context) }
+        assertFailsWith<IllegalArgumentException> { player.speakingUrge(context) }
     }
 
     @Test
-    fun `eagerness records speaking urge in player memories and returns its eagerness`() {
+    fun `speakingUrge records the urge in player memories and returns it`() {
         val player = UrgedPlayer(Role.VILLAGER, "Player")
-        val eagerness = player.eagerness(openContext(listOf(player)))
+        val eagerness = player.speakingUrge(openContext(listOf(player))).eagerness
         assertEquals(Eagerness(3), eagerness)
         assertTrue(player.reveal(fakeCitizenWinSignal()).any { it is SpeakingUrge })
     }
 
     @Test
-    fun `eagerness throws when counter claiming a role other than the one just claimed`() {
+    fun `speakingUrge throws when counter claiming a role other than the one just claimed`() {
         val claimer = NothingPlayer(Role.SEER, "Claimer")
         val player = CounterClaimingPlayer(Role.MADMAN, "Player", counterRole = Role.MEDIUM)
         val context = openContext(listOf(player, claimer), previousStatement = Statement.RoleClaim(claimer, Role.SEER))
-        assertFailsWith<IllegalArgumentException> { player.eagerness(context) }
+        assertFailsWith<IllegalArgumentException> { player.speakingUrge(context) }
     }
 
     @Test

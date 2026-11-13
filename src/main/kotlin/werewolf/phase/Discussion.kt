@@ -4,11 +4,11 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import werewolf.game.AllPlayers
 import werewolf.game.DiscussionContext
-import werewolf.game.Eagerness
 import werewolf.game.GameEvent
 import werewolf.game.Notifiable
 import werewolf.game.Player
 import werewolf.game.PlayerManager
+import werewolf.game.SpeakingUrge
 import werewolf.game.Statement
 import kotlin.time.Duration
 import kotlin.time.measureTime
@@ -61,15 +61,15 @@ abstract class Discussion<R : Notifiable>(
         contexts.keys.singleOrNull() ?: mostEager(contexts)
 
     private fun mostEager(contexts: Map<Player, DiscussionContext>): Player =
-        playersWithHighestEagerness(collectEagerness(contexts)).random()
+        mostEagerUrges(collectUrges(contexts)).random().player
 
-    private fun playersWithHighestEagerness(eagerness: Map<Player, Eagerness>): Set<Player> {
-        val highest = eagerness.values.max()
-        return eagerness.filterValues { it == highest }.keys
+    private fun mostEagerUrges(urges: Collection<SpeakingUrge>): List<SpeakingUrge> {
+        val highest = urges.maxOf { it.eagerness }
+        return urges.filter { it.eagerness == highest }
     }
 
-    private fun collectEagerness(contexts: Map<Player, DiscussionContext>): Map<Player, Eagerness> =
-        contexts.keys.askInParallel(dispatcher) { it.eagerness(contexts.getValue(it)) }
+    private fun collectUrges(contexts: Map<Player, DiscussionContext>): Collection<SpeakingUrge> =
+        contexts.keys.askInParallel(dispatcher) { it.speakingUrge(contexts.getValue(it)) }.values
 
     companion object {
         private const val MAX_STATEMENTS_PER_SPEAKER = 4
