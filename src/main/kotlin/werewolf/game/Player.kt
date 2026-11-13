@@ -35,13 +35,16 @@ abstract class Player(private val role: Role) : Notifiable {
         val eligibility = UrgeEligibility(context, claimableRoles(), ReportEligibility.forRole(role, _memories, this))
         val urge = feelUrge(context, eligibility)
         require(urge.player === this) { "${urge.player.name} is not the urged player" }
-        if (urge is CounterClaimSpeakingUrge) {
-            require(urge.role == eligibility.counterClaimRole) { "${urge.player.name} cannot counter claim ${urge.role}" }
-        }
+        requireCounterClaimable(urge, eligibility)
         _memories.add(urge)
         return urge.eagerness
     }
     protected abstract fun feelUrge(context: DiscussionContext, eligibility: UrgeEligibility): SpeakingUrge
+
+    private fun requireCounterClaimable(urge: SpeakingUrge, eligibility: UrgeEligibility) {
+        if (urge !is CounterClaimSpeakingUrge) return
+        require(urge.role == eligibility.counterClaimRole) { "${urge.player.name} cannot counter claim ${urge.role}" }
+    }
 
     private fun claimableRoles(): Set<Role> {
         val alreadyRevealed = ClaimedRole(_memories).of(this) == role
