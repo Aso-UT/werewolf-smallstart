@@ -14,7 +14,6 @@ import werewolf.game.Statement
 import werewolf.game.StatementType
 import werewolf.game.UrgeEligibility
 import werewolf.game.selectableTypes
-import werewolf.view.ChoiceView
 import kotlin.time.measureTimedValue
 
 class HumanPlayer(role: Role, override val name: String, private val io: HumanIO) : Player(role) {
@@ -24,11 +23,12 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
     }
 
     private val screen = HumanScreen(io)
+    private val selection = HumanSelection(io)
 
     override fun choose(context: SelectionContext): Choice {
         screen.showSelectionMood(context)
         val (selected, metadata) = measured(HumanActionKind.CHOICE) {
-            select(context.title, context.description, context.candidates()) { it.name }
+            selection.select(context.title, context.description, context.candidates()) { it.name }
         }
         val choice = Choice(this, context, selected, "プレイヤーが選択", metadata)
         io.display(choice.toRecallView())
@@ -71,38 +71,30 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
 
     private fun selectType(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): StatementType {
         val types = StatementType.entries.filter { it in context.selectableTypes(claimableRoles, reportEligibility) }
-        return select(context.title, context.description, types) { it.displayName }
+        return selection.select(context.title, context.description, types) { it.displayName }
     }
 
     private fun buildPlain(context: DiscussionContext): Statement =
         Statement.Plain(this, io.promptFreeText(context.title, "発言してください"))
 
     private fun buildDivinationReport(reportEligibility: ReportEligibility): Statement {
-        val target = select("占い報告 - 対象", "誰の占い結果を報告しますか？", reportEligibility.divinationCandidates()) { it.name }
-        val result = select("占い報告 - 結果", "占い結果を選んでください", reportEligibility.divinationResults(target)) { it.displayName }
+        val target = selection.select("占い報告 - 対象", "誰の占い結果を報告しますか？", reportEligibility.divinationCandidates()) { it.name }
+        val result = selection.select("占い報告 - 結果", "占い結果を選んでください", reportEligibility.divinationResults(target)) { it.displayName }
         val comment = io.promptFreeText("占い報告 - 補足", COMMENT_PROMPT)
         return Statement.DivinationReport(this, target, result, comment)
     }
 
     private fun buildMediumReport(reportEligibility: ReportEligibility): Statement {
-        val target = select("霊媒報告 - 対象", "誰の霊媒結果を報告しますか？", reportEligibility.mediumCandidates()) { it.name }
-        val result = select("霊媒報告 - 結果", "霊媒結果を選んでください", reportEligibility.mediumResults(target)) { it.displayName }
+        val target = selection.select("霊媒報告 - 対象", "誰の霊媒結果を報告しますか？", reportEligibility.mediumCandidates()) { it.name }
+        val result = selection.select("霊媒報告 - 結果", "霊媒結果を選んでください", reportEligibility.mediumResults(target)) { it.displayName }
         val comment = io.promptFreeText("霊媒報告 - 補足", COMMENT_PROMPT)
         return Statement.MediumReport(this, target, result, comment)
     }
 
     private fun buildRoleClaim(claimableRoles: Set<Role>): Statement {
-        val role = select("役職申告 - 役職", "申告する役職を選んでください", claimableRoles.toList()) { it.displayName }
+        val role = selection.select("役職申告 - 役職", "申告する役職を選んでください", claimableRoles.toList()) { it.displayName }
         val comment = io.promptFreeText("役職申告 - 補足", COMMENT_PROMPT)
         return Statement.RoleClaim(this, role, comment)
-    }
-
-    private fun <T> select(title: String, description: String, candidates: List<T>, label: (T) -> String): T =
-        if (candidates.size == 1) candidates.single() else promptChoice(title, description, candidates, label)
-
-    private fun <T> promptChoice(title: String, description: String, candidates: List<T>, label: (T) -> String): T {
-        val selected = io.promptChoice(ChoiceView(title, description, candidates.map(label)))
-        return candidates.single { label(it) == selected }
     }
 
     override fun watchEpilogue(chronicles: List<ChronicleView>, metadataTotals: List<String>) {
