@@ -24,6 +24,7 @@ class AnthropicMetadataTest {
         cacheDiagnostics = CacheDiagnostics(cachedItemCount = 0, newItemCount = 1, timeSinceLastCallMs = null),
         stopReason = "end_turn",
         effort = AnthropicEffort.HIGH,
+        maxTokens = 16000,
         thinkingSummary = thinkingSummary,
         responseTime = 2340.milliseconds,
     )
@@ -33,6 +34,13 @@ class AnthropicMetadataTest {
         val display = metadata("").toDisplayString()
 
         assertTrue(display.contains(" response=2.3s "))
+    }
+
+    @Test
+    fun `max tokens is shown after effort`() {
+        val display = metadata("").toDisplayString()
+
+        assertTrue(display.endsWith(" effort=HIGH max_tokens=16000"))
     }
 
     @Test
@@ -65,39 +73,45 @@ class AnthropicMetadataTest {
         assertFalse(display.contains("思考要約"))
     }
 
-    private fun summable(model: String = "test-model", effort: AnthropicEffort = AnthropicEffort.HIGH, input: Long = 0) =
+    private fun summable(
+        model: String = "test-model",
+        effort: AnthropicEffort = AnthropicEffort.HIGH,
+        maxTokens: Long = 16000,
+        input: Long = 0,
+    ) =
         AnthropicSummableMetadata(
             model = model,
             effort = effort,
+            maxTokens = maxTokens,
             tokenUsage = TokenUsage(input = input, output = 0, cacheCreationInput = 0, cacheReadInput = 0, thinking = 0),
             responseTime = ResponseTimeStats(1.seconds),
             count = 1,
         )
 
     @Test
-    fun `summable has model and effort in decision method and starts with count 1`() {
+    fun `summable has model, effort and max tokens in decision method and starts with count 1`() {
         val summable = metadata("").toSummable()
 
-        assertEquals("Anthropic test-model effort=HIGH", summable.decisionMethod)
+        assertEquals("Anthropic test-model effort=HIGH max_tokens=16000", summable.decisionMethod)
         assertEquals(1, summable.count)
     }
 
     @Test
     fun `plus adds token usages, response times and counts`() {
         val a = AnthropicSummableMetadata(
-            "m", AnthropicEffort.HIGH,
+            "m", AnthropicEffort.HIGH, 16000,
             TokenUsage(input = 1, output = 2, cacheCreationInput = 3, cacheReadInput = 4, thinking = 5),
             ResponseTimeStats(total = 3.seconds, max = 2.seconds), count = 2,
         )
         val b = AnthropicSummableMetadata(
-            "m", AnthropicEffort.HIGH,
+            "m", AnthropicEffort.HIGH, 16000,
             TokenUsage(input = 10, output = 20, cacheCreationInput = 30, cacheReadInput = 40, thinking = 50),
             ResponseTimeStats(total = 6.seconds, max = 4.seconds), count = 3,
         )
 
         assertEquals(
             AnthropicSummableMetadata(
-                "m", AnthropicEffort.HIGH,
+                "m", AnthropicEffort.HIGH, 16000,
                 TokenUsage(input = 11, output = 22, cacheCreationInput = 33, cacheReadInput = 44, thinking = 55),
                 ResponseTimeStats(total = 9.seconds, max = 4.seconds), count = 5,
             ),
@@ -116,6 +130,11 @@ class AnthropicMetadataTest {
     }
 
     @Test
+    fun `plus rejects different max tokens`() {
+        assertFailsWith<IllegalArgumentException> { summable(maxTokens = 16000) + summable(maxTokens = 0) }
+    }
+
+    @Test
     fun `plus rejects other kinds of summable`() {
         assertFailsWith<IllegalArgumentException> { summable() + UnimplementedSummableMetadata(count = 1) }
     }
@@ -123,7 +142,7 @@ class AnthropicMetadataTest {
     @Test
     fun `summable display shows tokens with thinking as part of output, followed by response times`() {
         val summable = AnthropicSummableMetadata(
-            "m", AnthropicEffort.HIGH,
+            "m", AnthropicEffort.HIGH, 16000,
             TokenUsage(input = 12345, output = 1200, cacheCreationInput = 0, cacheReadInput = 10000, thinking = 800),
             ResponseTimeStats(total = 6.seconds, max = 4.seconds), count = 2,
         )

@@ -53,6 +53,7 @@ class AnthropicLanguageModel(
                 cacheDiagnostics = diagnostics,
                 stopReason = message.stopReason().map { it.asString() }.orElse("unknown"),
                 effort = effort,
+                maxTokens = MAX_TOKENS,
                 thinkingSummary = extractThinkingSummary(message),
                 responseTime = responseTime,
             )

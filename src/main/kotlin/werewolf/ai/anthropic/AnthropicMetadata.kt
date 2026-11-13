@@ -52,6 +52,7 @@ class AnthropicMetadata(
     val cacheDiagnostics: CacheDiagnostics,
     val stopReason: String,
     val effort: AnthropicEffort,
+    val maxTokens: Long,
     val thinkingSummary: String,
     val responseTime: Duration,
 ) : ActionMetadata {
@@ -60,12 +61,12 @@ class AnthropicMetadata(
         val stats = "model=$model in=${tokenUsage.input} out=${tokenUsage.output} thinking=${tokenUsage.thinking}" +
             " cache_create=${tokenUsage.cacheCreationInput} cache_read=${tokenUsage.cacheReadInput}" +
             " cached=${cacheDiagnostics.cachedItemCount} new=${cacheDiagnostics.newItemCount} $sinceLast" +
-            " response=${responseTime.toSecondsString()} stop=$stopReason effort=$effort"
+            " response=${responseTime.toSecondsString()} stop=$stopReason effort=$effort max_tokens=$maxTokens"
         val summary = singleLineThinkingSummary()
         return if (summary.isEmpty()) stats else "$stats | 思考要約: $summary"
     }
 
-    override fun toSummable() = AnthropicSummableMetadata(model, effort, tokenUsage, ResponseTimeStats(responseTime), count = 1)
+    override fun toSummable() = AnthropicSummableMetadata(model, effort, maxTokens, tokenUsage, ResponseTimeStats(responseTime), count = 1)
 
     // コンソールの「[...]」表示が崩れないよう、改行などの連続する空白を1つの空白にまとめる
     private fun singleLineThinkingSummary(): String = thinkingSummary.trim().replace(WHITESPACE, " ")
@@ -76,15 +77,17 @@ class AnthropicMetadata(
     }
 }
 
-// effort によってトークン数が大きく変わるため、model と effort の組み合わせを判断方式とする
+// effort によってトークン数が大きく変わるため、model と effort の組み合わせを判断方式とする。
+// max_tokens も含めるのは、キャッシュを保つだけの反芻（max_tokens=0）を本番の呼び出しと分けて合算するため
 data class AnthropicSummableMetadata(
     val model: String,
     val effort: AnthropicEffort,
+    val maxTokens: Long,
     val tokenUsage: TokenUsage,
     val responseTime: ResponseTimeStats,
     override val count: Int,
 ) : SummableMetadata {
-    override val decisionMethod = "Anthropic $model effort=$effort"
+    override val decisionMethod = "Anthropic $model effort=$effort max_tokens=$maxTokens"
 
     override fun plus(other: SummableMetadata): SummableMetadata {
         require(other is AnthropicSummableMetadata && other.decisionMethod == decisionMethod) {
