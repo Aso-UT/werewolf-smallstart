@@ -20,6 +20,6 @@ open class NothingHumanIO : HumanIO {
     override fun waitUntilReady() { error("waitUntilReady not expected") }
     override fun promptChoice(view: ChoiceView): String = error("promptChoice not expected")
     override fun promptFreeText(title: String, description: String): String = error("promptFreeText not expected")
-    override fun promptSpeakingUrge(title: String, seconds: Int, buttons: List<String>): String? = error("promptSpeakingUrge not expected")
+    override fun promptSpeakingUrge(title: String, seconds: Int, buttons: List<String>, timeoutButton: String): String = error("promptSpeakingUrge not expected")
     override fun watchEpilogue(chronicles: List<ChronicleView>, metadataTotals: List<String>) { error("watchEpilogue not expected") }
 }

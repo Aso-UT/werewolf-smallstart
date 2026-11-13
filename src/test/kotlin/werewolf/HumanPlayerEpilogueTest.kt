@@ -27,7 +27,7 @@ class HumanPlayerEpilogueTest {
         override fun waitUntilReady() {}
         override fun promptFreeText(title: String, description: String): String = "human speaks"
         override fun promptChoice(view: ChoiceView): String = view.options.first()
-        override fun promptSpeakingUrge(title: String, seconds: Int, buttons: List<String>): String? = null
+        override fun promptSpeakingUrge(title: String, seconds: Int, buttons: List<String>, timeoutButton: String): String = timeoutButton
         override fun watchEpilogue(chronicles: List<ChronicleView>, metadataTotals: List<String>) { capturedChronicles = chronicles }
     }
 

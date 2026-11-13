@@ -15,9 +15,9 @@ class HumanPlayerSpeakingUrgeTest {
     private class ButtonPressingIO(private val pressing: String?) : NothingHumanIO() {
         var offeredButtons: List<String> = emptyList()
         override fun waitUntilReady() {}
-        override fun promptSpeakingUrge(title: String, seconds: Int, buttons: List<String>): String? {
+        override fun promptSpeakingUrge(title: String, seconds: Int, buttons: List<String>, timeoutButton: String): String {
             offeredButtons = buttons
-            return pressing
+            return pressing ?: timeoutButton
         }
     }
 
@@ -69,7 +69,7 @@ class HumanPlayerSpeakingUrgeTest {
     }
 
     @Test
-    fun `pressing no button gives lower eagerness than the default`() {
+    fun `timing out without pressing any button gives lower eagerness than the default`() {
         val villager = HumanPlayer(Role.VILLAGER, "Human", ButtonPressingIO(pressing = null))
         assertEquals(Eagerness.UNWILLING, villager.eagerness(afterSeerClaim(villager)))
     }
@@ -77,8 +77,8 @@ class HumanPlayerSpeakingUrgeTest {
     private class CallRecordingIO : NothingHumanIO() {
         val calls = mutableListOf<String>()
         override fun waitUntilReady() { calls.add("waitUntilReady") }
-        override fun promptSpeakingUrge(title: String, seconds: Int, buttons: List<String>): String? =
-            null.also { calls.add("promptSpeakingUrge") }
+        override fun promptSpeakingUrge(title: String, seconds: Int, buttons: List<String>, timeoutButton: String): String =
+            timeoutButton.also { calls.add("promptSpeakingUrge") }
     }
 
     @Test

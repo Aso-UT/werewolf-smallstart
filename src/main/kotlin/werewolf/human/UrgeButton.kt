@@ -30,6 +30,12 @@ sealed class UrgeButton(val label: String) {
             SpeakingUrge(player, context, Eagerness.URGENT, intent, metadata)
     }
 
+    // 画面には出さず、時間内にどのボタンも押さなかったときに押したことにする
+    data object Pass : UrgeButton("発言を希望しない") {
+        override fun press(player: Player, context: DiscussionContext, metadata: ActionMetadata) =
+            SpeakingUrge(player, context, Eagerness.UNWILLING, "時間内にボタンを押さなかった", metadata)
+    }
+
     companion object {
         fun available(eligibility: UrgeEligibility): List<UrgeButton> = listOfNotNull(
             eligibility.counterClaimRole?.let { CounterClaim(it) },

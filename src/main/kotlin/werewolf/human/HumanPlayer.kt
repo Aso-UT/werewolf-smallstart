@@ -4,7 +4,6 @@ import werewolf.game.Choice
 import werewolf.game.Claim
 import werewolf.game.ChronicleView
 import werewolf.game.DiscussionContext
-import werewolf.game.Eagerness
 import werewolf.game.GameEvent
 import werewolf.game.Player
 import werewolf.game.ReportEligibility
@@ -43,11 +42,10 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
     override fun feelUrge(context: DiscussionContext, eligibility: UrgeEligibility): SpeakingUrge {
         val buttons = UrgeButton.available(eligibility)
         val (pressed, metadata) = measured(HumanActionKind.SPEAKING_URGE) {
-            io.promptSpeakingUrge(context.title, URGE_SECONDS, buttons.map { it.label })
-                ?.let { label -> buttons.single { it.label == label } }
+            val label = io.promptSpeakingUrge(context.title, URGE_SECONDS, buttons.map { it.label }, UrgeButton.Pass.label)
+            (buttons + UrgeButton.Pass).single { it.label == label }
         }
-        return pressed?.press(this, context, metadata)
-            ?: SpeakingUrge(this, context, Eagerness.UNWILLING, "発言を希望せず", metadata)
+        return pressed.press(this, context, metadata)
     }
 
     override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
