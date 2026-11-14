@@ -265,7 +265,6 @@
   </div>
 
   <aside class="panel">
-    <h2>プレイヤー</h2>
     {#if note.players.length === 0}
       <p class="panel-empty">ゲーム開始前</p>
     {:else}
