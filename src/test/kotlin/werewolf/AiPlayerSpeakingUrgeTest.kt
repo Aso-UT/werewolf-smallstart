@@ -126,6 +126,21 @@ class AiPlayerSpeakingUrgeTest {
     }
 
     @Test
+    fun `counter claim level lists every role claimed in a simultaneous statement and accepts any of them`() {
+        val lm = FakeLanguageModel("霊能者COしたYanに対抗COするため：5（霊能者）")
+        val madman = AiPlayer(Role.MADMAN, "Madman", lm, lm, testInstruction("Madman"))
+        val yan = ReceivingPlayer(Role.MEDIUM, "Yan")
+        val context = openContext(
+            listOf(madman, zoe, yan),
+            previousStatements = listOf(Statement.RoleClaim(zoe, Role.SEER), Statement.RoleClaim(yan, Role.MEDIUM)),
+        )
+        assertEquals(Eagerness.COUNTER_CLAIM, madman.speakingUrge(context).eagerness)
+        assertContains(lm.instructions.first(), "対抗COできる役職：占い師、霊能者）")
+        val urge = madman.reveal(fakeCitizenWinSignal()).filterIsInstance<CounterClaimSpeakingUrge>().single()
+        assertEquals(Role.MEDIUM, urge.role)
+    }
+
+    @Test
     fun `announcement level can be chosen to report a result after the role is already claimed`() {
         val lm = FakeLanguageModel("Wolfの占い結果を報告するため：4")
         val seer = AiPlayer(Role.SEER, "Seer", lm, lm, testInstruction("Seer"))

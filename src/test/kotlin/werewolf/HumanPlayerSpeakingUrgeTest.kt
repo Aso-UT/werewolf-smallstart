@@ -48,6 +48,23 @@ class HumanPlayerSpeakingUrgeTest {
     }
 
     @Test
+    fun `a counter claim button is offered for each role claimed in a simultaneous statement`() {
+        val io = ButtonPressingIO(pressing = "対抗CO（霊能者）")
+        val madman = HumanPlayer(Role.MADMAN, "Human", io)
+        val mediumClaimer = ReceivingPlayer(Role.MEDIUM, "MediumClaimer")
+        val context = openContext(
+            listOf(madman, seerClaimer, mediumClaimer),
+            previousStatements = listOf(Statement.RoleClaim(seerClaimer, Role.SEER), Statement.RoleClaim(mediumClaimer, Role.MEDIUM)),
+        )
+
+        madman.speakingUrge(context)
+
+        assertEquals(listOf("対抗CO（占い師）", "対抗CO（霊能者）", "CO・結果報告", "発言を希望"), io.offeredButtons)
+        val urge = madman.reveal(fakeCitizenWinSignal()).filterIsInstance<CounterClaimSpeakingUrge>().single()
+        assertEquals(Role.MEDIUM, urge.role)
+    }
+
+    @Test
     fun `pressing the counter claim button gives the highest eagerness with the role to counter`() {
         val madman = HumanPlayer(Role.MADMAN, "Human", ButtonPressingIO(pressing = "対抗CO（占い師）"))
 
