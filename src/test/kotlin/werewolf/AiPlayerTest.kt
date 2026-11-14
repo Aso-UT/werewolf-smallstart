@@ -70,6 +70,25 @@ class AiPlayerTest {
     }
 
     @Test
+    fun `simultaneous statement appears as one entry and marks the player's own remark`() {
+        val lm = FakeLanguageModel("発言する：[真意]")
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
+        val alice = ReceivingPlayer(Role.VILLAGER, "Alice")
+        val setup = TestLodge(villager to Role.VILLAGER, alice to Role.VILLAGER).create()
+
+        GameEvent.StatementMade.send(
+            listOf(Statement.RoleClaim(alice, Role.SEER), Statement.RoleClaim(villager, Role.SEER)),
+            AllPlayers(setup.playerManager),
+        )
+        villager.discuss(openContext(), SpeakingRight.Uncontested(villager))
+
+        assertContains(
+            lm.histories.first(),
+            "<議論（同時発言）>\nAlice: 私の役職は「占い師」です。\nVillager（あなた）: 私の役職は「占い師」です。",
+        )
+    }
+
+    @Test
     fun `another player's statement broadcast appears in next prompt with speaker name`() {
         val lm = FakeLanguageModel("発言する：[真意]")
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())

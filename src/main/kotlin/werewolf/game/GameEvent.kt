@@ -91,10 +91,9 @@ sealed class GameEvent : Recallable() {
             require(statements.isNotEmpty()) { "StatementMade needs at least one statement" }
         }
         override val title = TITLE
-        override fun body() = statements.single().text()
+        override fun body() = statements.body()
         override val recipients: Notifiable = allPlayers
-        override fun toRecallView(): RecallView =
-            RecallView.AttributedObservation(title, statements.single().claimant.name, body())
+        override fun toRecallView(): RecallView = statements.toRecallView(title)
         override fun toChronicleView(): ChronicleView =
             error("StatementMade is excluded from chronicles by GameRecap.isRedundantWithClaim")
         companion object {
@@ -222,10 +221,9 @@ sealed class GameEvent : Recallable() {
             require(statements.isNotEmpty()) { "WerewolfStatementMade needs at least one statement" }
         }
         override val title = TITLE
-        override fun body() = statements.single().text()
+        override fun body() = statements.body()
         override val recipients: Notifiable = wolves
-        override fun toRecallView(): RecallView =
-            RecallView.AttributedObservation(title, statements.single().claimant.name, body())
+        override fun toRecallView(): RecallView = statements.toRecallView(title)
         override fun toChronicleView(): ChronicleView =
             error("WerewolfStatementMade is excluded from chronicles by GameRecap.isRedundantWithClaim")
         companion object {
@@ -235,3 +233,11 @@ sealed class GameEvent : Recallable() {
         }
     }
 }
+
+// 一人の発言なら発言者つきで、同時発言なら全員の発言をひとまとまりで思い出す
+private fun List<Statement>.toRecallView(title: String): RecallView =
+    singleOrNull()?.let { RecallView.AttributedObservation(title, it.claimant.name, it.text()) }
+        ?: RecallView.SimultaneousObservation(title, map { Remark(it.claimant.name, it.text()) })
+
+private fun List<Statement>.body(): String =
+    singleOrNull()?.text() ?: joinToString("\n") { "${it.claimant.name}: ${it.text()}" }

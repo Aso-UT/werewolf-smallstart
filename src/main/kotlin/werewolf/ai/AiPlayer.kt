@@ -169,8 +169,15 @@ class AiPlayer(
     private fun toHistoryEntry(view: RecallView): String = when (view) {
         is RecallView.Observation -> "<${view.category}> ${view.content}"
         is RecallView.AttributedObservation -> "<${view.category}> ${view.actor}: ${view.content}"
+        is RecallView.SimultaneousObservation -> buildString {
+            append("<${view.category}（同時発言）>")
+            view.remarks.forEach { append("\n${actorLabel(it.actor)}: ${it.content}") }
+        }
         is RecallView.SelfAction -> "<${view.category}> ${name}（あなた）: ${view.content}　〔あなたのメモ：${view.intent}〕"
     }
+
+    // 同時発言には自分の発言も含まれるので、どれが自分のものかわかるようにする
+    private fun actorLabel(actor: String): String = if (actor == name) "${name}（あなた）" else actor
 
     companion object {
         private const val MAX_ATTEMPTS = 2
