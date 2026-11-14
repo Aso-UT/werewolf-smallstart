@@ -4,9 +4,8 @@ import werewolf.game.*
 import werewolf.human.HumanPlayer
 import werewolf.view.Atmosphere
 import werewolf.view.ChoiceView
-import werewolf.view.DivinationView
 import werewolf.view.EpilogueMood
-import werewolf.view.PlayerStatusView
+import werewolf.view.GameNoteView
 import werewolf.phase.Conclave
 import werewolf.phase.Epilogue
 import werewolf.phase.OpenDiscussion
@@ -20,8 +19,7 @@ class HumanPlayerEpilogueTest {
     private class SpeakingIO : NothingHumanIO() {
         var capturedChronicles: List<ChronicleView> = emptyList()
         override fun display(view: RecallView) {}
-        override fun updatePlayerStatusPanel(view: PlayerStatusView) {}
-        override fun updateDivinationPanel(view: DivinationView) {}
+        override fun updateGameNotePanel(view: GameNoteView) {}
         override fun updateAtmosphere(atmosphere: Atmosphere) {}
         override fun updateEpilogueMood(mood: EpilogueMood) {}
         override fun waitUntilReady() {}

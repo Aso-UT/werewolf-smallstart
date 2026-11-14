@@ -6,9 +6,8 @@ import werewolf.game.RecallView
 import werewolf.human.HumanIO
 import werewolf.view.Atmosphere
 import werewolf.view.ChoiceView
-import werewolf.view.DivinationView
 import werewolf.view.EpilogueMood
-import werewolf.view.PlayerStatusView
+import werewolf.view.GameNoteView
 import werewolf.view.SelectionMood
 
 class ConsoleHumanIO : HumanIO {
@@ -17,12 +16,8 @@ class ConsoleHumanIO : HumanIO {
         private const val ABORT_PASSWORD = 4423
     }
 
-    override fun updatePlayerStatusPanel(view: PlayerStatusView) {
-        // Console has no persistent panel; player status info is visible in the event log
-    }
-
-    override fun updateDivinationPanel(view: DivinationView) {
-        // Console has no persistent panel; divination info is visible in the event log
+    override fun updateGameNotePanel(view: GameNoteView) {
+        // Console has no persistent panel; player status, claims and results are visible in the event log
     }
 
     override fun updateAtmosphere(atmosphere: Atmosphere) {

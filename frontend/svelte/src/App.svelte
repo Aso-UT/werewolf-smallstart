@@ -22,16 +22,17 @@
   type EpilogueMood = 'citizenWin' | 'citizenLose' | 'werewolfWin' | 'werewolfLose'
 
   type PlayerStatus = 'alive' | 'executed' | 'attacked'
-  type PlayerEntry = { name: string; status: PlayerStatus; claimedRole: string | null; knownRole: string | null }
-
-  type ReportEntry = { source: string; targetName: string; isWerewolf: boolean }
-  type DivinationData = {
-    playerNames: string[]
-    divineResults: { targetName: string; isWerewolf: boolean }[]
-    mediumResults: { targetName: string; isWerewolf: boolean }[]
-    divineReports: ReportEntry[]
-    mediumReports: ReportEntry[]
+  // 結果の値は、true が人狼
+  type PlayerNote = {
+    name: string
+    status: PlayerStatus
+    claimedRole: string | null
+    knownRole: string | null
+    ownResult: boolean | null
+    divinationReports: Record<string, boolean>
+    mediumReports: Record<string, boolean>
   }
+  type GameNote = { players: PlayerNote[]; seerClaimants: string[]; mediumClaimants: string[]; hasOwnResults: boolean }
 
   let status = '接続中...'
   let rules = ''
@@ -47,14 +48,10 @@
   let urgeTimer: ReturnType<typeof setInterval> | null = null
   let logEl: HTMLElement
   let ws: WebSocket
-  let players: PlayerEntry[] = []
-  let divination: DivinationData = {
-    playerNames: [],
-    divineResults: [],
-    mediumResults: [],
-    divineReports: [],
-    mediumReports: [],
-  }
+  let note: GameNote = { players: [], seerClaimants: [], mediumClaimants: [], hasOwnResults: false }
+  // 申告の列があるときは、見出しを「占い／霊能」と名乗った人の2段にする
+  $: hasClaimants = note.seerClaimants.length + note.mediumClaimants.length > 0
+  $: headerRows = hasClaimants ? 2 : 1
 
   onMount(() => {
     ws = new WebSocket(`ws://${location.host}/game`)
@@ -96,8 +93,8 @@
         }
         startUrgeCountdown(msg.seconds as number)
         break
-      case 'playerStatus':
-        players = msg.players as PlayerEntry[]
+      case 'gameNote':
+        note = msg as unknown as GameNote
         break
       case 'atmosphere':
         atmosphere = msg.value as Atmosphere
@@ -107,9 +104,6 @@
         break
       case 'epilogueMood':
         epilogueMood = msg.value as EpilogueMood
-        break
-      case 'divination':
-        divination = msg as unknown as DivinationData
         break
     }
   }
@@ -186,20 +180,8 @@
     throw new Error(`Unknown player status: ${s}`)
   }
 
-  function uniqueSources(reports: ReportEntry[]): string[] {
-    const seen = new Set<string>()
-    return reports.reduce<string[]>((acc, r) => {
-      if (!seen.has(r.source)) { seen.add(r.source); acc.push(r.source) }
-      return acc
-    }, [])
-  }
-
-  function reportOf(reports: ReportEntry[], player: string, source: string): ReportEntry | undefined {
-    return reports.find(r => r.targetName === player && r.source === source)
-  }
-
   function claimedRoleOf(name: string): string | null {
-    return players.find(p => p.name === name)?.claimedRole ?? null
+    return note.players.find(p => p.name === name)?.claimedRole ?? null
   }
 </script>
 
@@ -283,109 +265,56 @@
   </div>
 
   <aside class="panel">
-    <h2>生存状況・CO</h2>
-    {#if players.length === 0}
+    <h2>プレイヤー</h2>
+    {#if note.players.length === 0}
       <p class="panel-empty">ゲーム開始前</p>
     {:else}
-      <table class="status-table">
+      <table class="note-table">
         <thead>
-          <tr><th>プレイヤー</th><th>状態</th><th>CO</th><th>役職</th></tr>
+          <tr>
+            <th rowspan={headerRows}>プレイヤー</th>
+            <th rowspan={headerRows}>状態</th>
+            <th rowspan={headerRows}>CO</th>
+            <th rowspan={headerRows}>役職</th>
+            {#if note.hasOwnResults}<th rowspan={headerRows} class="group-start">あなたの結果</th>{/if}
+            {#if note.seerClaimants.length > 0}<th colspan={note.seerClaimants.length} class="group-start">占い</th>{/if}
+            {#if note.mediumClaimants.length > 0}<th colspan={note.mediumClaimants.length} class="group-start">霊能</th>{/if}
+          </tr>
+          {#if hasClaimants}
+            <tr>
+              {#each note.seerClaimants as claimant, i}<th class="claimant" class:group-start={i === 0}>{claimant}</th>{/each}
+              {#each note.mediumClaimants as claimant, i}<th class="claimant" class:group-start={i === 0}>{claimant}</th>{/each}
+            </tr>
+          {/if}
         </thead>
         <tbody>
-          {#each players as p}
+          {#each note.players as p}
             <tr class={p.status}>
               <td class="row-label">{p.name}</td>
               <td><span class="player-status">{statusLabel(p.status)}</span></td>
               <td class:co-empty={!p.claimedRole}>{p.claimedRole ?? '-'}</td>
               <td class:co-empty={!p.knownRole}>{p.knownRole ?? '-'}</td>
+              {#if note.hasOwnResults}
+                <td class="result group-start">
+                  {#if p.ownResult !== null}<span class="badge {p.ownResult ? 'black' : 'white'}">&nbsp;</span>{/if}
+                </td>
+              {/if}
+              {#each note.seerClaimants as claimant, i}
+                {@const reported = p.divinationReports[claimant]}
+                <td class="result" class:group-start={i === 0}>
+                  {#if reported !== undefined}<span class="badge {reported ? 'black' : 'white'}">&nbsp;</span>{/if}
+                </td>
+              {/each}
+              {#each note.mediumClaimants as claimant, i}
+                {@const reported = p.mediumReports[claimant]}
+                <td class="result" class:group-start={i === 0}>
+                  {#if reported !== undefined}<span class="badge {reported ? 'black' : 'white'}">&nbsp;</span>{/if}
+                </td>
+              {/each}
             </tr>
           {/each}
         </tbody>
       </table>
-    {/if}
-
-    {#if divination.divineResults.length > 0}
-      <h2 class="panel-section">占い結果</h2>
-      <ul class="result-list">
-        {#each divination.divineResults as r}
-          <li class="result-entry">
-            <span class="result-name">{r.targetName}</span>
-            <span class="badge {r.isWerewolf ? 'black' : 'white'}">&nbsp;</span>
-          </li>
-        {/each}
-      </ul>
-    {/if}
-
-    {#if divination.mediumResults.length > 0}
-      <h2 class="panel-section">霊媒結果</h2>
-      <ul class="result-list">
-        {#each divination.mediumResults as r}
-          <li class="result-entry">
-            <span class="result-name">{r.targetName}</span>
-            <span class="badge {r.isWerewolf ? 'black' : 'white'}">&nbsp;</span>
-          </li>
-        {/each}
-      </ul>
-    {/if}
-
-    {#if divination.divineReports.length > 0}
-      {@const sources = uniqueSources(divination.divineReports)}
-      <h2 class="panel-section">占い申告</h2>
-      <div class="report-scroll">
-        <table class="report-table">
-          <thead>
-            <tr>
-              <th></th>
-              {#each sources as src}<th>{src}</th>{/each}
-            </tr>
-          </thead>
-          <tbody>
-            {#each divination.playerNames as player}
-              <tr>
-                <td class="row-label">{player}</td>
-                {#each sources as src}
-                  {@const entry = reportOf(divination.divineReports, player, src)}
-                  <td>
-                    {#if entry}
-                      <span class="badge {entry.isWerewolf ? 'black' : 'white'}">&nbsp;</span>
-                    {/if}
-                  </td>
-                {/each}
-              </tr>
-            {/each}
-          </tbody>
-        </table>
-      </div>
-    {/if}
-
-    {#if divination.mediumReports.length > 0}
-      {@const sources = uniqueSources(divination.mediumReports)}
-      <h2 class="panel-section">霊媒申告</h2>
-      <div class="report-scroll">
-        <table class="report-table">
-          <thead>
-            <tr>
-              <th></th>
-              {#each sources as src}<th>{src}</th>{/each}
-            </tr>
-          </thead>
-          <tbody>
-            {#each divination.playerNames as player}
-              <tr>
-                <td class="row-label">{player}</td>
-                {#each sources as src}
-                  {@const entry = reportOf(divination.mediumReports, player, src)}
-                  <td>
-                    {#if entry}
-                      <span class="badge {entry.isWerewolf ? 'black' : 'white'}">&nbsp;</span>
-                    {/if}
-                  </td>
-                {/each}
-              </tr>
-            {/each}
-          </tbody>
-        </table>
-      </div>
     {/if}
   </aside>
 </div>
@@ -400,10 +329,10 @@
 
   .layout { display: flex; gap: 16px; max-width: 1100px; margin: 0 auto; padding: 16px; font-family: sans-serif; }
   .main { flex: 1; min-width: 0; }
-  .panel { width: 240px; flex-shrink: 0; border: 1px solid #ccc; border-radius: 4px; padding: 12px; background: #fafafa; color: #333; align-self: flex-start; }
+  /* 見逃しのもとになるので、表を横スクロールさせず、パネルを表の幅まで広げる */
+  .panel { flex: none;border: 1px solid #ccc; border-radius: 4px; padding: 12px; background: #fafafa; color: #333; align-self: flex-start; }
   h1 { margin: 0 0 4px; }
   h2 { margin: 0 0 10px; font-size: 1em; color: #444; }
-  .panel-section { margin: 14px 0 6px; }
   .status { color: #666; margin-bottom: 8px; }
   .controls { margin: 8px 0; display: flex; align-items: center; justify-content: space-between; }
   .urge { display: flex; align-items: center; }
@@ -442,24 +371,20 @@
   :global(body.atmosphere-night) .countdown { color: #cdd6f0; }
 
   .panel-empty { color: #999; font-size: 0.9em; }
-  .status-table { border-collapse: collapse; font-size: 0.85em; width: 100%; }
-  .status-table th { font-weight: normal; color: #666; padding: 3px 4px; text-align: left; }
-  .status-table td { padding: 4px 4px; border-bottom: 1px solid #eee; }
-  .status-table tr:last-child td { border-bottom: none; }
+  .note-table { border-collapse: collapse; font-size: 0.85em; }
+  .note-table th { font-weight: normal; color: #666; padding: 3px 4px; text-align: left; white-space: nowrap; vertical-align: bottom; }
+  .note-table th[colspan], .note-table th.claimant { text-align: center; }
+  .note-table td { padding: 4px 4px; border-bottom: 1px solid #eee; white-space: nowrap; }
+  .note-table tbody tr:last-child td { border-bottom: none; }
+  .note-table .result { text-align: center; }
+  /* あなたの結果・占い・霊能の境目に縦線を引き、どの申告かを見分けやすくする */
+  .note-table .group-start { border-left: 1px solid #ccc; }
   .co-empty { color: #999; }
   .player-status { font-size: 0.8em; padding: 1px 6px; border-radius: 3px; white-space: nowrap; }
   .alive .player-status { background: #d4f7d4; color: #2a6e2a; }
   .executed .player-status { background: #f7d4d4; color: #6e2a2a; }
   .attacked .player-status { background: #f7ead4; color: #6e4a2a; }
 
-  .result-list { list-style: none; margin: 0; padding: 0; }
-  .result-entry { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; font-size: 0.9em; }
-  .result-name { flex: 1; }
-
-  .report-scroll { overflow-x: auto; }
-  .report-table { border-collapse: collapse; font-size: 0.8em; width: 100%; }
-  .report-table th { font-weight: normal; color: #666; padding: 2px 4px; text-align: center; white-space: nowrap; }
-  .report-table td { padding: 2px 4px; text-align: center; }
   .row-label { text-align: left; white-space: nowrap; color: #444; }
   .badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 0.85em; }
   .badge.black { background: #333; color: #fff; }

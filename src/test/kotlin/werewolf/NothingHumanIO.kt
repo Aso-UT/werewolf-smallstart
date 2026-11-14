@@ -5,15 +5,13 @@ import werewolf.game.RecallView
 import werewolf.human.HumanIO
 import werewolf.view.Atmosphere
 import werewolf.view.ChoiceView
-import werewolf.view.DivinationView
 import werewolf.view.EpilogueMood
-import werewolf.view.PlayerStatusView
+import werewolf.view.GameNoteView
 import werewolf.view.SelectionMood
 
 open class NothingHumanIO : HumanIO {
     override fun display(view: RecallView) { error("display not expected") }
-    override fun updatePlayerStatusPanel(view: PlayerStatusView) { error("updatePlayerStatusPanel not expected") }
-    override fun updateDivinationPanel(view: DivinationView) { error("updateDivinationPanel not expected") }
+    override fun updateGameNotePanel(view: GameNoteView) { error("updateGameNotePanel not expected") }
     override fun updateAtmosphere(atmosphere: Atmosphere) { error("updateAtmosphere not expected") }
     override fun updateSelectionMood(mood: SelectionMood) { error("updateSelectionMood not expected") }
     override fun updateEpilogueMood(mood: EpilogueMood) { error("updateEpilogueMood not expected") }

@@ -5,20 +5,22 @@ import werewolf.game.GameEvent
 import werewolf.game.MediumResult
 import werewolf.game.Role
 import werewolf.game.Statement
-import werewolf.view.DivinationView
+import werewolf.view.GameNoteView
+import werewolf.view.PlayerNote
 import werewolf.view.PlayerStatus
-import werewolf.view.PlayerStatusView
-import werewolf.view.PlayerSummary
-import werewolf.view.ReportEntry
 
 class GameNote {
     private val playerStatuses = mutableMapOf<String, PlayerStatus>()
     private val playerNames = mutableListOf<String>()
+    private var ownRole: Role? = null
     private val divineResults = mutableMapOf<String, Boolean>()
     private val mediumResults = mutableMapOf<String, Boolean>()
     private val divineReports = mutableSetOf<ReportEntry>()
     private val mediumReports = mutableSetOf<ReportEntry>()
     private val claimedRoles = mutableMapOf<String, String>()
+    // 挿入順を保つので、最初に名乗った順に並ぶ
+    private val seerClaimants = linkedSetOf<String>()
+    private val mediumClaimants = linkedSetOf<String>()
     private val knownRoles = mutableMapOf<String, String>()
 
     fun post(event: GameEvent) {
@@ -27,7 +29,11 @@ class GameNote {
                 playerStatuses[it.name] = PlayerStatus.ALIVE
                 playerNames += it.name
             }
-            is GameEvent.RoleAssigned -> knownRoles[event.assignee.name] = event.role.displayName
+            // 役職通知は本人にしか届かないので、自分の役職とわかる
+            is GameEvent.RoleAssigned -> {
+                ownRole = event.role
+                knownRoles[event.assignee.name] = event.role.displayName
+            }
             is GameEvent.WerewolfAllyRevealed -> knownRoles[event.ally.name] = Role.WEREWOLF.displayName
             is GameEvent.RolesRevealed -> event.roles.forEach { (player, role) -> knownRoles[player.name] = role.displayName }
             is GameEvent.PlayerExecuted -> playerStatuses[event.executed.name] = PlayerStatus.EXECUTED
@@ -40,7 +46,7 @@ class GameNote {
     }
 
     private fun noteStatement(speakerName: String, statement: Statement) {
-        statement.claimedRole?.let { claimedRoles[speakerName] = it.displayName }
+        statement.claimedRole?.let { noteClaim(speakerName, it) }
         when (statement) {
             is Statement.DivinationReport ->
                 divineReports += ReportEntry(speakerName, statement.target.name, statement.result == DivineResult.WEREWOLF)
@@ -50,15 +56,34 @@ class GameNote {
         }
     }
 
-    fun playerStatusSummary(): PlayerStatusView = PlayerStatusView(
-        playerNames.map { name -> PlayerSummary(name, playerStatuses.getValue(name), claimedRoles[name], knownRoles[name]) },
+    private fun noteClaim(speakerName: String, role: Role) {
+        claimedRoles[speakerName] = role.displayName
+        when (role) {
+            Role.SEER -> seerClaimants += speakerName
+            Role.MEDIUM -> mediumClaimants += speakerName
+            else -> Unit
+        }
+    }
+
+    fun summary(): GameNoteView = GameNoteView(
+        players = playerNames.map { name ->
+            PlayerNote(
+                name = name,
+                status = playerStatuses.getValue(name),
+                claimedRole = claimedRoles[name],
+                knownRole = knownRoles[name],
+                ownResult = divineResults[name] ?: mediumResults[name],
+                divinationReports = reportsOn(name, divineReports),
+                mediumReports = reportsOn(name, mediumReports),
+            )
+        },
+        seerClaimants = seerClaimants.toList(),
+        mediumClaimants = mediumClaimants.toList(),
+        hasOwnResults = ownRole == Role.SEER || ownRole == Role.MEDIUM,
     )
 
-    fun divinationSummary(): DivinationView = DivinationView(
-        playerNames = playerNames.toList(),
-        divineResults = divineResults.toMap(),
-        mediumResults = mediumResults.toMap(),
-        divineReports = divineReports.toList(),
-        mediumReports = mediumReports.toList(),
-    )
+    private fun reportsOn(targetName: String, reports: Set<ReportEntry>): Map<String, Boolean> =
+        reports.filter { it.targetName == targetName }.associate { it.source to it.isWerewolf }
+
+    private data class ReportEntry(val source: String, val targetName: String, val isWerewolf: Boolean)
 }

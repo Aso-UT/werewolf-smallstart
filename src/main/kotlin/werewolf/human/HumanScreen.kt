@@ -5,21 +5,18 @@ import werewolf.game.SelectionContext
 import werewolf.game.Side
 import werewolf.game.TimeOfDay
 import werewolf.view.Atmosphere
-import werewolf.view.DivinationView
 import werewolf.view.EpilogueMood
-import werewolf.view.PlayerStatusView
+import werewolf.view.GameNoteView
 import werewolf.view.SelectionMood
 
 class HumanScreen(private val io: HumanDisplay) {
     private val gameNote = GameNote()
-    private var lastPlayerStatus: PlayerStatusView? = null
-    private var lastDivinationSummary: DivinationView? = null
+    private var lastGameNote: GameNoteView? = null
 
     fun show(event: GameEvent) {
         io.display(event.toRecallView())
         gameNote.post(event)
-        refreshPlayerStatusPanel()
-        refreshDivinationPanel()
+        refreshGameNotePanel()
         atmosphereOf(event)?.let { io.updateAtmosphere(it) }
         epilogueMoodOf(event)?.let { io.updateEpilogueMood(it) }
     }
@@ -28,18 +25,11 @@ class HumanScreen(private val io: HumanDisplay) {
         io.updateSelectionMood(moodOf(context))
     }
 
-    private fun refreshPlayerStatusPanel() {
-        val current = gameNote.playerStatusSummary()
-        if (current == lastPlayerStatus) return
-        lastPlayerStatus = current
-        io.updatePlayerStatusPanel(current)
-    }
-
-    private fun refreshDivinationPanel() {
-        val current = gameNote.divinationSummary()
-        if (current == lastDivinationSummary) return
-        lastDivinationSummary = current
-        io.updateDivinationPanel(current)
+    private fun refreshGameNotePanel() {
+        val current = gameNote.summary()
+        if (current == lastGameNote) return
+        lastGameNote = current
+        io.updateGameNotePanel(current)
     }
 
     private fun atmosphereOf(event: GameEvent): Atmosphere? = when (event) {
