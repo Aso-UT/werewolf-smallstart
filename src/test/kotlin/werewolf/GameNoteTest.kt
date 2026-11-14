@@ -14,19 +14,16 @@ import werewolf.game.Statement
 import werewolf.human.HumanPlayer
 import werewolf.phase.InitialPhase
 import werewolf.view.Atmosphere
-import werewolf.view.DivinationView
+import werewolf.view.GameNoteView
+import werewolf.view.PlayerNote
 import werewolf.view.PlayerStatus
-import werewolf.view.PlayerStatusView
-import werewolf.view.ReportEntry
 
 class GameNoteTest {
 
     private class CapturingIO : NothingHumanIO() {
-        val panels = mutableListOf<PlayerStatusView>()
-        val divinationPanels = mutableListOf<DivinationView>()
+        val panels = mutableListOf<GameNoteView>()
         override fun display(view: RecallView) {}
-        override fun updatePlayerStatusPanel(view: PlayerStatusView) { panels += view }
-        override fun updateDivinationPanel(view: DivinationView) { divinationPanels += view }
+        override fun updateGameNotePanel(view: GameNoteView) { panels += view }
         override fun updateAtmosphere(atmosphere: Atmosphere) {}
     }
 
@@ -44,11 +41,13 @@ class GameNoteTest {
         return TestLodge(*otherPlayers.toTypedArray(), human to humanRole).create()
     }
 
-    private fun statusOf(view: PlayerStatusView, name: String): PlayerStatus = view.players.single { it.name == name }.status
+    private fun noteOf(view: GameNoteView, name: String): PlayerNote = view.players.single { it.name == name }
 
-    private fun claimedRoleOf(view: PlayerStatusView, name: String): String? = view.players.single { it.name == name }.claimedRole
+    private fun statusOf(view: GameNoteView, name: String): PlayerStatus = noteOf(view, name).status
 
-    private fun knownRoleOf(view: PlayerStatusView, name: String): String? = view.players.single { it.name == name }.knownRole
+    private fun claimedRoleOf(view: GameNoteView, name: String): String? = noteOf(view, name).claimedRole
+
+    private fun knownRoleOf(view: GameNoteView, name: String): String? = noteOf(view, name).knownRole
 
     @Test
     fun `own role is known and others are unknown at game start`() {
@@ -137,7 +136,7 @@ class GameNoteTest {
     }
 
     @Test
-    fun `divined result appears in divine results of divination panel`() {
+    fun `divined result appears as own result under the divination title`() {
         val io = CapturingIO()
         val gameSetup = createGameWithHuman(io, "Wolf" to Role.WEREWOLF)
         InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
@@ -146,49 +145,93 @@ class GameNoteTest {
 
         GameEvent.Divined.send(wolf, DivineResult.WEREWOLF, human)
 
-        assertEquals(mapOf("Wolf" to true), io.divinationPanels.last().divineResults)
+        assertEquals("占い結果", io.panels.last().ownResultTitle)
+        assertEquals(true, noteOf(io.panels.last(), "Wolf").ownResult)
+        assertEquals(null, noteOf(io.panels.last(), "V1").ownResult)
     }
 
     @Test
-    fun `medium result appears in medium results of divination panel`() {
+    fun `medium result appears as own result under the medium title`() {
         val io = CapturingIO()
         val gameSetup = createGameWithHuman(io, "Wolf" to Role.WEREWOLF)
         InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
         val human = gameSetup.playerManager.allPlayers.single { it.name == "V1" }
         val wolf = gameSetup.playerManager.allPlayers.single { it.name == "Wolf" }
 
-        GameEvent.MediumRevealed.send(wolf, MediumResult.WEREWOLF, human)
+        GameEvent.MediumRevealed.send(wolf, MediumResult.NOT_WEREWOLF, human)
 
-        assertEquals(mapOf("Wolf" to true), io.divinationPanels.last().mediumResults)
+        assertEquals("霊能結果", io.panels.last().ownResultTitle)
+        assertEquals(false, noteOf(io.panels.last(), "Wolf").ownResult)
     }
 
     @Test
-    fun `claimed divine result appears in divine reports of divination panel`() {
+    fun `own result column does not appear before any result is given even for a medium`() {
+        val io = CapturingIO()
+        val gameSetup = createGameWithHumanAs(io, "Me" to Role.MEDIUM, "V2" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
+
+        InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
+
+        assertEquals(null, io.panels.last().ownResultTitle)
+    }
+
+    @Test
+    fun `no reporter appears before anyone reports a result`() {
+        val io = CapturingIO()
+        val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
+
+        InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
+
+        assertEquals(emptyList(), io.panels.last().divinationReporters)
+        assertEquals(emptyList(), io.panels.last().mediumReporters)
+    }
+
+    @Test
+    fun `a role claim alone does not make the player a reporter`() {
+        val io = CapturingIO()
+        val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
+        InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
+        val v2 = gameSetup.playerManager.allPlayers.single { it.name == "V2" }
+
+        GameEvent.StatementMade.send(1, "V2", Statement.RoleClaim(v2, Role.MEDIUM), AllPlayers(gameSetup.playerManager))
+
+        assertEquals(emptyList(), io.panels.last().mediumReporters)
+    }
+
+    @Test
+    fun `reported result appears under the reporter in the target's row`() {
         val io = CapturingIO()
         val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
         InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
         val v2 = gameSetup.playerManager.allPlayers.single { it.name == "V2" }
         val wolf = gameSetup.playerManager.allPlayers.single { it.name == "Wolf" }
-        val allPlayers = AllPlayers(gameSetup.playerManager)
 
-        GameEvent.StatementMade.send(1, "V2", Statement.DivinationReport(v2, wolf, DivineResult.WEREWOLF), allPlayers)
+        GameEvent.StatementMade.send(1, "V2", Statement.MediumReport(v2, wolf, MediumResult.WEREWOLF), AllPlayers(gameSetup.playerManager))
 
-        assertEquals(
-            listOf(ReportEntry("V2", "Wolf", isWerewolf = true)),
-            io.divinationPanels.last().divineReports,
-        )
+        assertEquals(listOf("V2"), io.panels.last().mediumReporters)
+        assertEquals(emptyList(), io.panels.last().divinationReporters)
+        assertEquals(mapOf("V2" to true), noteOf(io.panels.last(), "Wolf").mediumReports)
+        assertEquals(emptyMap(), noteOf(io.panels.last(), "V1").mediumReports)
+        // 自分が得た結果とは混ぜない
+        assertEquals(null, noteOf(io.panels.last(), "Wolf").ownResult)
+        assertEquals(null, io.panels.last().ownResultTitle)
     }
 
     @Test
-    fun `divination panel is not updated for unrelated events`() {
+    fun `reporters are ordered by when they first revealed the role`() {
         val io = CapturingIO()
-        val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
+        val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "V3" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
         InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
-        val countAfterStart = io.divinationPanels.size
+        val v2 = gameSetup.playerManager.allPlayers.single { it.name == "V2" }
+        val v3 = gameSetup.playerManager.allPlayers.single { it.name == "V3" }
+        val wolf = gameSetup.playerManager.allPlayers.single { it.name == "Wolf" }
+        val allPlayers = AllPlayers(gameSetup.playerManager)
 
-        GameEvent.DiscussionStarted.send(1, AllPlayers(gameSetup.playerManager))
+        // V3 が先に占い師だと明かしたが、結果を報告したのは V2 が先
+        GameEvent.StatementMade.send(1, "V3", Statement.RoleClaim(v3, Role.SEER), allPlayers)
+        GameEvent.StatementMade.send(1, "V2", Statement.DivinationReport(v2, wolf, DivineResult.WEREWOLF), allPlayers)
+        GameEvent.StatementMade.send(1, "V3", Statement.DivinationReport(v3, wolf, DivineResult.NOT_WEREWOLF), allPlayers)
 
-        assertEquals(countAfterStart, io.divinationPanels.size)
+        assertEquals(listOf("V3", "V2"), io.panels.last().divinationReporters)
     }
 
     @Test

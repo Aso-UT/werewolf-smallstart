@@ -21,9 +21,8 @@ import werewolf.game.Wolves
 import werewolf.human.HumanPlayer
 import werewolf.view.Atmosphere
 import werewolf.view.ChoiceView
-import werewolf.view.DivinationView
 import werewolf.view.EpilogueMood
-import werewolf.view.PlayerStatusView
+import werewolf.view.GameNoteView
 import werewolf.view.SelectionMood
 
 class HumanPlayerTest {
@@ -42,8 +41,7 @@ class HumanPlayerTest {
         var capturedMetadataTotals: List<String> = emptyList()
 
         override fun display(view: RecallView) { displayedViews += view }
-        override fun updatePlayerStatusPanel(view: PlayerStatusView) {}
-        override fun updateDivinationPanel(view: DivinationView) {}
+        override fun updateGameNotePanel(view: GameNoteView) {}
         override fun updateAtmosphere(atmosphere: Atmosphere) { capturedAtmospheres += atmosphere }
         override fun updateSelectionMood(mood: SelectionMood) { capturedSelectionMoods += mood }
         override fun updateEpilogueMood(mood: EpilogueMood) { capturedEpilogueMoods += mood }
