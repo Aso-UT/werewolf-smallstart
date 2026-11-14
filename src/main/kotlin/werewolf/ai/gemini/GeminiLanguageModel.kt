@@ -37,7 +37,7 @@ class GeminiLanguageModel(
                 candidatesTokenCount = usageMeta?.candidatesTokenCount()?.orElse(null),
                 responseTime = responseTime,
             )
-            Completion(response.text() ?: "", metadata)
+            Completion.Answer(response.text() ?: "", metadata)
         } catch (e: Exception) {
             throw GeminiApiException("Gemini API call failed: ${e.javaClass.simpleName}")
         }

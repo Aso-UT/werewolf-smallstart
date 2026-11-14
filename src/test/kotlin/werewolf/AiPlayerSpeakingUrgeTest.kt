@@ -90,6 +90,14 @@ class AiPlayerSpeakingUrgeTest {
     }
 
     @Test
+    fun `eagerness falls back to default without asking again when the model refuses`() {
+        val lm = RefusingLanguageModel("言いたいことがあるため：3")
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
+        assertEquals(Eagerness.DEFAULT, villager.speakingUrge(openContext(listOf(villager))).eagerness)
+        assertEquals(1, lm.askCount)
+    }
+
+    @Test
     fun `counter claim level cannot be chosen in conclave`() {
         val lm = FakeLanguageModel("対抗COするため：5", "仲間と相談したいため：2")
         val wolf = AiPlayer(Role.WEREWOLF, "Wolf", lm, lm, testInstruction("Wolf"))
