@@ -32,7 +32,7 @@
     divinationReports: Record<string, boolean>
     mediumReports: Record<string, boolean>
   }
-  type GameNote = { players: PlayerNote[]; seerClaimants: string[]; mediumClaimants: string[]; hasOwnResults: boolean }
+  type GameNote = { players: PlayerNote[]; ownResultTitle: string | null; divinationReporters: string[]; mediumReporters: string[] }
 
   let status = '接続中...'
   let rules = ''
@@ -48,10 +48,10 @@
   let urgeTimer: ReturnType<typeof setInterval> | null = null
   let logEl: HTMLElement
   let ws: WebSocket
-  let note: GameNote = { players: [], seerClaimants: [], mediumClaimants: [], hasOwnResults: false }
-  // 申告の列があるときは、見出しを「占い／霊能」と名乗った人の2段にする
-  $: hasClaimants = note.seerClaimants.length + note.mediumClaimants.length > 0
-  $: headerRows = hasClaimants ? 2 : 1
+  let note: GameNote = { players: [], ownResultTitle: null, divinationReporters: [], mediumReporters: [] }
+  // 申告の列があるときは、見出しを「占い／霊能」と報告した人の2段にする
+  $: hasReporters = note.divinationReporters.length + note.mediumReporters.length > 0
+  $: headerRows = hasReporters ? 2 : 1
 
   onMount(() => {
     ws = new WebSocket(`ws://${location.host}/game`)
@@ -276,14 +276,14 @@
             <th rowspan={headerRows}>状態</th>
             <th rowspan={headerRows}>CO</th>
             <th rowspan={headerRows}>役職</th>
-            {#if note.hasOwnResults}<th rowspan={headerRows} class="group-start">あなたの結果</th>{/if}
-            {#if note.seerClaimants.length > 0}<th colspan={note.seerClaimants.length} class="group-start">占い</th>{/if}
-            {#if note.mediumClaimants.length > 0}<th colspan={note.mediumClaimants.length} class="group-start">霊能</th>{/if}
+            {#if note.ownResultTitle}<th rowspan={headerRows} class="group-start">{note.ownResultTitle}</th>{/if}
+            {#if note.divinationReporters.length > 0}<th colspan={note.divinationReporters.length} class="group-start">占い</th>{/if}
+            {#if note.mediumReporters.length > 0}<th colspan={note.mediumReporters.length} class="group-start">霊能</th>{/if}
           </tr>
-          {#if hasClaimants}
+          {#if hasReporters}
             <tr>
-              {#each note.seerClaimants as claimant, i}<th class="claimant" class:group-start={i === 0}>{claimant}</th>{/each}
-              {#each note.mediumClaimants as claimant, i}<th class="claimant" class:group-start={i === 0}>{claimant}</th>{/each}
+              {#each note.divinationReporters as reporter, i}<th class="reporter" class:group-start={i === 0}>{reporter}</th>{/each}
+              {#each note.mediumReporters as reporter, i}<th class="reporter" class:group-start={i === 0}>{reporter}</th>{/each}
             </tr>
           {/if}
         </thead>
@@ -294,19 +294,19 @@
               <td><span class="player-status">{statusLabel(p.status)}</span></td>
               <td class:co-empty={!p.claimedRole}>{p.claimedRole ?? '-'}</td>
               <td class:co-empty={!p.knownRole}>{p.knownRole ?? '-'}</td>
-              {#if note.hasOwnResults}
+              {#if note.ownResultTitle}
                 <td class="result group-start">
                   {#if p.ownResult !== null}<span class="badge {p.ownResult ? 'black' : 'white'}">&nbsp;</span>{/if}
                 </td>
               {/if}
-              {#each note.seerClaimants as claimant, i}
-                {@const reported = p.divinationReports[claimant]}
+              {#each note.divinationReporters as reporter, i}
+                {@const reported = p.divinationReports[reporter]}
                 <td class="result" class:group-start={i === 0}>
                   {#if reported !== undefined}<span class="badge {reported ? 'black' : 'white'}">&nbsp;</span>{/if}
                 </td>
               {/each}
-              {#each note.mediumClaimants as claimant, i}
-                {@const reported = p.mediumReports[claimant]}
+              {#each note.mediumReporters as reporter, i}
+                {@const reported = p.mediumReports[reporter]}
                 <td class="result" class:group-start={i === 0}>
                   {#if reported !== undefined}<span class="badge {reported ? 'black' : 'white'}">&nbsp;</span>{/if}
                 </td>
@@ -373,11 +373,11 @@
   .panel-empty { color: #999; font-size: 0.9em; }
   .note-table { border-collapse: collapse; font-size: 0.85em; }
   .note-table th { font-weight: normal; color: #666; padding: 3px 4px; text-align: left; white-space: nowrap; vertical-align: bottom; }
-  .note-table th[colspan], .note-table th.claimant { text-align: center; }
+  .note-table th[colspan], .note-table th.reporter { text-align: center; }
   .note-table td { padding: 4px 4px; border-bottom: 1px solid #eee; white-space: nowrap; }
   .note-table tbody tr:last-child td { border-bottom: none; }
   .note-table .result { text-align: center; }
-  /* あなたの結果・占い・霊能の境目に縦線を引き、どの申告かを見分けやすくする */
+  /* 自分の結果・占い・霊能の境目に縦線を引き、どの結果かを見分けやすくする */
   .note-table .group-start { border-left: 1px solid #ccc; }
   .co-empty { color: #999; }
   .player-status { font-size: 0.8em; padding: 1px 6px; border-radius: 3px; white-space: nowrap; }

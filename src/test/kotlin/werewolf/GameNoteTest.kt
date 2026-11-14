@@ -2,7 +2,6 @@ package werewolf
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import werewolf.game.AllPlayers
 import werewolf.game.DivineResult
@@ -137,7 +136,7 @@ class GameNoteTest {
     }
 
     @Test
-    fun `divined result appears as own result in the target's row`() {
+    fun `divined result appears as own result under the divination title`() {
         val io = CapturingIO()
         val gameSetup = createGameWithHuman(io, "Wolf" to Role.WEREWOLF)
         InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
@@ -146,12 +145,13 @@ class GameNoteTest {
 
         GameEvent.Divined.send(wolf, DivineResult.WEREWOLF, human)
 
+        assertEquals("占い結果", io.panels.last().ownResultTitle)
         assertEquals(true, noteOf(io.panels.last(), "Wolf").ownResult)
         assertEquals(null, noteOf(io.panels.last(), "V1").ownResult)
     }
 
     @Test
-    fun `medium result appears as own result in the target's row`() {
+    fun `medium result appears as own result under the medium title`() {
         val io = CapturingIO()
         val gameSetup = createGameWithHuman(io, "Wolf" to Role.WEREWOLF)
         InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
@@ -160,36 +160,33 @@ class GameNoteTest {
 
         GameEvent.MediumRevealed.send(wolf, MediumResult.NOT_WEREWOLF, human)
 
+        assertEquals("霊能結果", io.panels.last().ownResultTitle)
         assertEquals(false, noteOf(io.panels.last(), "Wolf").ownResult)
     }
 
     @Test
-    fun `own results are expected for a seer and a medium but not for a villager`() {
-        fun hasOwnResultsAs(role: Role): Boolean {
-            val io = CapturingIO()
-            val gameSetup = createGameWithHumanAs(io, "Me" to role, "V2" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
-            InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
-            return io.panels.last().hasOwnResults
-        }
+    fun `own result column does not appear before any result is given even for a medium`() {
+        val io = CapturingIO()
+        val gameSetup = createGameWithHumanAs(io, "Me" to Role.MEDIUM, "V2" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
 
-        assertTrue(hasOwnResultsAs(Role.SEER))
-        assertTrue(hasOwnResultsAs(Role.MEDIUM))
-        assertFalse(hasOwnResultsAs(Role.VILLAGER))
+        InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
+
+        assertEquals(null, io.panels.last().ownResultTitle)
     }
 
     @Test
-    fun `no claimant appears before anyone claims seer or medium`() {
+    fun `no reporter appears before anyone reports a result`() {
         val io = CapturingIO()
         val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
 
         InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
 
-        assertEquals(emptyList(), io.panels.last().seerClaimants)
-        assertEquals(emptyList(), io.panels.last().mediumClaimants)
+        assertEquals(emptyList(), io.panels.last().divinationReporters)
+        assertEquals(emptyList(), io.panels.last().mediumReporters)
     }
 
     @Test
-    fun `a role claim alone makes the player a claimant`() {
+    fun `a role claim alone does not make the player a reporter`() {
         val io = CapturingIO()
         val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
         InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
@@ -197,8 +194,7 @@ class GameNoteTest {
 
         GameEvent.StatementMade.send(1, "V2", Statement.RoleClaim(v2, Role.MEDIUM), AllPlayers(gameSetup.playerManager))
 
-        assertEquals(listOf("V2"), io.panels.last().mediumClaimants)
-        assertEquals(emptyList(), io.panels.last().seerClaimants)
+        assertEquals(emptyList(), io.panels.last().mediumReporters)
     }
 
     @Test
@@ -209,17 +205,19 @@ class GameNoteTest {
         val v2 = gameSetup.playerManager.allPlayers.single { it.name == "V2" }
         val wolf = gameSetup.playerManager.allPlayers.single { it.name == "Wolf" }
 
-        GameEvent.StatementMade.send(1, "V2", Statement.DivinationReport(v2, wolf, DivineResult.WEREWOLF), AllPlayers(gameSetup.playerManager))
+        GameEvent.StatementMade.send(1, "V2", Statement.MediumReport(v2, wolf, MediumResult.WEREWOLF), AllPlayers(gameSetup.playerManager))
 
-        assertEquals(listOf("V2"), io.panels.last().seerClaimants)
-        assertEquals(mapOf("V2" to true), noteOf(io.panels.last(), "Wolf").divinationReports)
-        assertEquals(emptyMap(), noteOf(io.panels.last(), "V1").divinationReports)
+        assertEquals(listOf("V2"), io.panels.last().mediumReporters)
+        assertEquals(emptyList(), io.panels.last().divinationReporters)
+        assertEquals(mapOf("V2" to true), noteOf(io.panels.last(), "Wolf").mediumReports)
+        assertEquals(emptyMap(), noteOf(io.panels.last(), "V1").mediumReports)
         // 自分が得た結果とは混ぜない
         assertEquals(null, noteOf(io.panels.last(), "Wolf").ownResult)
+        assertEquals(null, io.panels.last().ownResultTitle)
     }
 
     @Test
-    fun `claimants are ordered by when they first revealed the role`() {
+    fun `reporters are ordered by when they first revealed the role`() {
         val io = CapturingIO()
         val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "V3" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
         InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
@@ -228,11 +226,12 @@ class GameNoteTest {
         val wolf = gameSetup.playerManager.allPlayers.single { it.name == "Wolf" }
         val allPlayers = AllPlayers(gameSetup.playerManager)
 
+        // V3 が先に占い師だと明かしたが、結果を報告したのは V2 が先
         GameEvent.StatementMade.send(1, "V3", Statement.RoleClaim(v3, Role.SEER), allPlayers)
         GameEvent.StatementMade.send(1, "V2", Statement.DivinationReport(v2, wolf, DivineResult.WEREWOLF), allPlayers)
         GameEvent.StatementMade.send(1, "V3", Statement.DivinationReport(v3, wolf, DivineResult.NOT_WEREWOLF), allPlayers)
 
-        assertEquals(listOf("V3", "V2"), io.panels.last().seerClaimants)
+        assertEquals(listOf("V3", "V2"), io.panels.last().divinationReporters)
     }
 
     @Test

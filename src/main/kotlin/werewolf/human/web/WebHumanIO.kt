@@ -40,12 +40,12 @@ class WebHumanIO : HumanIO {
 
     override fun updateGameNotePanel(view: GameNoteView) {
         val playersJson = view.players.joinToString(",") { it.toJson() }
-        val seerClaimantsJson = view.seerClaimants.joinToString(",") { it.jsonEncode() }
-        val mediumClaimantsJson = view.mediumClaimants.joinToString(",") { it.jsonEncode() }
+        val divinationReportersJson = view.divinationReporters.joinToString(",") { it.jsonEncode() }
+        val mediumReportersJson = view.mediumReporters.joinToString(",") { it.jsonEncode() }
         enqueue(
             """{"type":"gameNote","players":[$playersJson],""" +
-                """"seerClaimants":[$seerClaimantsJson],"mediumClaimants":[$mediumClaimantsJson],""" +
-                """"hasOwnResults":${view.hasOwnResults}}"""
+                """"ownResultTitle":${view.ownResultTitle?.jsonEncode() ?: "null"},""" +
+                """"divinationReporters":[$divinationReportersJson],"mediumReporters":[$mediumReportersJson]}"""
         )
     }
 
@@ -120,9 +120,9 @@ private fun PlayerNote.toJson(): String =
         """"ownResult":${ownResult ?: "null"},""" +
         """"divinationReports":${divinationReports.toJson()},"mediumReports":${mediumReports.toJson()}}"""
 
-// 名乗った人の名前から、報告された結果（true は人狼）へのオブジェクトにする
+// 報告した人の名前から、報告された結果（true は人狼）へのオブジェクトにする
 private fun Map<String, Boolean>.toJson(): String =
-    entries.joinToString(",", "{", "}") { (claimant, isWerewolf) -> "${claimant.jsonEncode()}:$isWerewolf" }
+    entries.joinToString(",", "{", "}") { (reporter, isWerewolf) -> "${reporter.jsonEncode()}:$isWerewolf" }
 
 private fun PlayerStatus.toJson(): String = when (this) {
     PlayerStatus.ALIVE -> "\"alive\""

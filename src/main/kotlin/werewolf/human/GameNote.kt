@@ -12,13 +12,12 @@ import werewolf.view.PlayerStatus
 class GameNote {
     private val playerStatuses = mutableMapOf<String, PlayerStatus>()
     private val playerNames = mutableListOf<String>()
-    private var ownRole: Role? = null
     private val divineResults = mutableMapOf<String, Boolean>()
     private val mediumResults = mutableMapOf<String, Boolean>()
     private val divineReports = mutableSetOf<ReportEntry>()
     private val mediumReports = mutableSetOf<ReportEntry>()
     private val claimedRoles = mutableMapOf<String, String>()
-    // 挿入順を保つので、最初に名乗った順に並ぶ
+    // 挿入順を保つので、役職を最初に明かした順に並ぶ
     private val seerClaimants = linkedSetOf<String>()
     private val mediumClaimants = linkedSetOf<String>()
     private val knownRoles = mutableMapOf<String, String>()
@@ -29,11 +28,7 @@ class GameNote {
                 playerStatuses[it.name] = PlayerStatus.ALIVE
                 playerNames += it.name
             }
-            // 役職通知は本人にしか届かないので、自分の役職とわかる
-            is GameEvent.RoleAssigned -> {
-                ownRole = event.role
-                knownRoles[event.assignee.name] = event.role.displayName
-            }
+            is GameEvent.RoleAssigned -> knownRoles[event.assignee.name] = event.role.displayName
             is GameEvent.WerewolfAllyRevealed -> knownRoles[event.ally.name] = Role.WEREWOLF.displayName
             is GameEvent.RolesRevealed -> event.roles.forEach { (player, role) -> knownRoles[player.name] = role.displayName }
             is GameEvent.PlayerExecuted -> playerStatuses[event.executed.name] = PlayerStatus.EXECUTED
@@ -77,10 +72,18 @@ class GameNote {
                 mediumReports = reportsOn(name, mediumReports),
             )
         },
-        seerClaimants = seerClaimants.toList(),
-        mediumClaimants = mediumClaimants.toList(),
-        hasOwnResults = ownRole == Role.SEER || ownRole == Role.MEDIUM,
+        ownResultTitle = when {
+            divineResults.isNotEmpty() -> "占い結果"
+            mediumResults.isNotEmpty() -> "霊能結果"
+            else -> null
+        },
+        divinationReporters = reportersIn(seerClaimants, divineReports),
+        mediumReporters = reportersIn(mediumClaimants, mediumReports),
     )
+
+    // 名乗っただけの人は除き、結果を報告した人だけを、役職を最初に明かした順に並べる
+    private fun reportersIn(claimants: Set<String>, reports: Set<ReportEntry>): List<String> =
+        claimants.filter { claimant -> reports.any { it.source == claimant } }
 
     private fun reportsOn(targetName: String, reports: Set<ReportEntry>): Map<String, Boolean> =
         reports.filter { it.targetName == targetName }.associate { it.source to it.isWerewolf }
