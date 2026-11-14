@@ -14,10 +14,8 @@ import werewolf.ai.LanguageModel
 import werewolf.ai.RuminationRecord
 import werewolf.game.Moment
 import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.measureTimedValue
 
 class AnthropicLanguageModel(
@@ -32,13 +30,7 @@ class AnthropicLanguageModel(
     @Volatile private var lastRequest: LastRequest? = null
     private val schedule = RuminationSchedule()
     private val ruminations = ConcurrentLinkedQueue<RuminationRecord>()
-    private val ruminationTimer: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor { task ->
-        Thread(task, "rumination-$model").apply { isDaemon = true }
-    }
-
-    init {
-        ruminationTimer.scheduleWithFixedDelay(::ruminateIfDue, CHECK_INTERVAL_SECONDS, CHECK_INTERVAL_SECONDS, TimeUnit.SECONDS)
-    }
+    private val ticker = Ticker("rumination-$model", CHECK_INTERVAL, ::ruminateIfDue)
 
     override fun ask(system: String, history: List<String>, instruction: String): Completion {
         val callStartTime = System.currentTimeMillis()
@@ -78,12 +70,9 @@ class AnthropicLanguageModel(
 
     override fun drainRuminations(): List<RuminationRecord> = generateSequence { ruminations.poll() }.toList()
 
-    override fun stop() {
-        ruminationTimer.shutdown()
-        ruminationTimer.awaitTermination(STOP_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-    }
+    override fun stop() = ticker.stop()
 
-    // タイマーのスレッドから定期的に呼ばれる。例外を外に出すと以降の確認が止まるため、すべてここで受け止める
+    // ticker から定期的に呼ばれる。例外を外に出すと以降の確認が止まるため、すべてここで受け止める
     @Suppress("TooGenericExceptionCaught", "SwallowedException")
     private fun ruminateIfDue() {
         val request = lastRequest ?: return
@@ -142,7 +131,6 @@ class AnthropicLanguageModel(
         private const val MAX_TOKENS = 16000L
         // max_tokens: 0 なら、キャッシュの読み書きだけをして、出力を生成せずに返る
         private const val RUMINATION_MAX_TOKENS = 0L
-        private const val CHECK_INTERVAL_SECONDS = 10L
-        private const val STOP_TIMEOUT_SECONDS = 60L
+        private val CHECK_INTERVAL = 10.seconds
     }
 }
