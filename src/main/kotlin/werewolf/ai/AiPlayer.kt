@@ -121,13 +121,21 @@ class AiPlayer(
     }
 
     // 応答が不正な形式なら、記録してもう一度聞き直す。最後まで正しい応答を得られなければ null を返す
-    private fun <T> askUntilValid(model: LanguageModel, instruction: String, interpret: (Completion) -> T): T? {
+    private fun <T> askUntilValid(model: LanguageModel, instruction: String, interpret: (Completion.Answer) -> T): T? {
         repeat(MAX_ATTEMPTS) {
-            val completion = prompt(model, instruction)
-            try {
-                return interpret(completion)
-            } catch (_: InvalidAiInputException) {
-                memorize(InvalidAiInput(this, completion.text, completion.metadata))
+            when (val completion = prompt(model, instruction)) {
+                is Completion.Answer -> try {
+                    return interpret(completion)
+                } catch (_: InvalidAiInputException) {
+                    memorize(InvalidAiInput(this, completion.text, completion.metadata))
+                }
+                is Completion.Refusal -> {
+                    memorize(RefusedAiInput(this, completion.text, completion.metadata))
+                    // 拒否はモデル提供元の安全分類器による判定で、同じモデルに同じプロンプトを送り直しても、ほとんどの場合また拒否される。
+                    // Anthropicの公式ドキュメント（拒否とフォールバック）でも、同じモデルへの再送ではなく別モデルへの切り替えが推奨されている。
+                    // 実際のゲームでも、同じプロンプトでの再試行16回中15回がまた拒否された（#353）。そのため聞き直さずに諦める
+                    return null
+                }
             }
         }
         return null

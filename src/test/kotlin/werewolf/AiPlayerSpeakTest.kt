@@ -2,6 +2,7 @@ package werewolf
 
 import werewolf.ai.AiPlayer
 import werewolf.ai.InvalidAiInput
+import werewolf.ai.RefusedAiInput
 import werewolf.game.AllPlayers
 import werewolf.game.ChronicleView
 import werewolf.game.Claim
@@ -276,5 +277,26 @@ class AiPlayerSpeakTest {
         assertIs<ChronicleView.Action>(invalidInputChronicle)
         assertTrue(invalidInputChronicle.content.contains("bad response"))
         assertEquals("model=test", invalidInputChronicle.intent)
+    }
+
+    @Test
+    fun `discuss falls back without asking again when the model refuses`() {
+        // 途中までの出力が形式どおりでも、発言としては使わない
+        val lm = RefusingLanguageModel("発言する：hello[真意]")
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
+        val result = villager.discuss(openContext(), SpeakingRight.Uncontested(villager))
+        assertEquals(Statement.Plain(villager, ""), result)
+        assertEquals(1, lm.askCount)
+    }
+
+    @Test
+    fun `speak records RefusedAiInput with partial response when the model refuses`() {
+        val lm = RefusingLanguageModel("発言する：hel", metadata = FakeActionMetadata("stop=refusal"))
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
+        villager.discuss(openContext(), SpeakingRight.Uncontested(villager))
+        val memories = villager.reveal(fakeCitizenWinSignal())
+        assertTrue(memories.none { it is InvalidAiInput })
+        val refusedChronicle = memories.filterIsInstance<RefusedAiInput>().single().toChronicleView()
+        assertEquals(ChronicleView.Action("Villager", "応答拒否", "発言する：hel", "stop=refusal"), refusedChronicle)
     }
 }

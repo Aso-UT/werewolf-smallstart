@@ -2,6 +2,7 @@ package werewolf
 
 import werewolf.ai.AiPlayer
 import werewolf.ai.InvalidAiInput
+import werewolf.ai.RefusedAiInput
 import werewolf.game.ChronicleView
 import werewolf.game.Choice
 import werewolf.game.Role
@@ -115,5 +116,17 @@ class AiPlayerChooseTest {
         assertIs<ChronicleView.Action>(invalidInputChronicle)
         assertTrue(invalidInputChronicle.content.contains("bad response"))
         assertEquals("model=test", invalidInputChronicle.intent)
+    }
+
+    @Test
+    fun `selectTarget falls back to random candidate without asking again when the model refuses`() {
+        val lm = RefusingLanguageModel("怪しいから：Wolf")
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
+        val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
+        val context = SelectionContext.Vote(villager, listOf(villager, wolf))
+        villager.selectTarget(context)
+        assertEquals(1, lm.askCount)
+        val memories = villager.reveal(fakeCitizenWinSignal())
+        assertTrue(memories.any { it is RefusedAiInput })
     }
 }

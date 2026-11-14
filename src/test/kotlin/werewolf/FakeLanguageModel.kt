@@ -29,7 +29,7 @@ class FakeLanguageModel(
     override fun ask(system: String, history: List<String>, instruction: String): Completion {
         histories.add(history)
         instructions.add(instruction)
-        return Completion(responseQueue.removeFirst(), metadata)
+        return Completion.Answer(responseQueue.removeFirst(), metadata)
     }
 
     override fun drainRuminations(): List<RuminationRecord> = pendingRuminations.toList().also { pendingRuminations.clear() }

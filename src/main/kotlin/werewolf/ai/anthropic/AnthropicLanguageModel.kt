@@ -61,7 +61,7 @@ class AnthropicLanguageModel(
             val text = message.content()
                 .mapNotNull { it.text().orElse(null) }
                 .joinToString("") { it.text() }
-            Completion(text, buildMetadata(message, diagnostics, MAX_TOKENS, responseTime))
+            Completion.Answer(text, buildMetadata(message, diagnostics, MAX_TOKENS, responseTime))
         } catch (e: Exception) {
             throw AnthropicApiException("Anthropic API call failed: ${e.javaClass.simpleName}")
         }
