@@ -8,30 +8,36 @@ import kotlin.time.TimeSource
 
 // プロンプトキャッシュのTTL（5分）が切れる前に、反芻を送るかどうかを決める。
 // TTL は送り始めた時点から数えるので、本番・反芻とも送り始めた時点を記録する。
-// 本番の呼び出しのスレッドと、反芻を確かめるタイマーのスレッドの両方から呼ばれる
+// 本番の呼び出しのスレッドが記録した時点を反芻を確かめるタイマーのスレッドから読めるよう、どのメソッドも同期する
 class RuminationSchedule(private val timeSource: TimeSource = TimeSource.Monotonic) {
     private var lastSentAt: TimeMark? = null
     private var lastAskedAt: TimeMark? = null
 
     @Synchronized
-    fun startAsk() {
+    fun recordAsk() {
         val now = timeSource.markNow()
         lastSentAt = now
         lastAskedAt = now
     }
 
-    // 反芻すべき時期なら、送り始めたことを記録して true を返す。同時に確かめても、送るのは一度だけになる
     @Synchronized
-    fun tryStartRumination(): Boolean {
-        if (!isDue()) return false
+    fun recordRumination() {
         lastSentAt = timeSource.markNow()
-        return true
     }
 
-    private fun isDue(): Boolean {
-        val askedAt = lastAskedAt ?: return false
+    @Synchronized
+    fun isDue(): Boolean = isCacheExpiring() && !isAbandoned()
+
+    // 最後に送り始めてから、反芻すべき間隔が経った
+    private fun isCacheExpiring(): Boolean {
         val sentAt = lastSentAt ?: return false
-        return askedAt.elapsedNow() < GIVE_UP_AFTER && sentAt.elapsedNow() >= INTERVAL
+        return sentAt.elapsedNow() >= INTERVAL
+    }
+
+    // 最後の本番から、反芻を打ち切るべき間隔が経った
+    private fun isAbandoned(): Boolean {
+        val askedAt = lastAskedAt ?: return false
+        return askedAt.elapsedNow() >= GIVE_UP_AFTER
     }
 
     companion object {

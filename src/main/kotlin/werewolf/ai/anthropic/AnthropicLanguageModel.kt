@@ -61,7 +61,7 @@ class AnthropicLanguageModel(
             .addUserMessageOfBlockParams(buildUserBlocks(blocks, instruction))
             .build()
         lastRequest = LastRequest(params, blockManager.committedItemCount)
-        schedule.startAsk()
+        schedule.recordAsk()
         // Catch broadly and swallow cause to prevent API key leakage via exception messages or URLs
         @Suppress("TooGenericExceptionCaught", "SwallowedException")
         return try {
@@ -87,7 +87,8 @@ class AnthropicLanguageModel(
     @Suppress("TooGenericExceptionCaught", "SwallowedException")
     private fun ruminateIfDue() {
         val request = lastRequest ?: return
-        if (!schedule.tryStartRumination()) return
+        if (!schedule.isDue()) return
+        schedule.recordRumination()
         val occurredAt = Moment.now()
         val diagnostics = CacheDiagnostics(
             cachedItemCount = request.itemCount,

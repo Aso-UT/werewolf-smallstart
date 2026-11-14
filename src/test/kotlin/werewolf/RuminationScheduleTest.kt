@@ -13,64 +13,64 @@ class RuminationScheduleTest {
     private val schedule = RuminationSchedule(time)
 
     @Test
-    fun `does not ruminate before the first ask`() {
+    fun `is not due before the first ask`() {
         time += 10.minutes
-        assertFalse(schedule.tryStartRumination())
+        assertFalse(schedule.isDue())
     }
 
     @Test
-    fun `does not ruminate until the interval has passed since the ask started`() {
-        schedule.startAsk()
+    fun `is not due until the interval has passed since the ask started`() {
+        schedule.recordAsk()
         time += RuminationSchedule.INTERVAL - 1.seconds
-        assertFalse(schedule.tryStartRumination())
+        assertFalse(schedule.isDue())
     }
 
     @Test
-    fun `ruminates once the interval has passed since the ask started`() {
-        schedule.startAsk()
+    fun `is due once the interval has passed since the ask started`() {
+        schedule.recordAsk()
         time += RuminationSchedule.INTERVAL
-        assertTrue(schedule.tryStartRumination())
+        assertTrue(schedule.isDue())
     }
 
     @Test
-    fun `ruminates only once for the same interval`() {
-        schedule.startAsk()
+    fun `is not due right after a rumination is recorded`() {
+        schedule.recordAsk()
         time += RuminationSchedule.INTERVAL
-        schedule.tryStartRumination()
-        assertFalse(schedule.tryStartRumination())
+        schedule.recordRumination()
+        assertFalse(schedule.isDue())
     }
 
     @Test
     fun `next rumination waits for the interval since the previous rumination started`() {
-        schedule.startAsk()
+        schedule.recordAsk()
         time += RuminationSchedule.INTERVAL
-        schedule.tryStartRumination()
+        schedule.recordRumination()
         time += RuminationSchedule.INTERVAL - 1.seconds
-        assertFalse(schedule.tryStartRumination())
+        assertFalse(schedule.isDue())
         time += 1.seconds
-        assertTrue(schedule.tryStartRumination())
+        assertTrue(schedule.isDue())
     }
 
     @Test
     fun `a new ask restarts the interval`() {
-        schedule.startAsk()
+        schedule.recordAsk()
         time += RuminationSchedule.INTERVAL - 1.seconds
-        schedule.startAsk()
+        schedule.recordAsk()
         time += 1.seconds
-        assertFalse(schedule.tryStartRumination())
+        assertFalse(schedule.isDue())
     }
 
     @Test
     fun `gives up once too long has passed since the last ask`() {
-        schedule.startAsk()
+        schedule.recordAsk()
         time += RuminationSchedule.GIVE_UP_AFTER
-        assertFalse(schedule.tryStartRumination())
+        assertFalse(schedule.isDue())
     }
 
     @Test
-    fun `keeps ruminating just before giving up`() {
-        schedule.startAsk()
+    fun `is still due just before giving up`() {
+        schedule.recordAsk()
         time += RuminationSchedule.GIVE_UP_AFTER - 1.seconds
-        assertTrue(schedule.tryStartRumination())
+        assertTrue(schedule.isDue())
     }
 }
