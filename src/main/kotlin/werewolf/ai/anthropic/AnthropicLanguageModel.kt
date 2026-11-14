@@ -7,6 +7,7 @@ import com.anthropic.models.messages.ContentBlockParam
 import com.anthropic.models.messages.Message
 import com.anthropic.models.messages.MessageCreateParams
 import com.anthropic.models.messages.OutputConfig
+import com.anthropic.models.messages.StopReason
 import com.anthropic.models.messages.TextBlockParam
 import com.anthropic.models.messages.ThinkingConfigAdaptive
 import werewolf.ai.Completion
@@ -61,7 +62,13 @@ class AnthropicLanguageModel(
             val text = message.content()
                 .mapNotNull { it.text().orElse(null) }
                 .joinToString("") { it.text() }
-            Completion.Answer(text, buildMetadata(message, diagnostics, MAX_TOKENS, responseTime))
+            val metadata = buildMetadata(message, diagnostics, MAX_TOKENS, responseTime)
+            // 拒否はエラーではなく正常なレスポンスとして返り、途中まで出力されていることもある。その出力は答えとして扱わない
+            if (message.stopReason().orElse(null) == StopReason.REFUSAL) {
+                Completion.Refusal(text, metadata)
+            } else {
+                Completion.Answer(text, metadata)
+            }
         } catch (e: Exception) {
             throw AnthropicApiException("Anthropic API call failed: ${e.javaClass.simpleName}")
         }
@@ -100,6 +107,7 @@ class AnthropicLanguageModel(
             tokenUsage = TokenUsage(message.usage()),
             cacheDiagnostics = diagnostics,
             stopReason = message.stopReason().map { it.asString() }.orElse("unknown"),
+            refusal = message.stopDetails().map { RefusalDetails(it) }.orElse(null),
             effort = effort,
             maxTokens = maxTokens,
             thinkingSummary = extractThinkingSummary(message),
