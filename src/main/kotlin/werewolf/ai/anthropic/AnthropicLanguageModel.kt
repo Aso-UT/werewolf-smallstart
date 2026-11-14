@@ -26,7 +26,6 @@ class AnthropicLanguageModel(
     private val blockManager = HistoryBlockManager()
     @Volatile private var lastCallTime: Long? = null
 
-    // 反芻は、前回の本番のリクエストをそのまま送り直す。キャッシュの区切り位置までが本番と完全に一致するようにするため
     @Volatile private var lastRequest: LastRequest? = null
     private val schedule = RuminationSchedule()
     private val ruminations = ConcurrentLinkedQueue<RuminationRecord>()
@@ -85,6 +84,7 @@ class AnthropicLanguageModel(
             timeSinceLastCallMs = lastCallTime?.let { System.currentTimeMillis() - it },
         )
         try {
+            // 前回の本番のリクエストをそのまま送り直す。キャッシュの区切り位置までが本番と完全に一致するようにするため
             val params = request.params.toBuilder().maxTokens(RUMINATION_MAX_TOKENS).build()
             val (message, responseTime) = measureTimedValue { client.messages().create(params) }
             ruminations.add(RuminationRecord(occurredAt, buildMetadata(message, diagnostics, RUMINATION_MAX_TOKENS, responseTime)))
