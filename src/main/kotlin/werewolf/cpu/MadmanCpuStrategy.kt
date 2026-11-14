@@ -44,7 +44,7 @@ class MadmanCpuStrategy(
 
     private fun accusedByMe(): Set<Player> =
         self.knowledge.filterIsInstance<GameEvent.StatementMade>()
-            .map { it.statement }
+            .flatMap { it.statements }
             .filterIsInstance<Statement.DivinationReport>()
             .filter { it.claimant === self }
             .map { it.target }
@@ -52,7 +52,7 @@ class MadmanCpuStrategy(
 
     private fun fakeMediumedByMe(): Set<Player> =
         self.knowledge.filterIsInstance<GameEvent.StatementMade>()
-            .map { it.statement }
+            .flatMap { it.statements }
             .filterIsInstance<Statement.MediumReport>()
             .filter { it.claimant === self }
             .map { it.target }

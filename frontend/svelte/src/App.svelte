@@ -5,9 +5,13 @@
     | { type: 'observation'; recipient: string; category: string; content: string }
     | { type: 'action'; actor: string; category: string; content: string; intent: string }
 
+  type Remark = { actor: string; body: string }
+
   type LogEntry =
     | { type: 'observation'; title: string; body: string }
     | { type: 'attributedObservation'; title: string; actor: string; body: string }
+    // 同時発言。並びは時間の前後を意味しない
+    | { type: 'simultaneousObservation'; title: string; remarks: Remark[] }
     | { type: 'action'; title: string; body: string; intent: string }
     | { type: 'epilogue'; chronicles: Chronicle[]; metadataTotals: string[] }
 
@@ -71,6 +75,9 @@
         break
       case 'attributedObservation':
         push({ type: 'attributedObservation', title: msg.title as string, actor: msg.actor as string, body: msg.body as string })
+        break
+      case 'simultaneousObservation':
+        push({ type: 'simultaneousObservation', title: msg.title as string, remarks: msg.remarks as Remark[] })
         break
       case 'action':
         push({ type: 'action', title: msg.title as string, body: msg.body as string, intent: msg.intent as string })
@@ -252,6 +259,16 @@
             <span class="title">[{entry.title}]</span>
             {entry.actor}{#if role}<span class="role-badge">{role}</span>{/if}: {entry.body}
           </div>
+        {:else if entry.type === 'simultaneousObservation'}
+          <div class="event simultaneous">
+            <span class="title">[{entry.title}（同時発言）]</span>
+            {#each entry.remarks as remark}
+              {@const role = claimedRoleOf(remark.actor)}
+              <div class="remark">
+                {remark.actor}{#if role}<span class="role-badge">{role}</span>{/if}: {remark.body}
+              </div>
+            {/each}
+          </div>
         {:else if entry.type === 'action'}
           <div class="event">
             <span class="title">[{entry.title}]</span> {entry.body}
@@ -345,6 +362,8 @@
   .rules-folded .rules-text { max-height: 300px; overflow-y: auto; }
   .rules-text { white-space: pre-wrap; font-family: inherit; line-height: 1.6; margin: 0; }
   .event { margin: 4px 0; line-height: 1.4; }
+  .simultaneous { border-left: 3px solid #b8c4d9; padding-left: 6px; }
+  .remark { margin-left: 1em; }
   .title { font-weight: bold; color: #444; }
   .intent { color: #888; font-size: 0.9em; }
   .role-badge { display: inline-block; margin-left: 4px; padding: 1px 6px; border-radius: 3px; font-size: 0.8em; background: #dde6f7; color: #33507a; }

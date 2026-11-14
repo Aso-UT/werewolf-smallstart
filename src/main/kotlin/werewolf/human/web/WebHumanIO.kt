@@ -6,6 +6,7 @@ import werewolf.game.ChronicleView
 import werewolf.game.GameOverSignal
 import werewolf.game.GameRules
 import werewolf.game.RecallView
+import werewolf.game.Remark
 import werewolf.human.HumanIO
 import werewolf.view.Atmosphere
 import werewolf.view.ChoiceView
@@ -156,9 +157,15 @@ private fun RecallView.toJson(): String = when (this) {
         """{"type":"observation","title":${category.jsonEncode()},"body":${content.jsonEncode()}}"""
     is RecallView.AttributedObservation ->
         """{"type":"attributedObservation","title":${category.jsonEncode()},"actor":${actor.jsonEncode()},"body":${content.jsonEncode()}}"""
+    is RecallView.SimultaneousObservation ->
+        """{"type":"simultaneousObservation","title":${category.jsonEncode()},""" +
+            """"remarks":${remarks.joinToString(",", "[", "]") { it.toJson() }}}"""
     is RecallView.SelfAction ->
         """{"type":"action","title":${category.jsonEncode()},"body":${content.jsonEncode()},"intent":${intent.jsonEncode()}}"""
 }
+
+private fun Remark.toJson(): String =
+    """{"actor":${actor.jsonEncode()},"body":${content.jsonEncode()}}"""
 
 private fun ChronicleView.toJson(): String = when (this) {
     is ChronicleView.Observation ->

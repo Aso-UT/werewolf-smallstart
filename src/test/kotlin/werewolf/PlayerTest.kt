@@ -208,7 +208,7 @@ class PlayerTest {
     fun `speakingUrge throws when counter claiming a role other than the one just claimed`() {
         val claimer = NothingPlayer(Role.SEER, "Claimer")
         val player = CounterClaimingPlayer(Role.MADMAN, "Player", counterRole = Role.MEDIUM)
-        val context = openContext(listOf(player, claimer), previousStatement = Statement.RoleClaim(claimer, Role.SEER))
+        val context = openContext(listOf(player, claimer), previousStatements = listOf(Statement.RoleClaim(claimer, Role.SEER)))
         assertFailsWith<IllegalArgumentException> { player.speakingUrge(context) }
     }
 
@@ -230,7 +230,7 @@ class PlayerTest {
     fun `seer cannot claim again after already revealed`() {
         val player = CapturingSpeakerPlayer(Role.SEER, "Player")
         val allPlayers = AllPlayers(TestLodge(player to Role.SEER).create().playerManager)
-        GameEvent.StatementMade.send(1, player.name, Statement.RoleClaim(player, Role.SEER), allPlayers)
+        GameEvent.StatementMade.send(listOf(Statement.RoleClaim(player, Role.SEER)), allPlayers)
 
         player.discuss(openContext(listOf(player)), SpeakingRight.Uncontested(player))
 
@@ -241,7 +241,7 @@ class PlayerTest {
     fun `werewolf can keep re-claiming roles after already claiming`() {
         val player = CapturingSpeakerPlayer(Role.WEREWOLF, "Player")
         val allPlayers = AllPlayers(TestLodge(player to Role.WEREWOLF).create().playerManager)
-        GameEvent.StatementMade.send(1, player.name, Statement.RoleClaim(player, Role.SEER), allPlayers)
+        GameEvent.StatementMade.send(listOf(Statement.RoleClaim(player, Role.SEER)), allPlayers)
 
         player.discuss(openContext(listOf(player)), SpeakingRight.Uncontested(player))
 

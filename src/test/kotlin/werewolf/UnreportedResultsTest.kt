@@ -28,7 +28,7 @@ class UnreportedResultsTest {
         val wolf = ReceivingPlayer(Role.WEREWOLF, "Wolf")
         val allPlayers = AllPlayers(TestLodge(self to Role.SEER, wolf to Role.WEREWOLF).create().playerManager)
         GameEvent.Divined.send(wolf, DivineResult.WEREWOLF, self)
-        GameEvent.StatementMade.send(1, self.name, Statement.DivinationReport(self, wolf, DivineResult.WEREWOLF), allPlayers)
+        GameEvent.StatementMade.send(listOf(Statement.DivinationReport(self, wolf, DivineResult.WEREWOLF)), allPlayers)
 
         val result = UnreportedResults(memoriesFor(self), self)
 
@@ -44,7 +44,7 @@ class UnreportedResultsTest {
             TestLodge(self to Role.SEER, madman to Role.MADMAN, wolf to Role.WEREWOLF).create().playerManager
         )
         GameEvent.Divined.send(wolf, DivineResult.WEREWOLF, self)
-        GameEvent.StatementMade.send(1, madman.name, Statement.DivinationReport(madman, wolf, DivineResult.WEREWOLF), allPlayers)
+        GameEvent.StatementMade.send(listOf(Statement.DivinationReport(madman, wolf, DivineResult.WEREWOLF)), allPlayers)
 
         val result = UnreportedResults(memoriesFor(self), self)
 
@@ -68,7 +68,7 @@ class UnreportedResultsTest {
         val wolf = ReceivingPlayer(Role.WEREWOLF, "Wolf")
         val allPlayers = AllPlayers(TestLodge(self to Role.MEDIUM, wolf to Role.WEREWOLF).create().playerManager)
         GameEvent.MediumRevealed.send(wolf, MediumResult.WEREWOLF, self)
-        GameEvent.StatementMade.send(1, self.name, Statement.MediumReport(self, wolf, MediumResult.WEREWOLF), allPlayers)
+        GameEvent.StatementMade.send(listOf(Statement.MediumReport(self, wolf, MediumResult.WEREWOLF)), allPlayers)
 
         val result = UnreportedResults(memoriesFor(self), self)
 

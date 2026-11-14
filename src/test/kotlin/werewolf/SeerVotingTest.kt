@@ -45,7 +45,7 @@ class SeerVotingTest {
         val wolf = ReceivingPlayer(Role.WEREWOLF, "Wolf")
         val setup = TestLodge(seer to Role.SEER, madman to Role.MADMAN, villager to Role.VILLAGER, wolf to Role.WEREWOLF).create()
         val allPlayers = AllPlayers(setup.playerManager)
-        GameEvent.StatementMade.send(1, madman.name, Statement.DivinationReport(madman, villager, DivineResult.WEREWOLF), allPlayers)
+        GameEvent.StatementMade.send(listOf(Statement.DivinationReport(madman, villager, DivineResult.WEREWOLF)), allPlayers)
 
         repeat(100) {
             val voted = seer.selectTarget(SelectionContext.Vote(seer, listOf(villager, madman)))
@@ -63,7 +63,7 @@ class SeerVotingTest {
         val setup = TestLodge(seer to Role.SEER, reporter to Role.VILLAGER, v1 to Role.VILLAGER, v2 to Role.VILLAGER, wolf to Role.WEREWOLF).create()
         val allPlayers = AllPlayers(setup.playerManager)
         setup.oracle.divine(seer, v1)
-        GameEvent.StatementMade.send(1, reporter.name, Statement.DivinationReport(reporter, v2, DivineResult.NOT_WEREWOLF), allPlayers)
+        GameEvent.StatementMade.send(listOf(Statement.DivinationReport(reporter, v2, DivineResult.NOT_WEREWOLF)), allPlayers)
 
         val votes = (1..100).map { seer.selectTarget(SelectionContext.Vote(seer, listOf(v1, v2))) }.toSet()
         assertEquals(setOf(v1, v2), votes)
