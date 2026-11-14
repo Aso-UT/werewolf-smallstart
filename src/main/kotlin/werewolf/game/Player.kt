@@ -37,7 +37,7 @@ abstract class Player(private val role: Role) : Notifiable {
         val eligibility = UrgeEligibility(context, claimableRoles(), ReportEligibility.forRole(role, _memories, this))
         val urge = feelUrge(context, eligibility)
         require(urge.player === this) { "${urge.player.name} is not the urged player" }
-        eligibility.requireAllows(urge)
+        eligibility.validate(urge)
         _memories.add(urge)
         return urge
     }

@@ -10,7 +10,7 @@ class UrgeEligibility(context: DiscussionContext, claimableRoles: Set<Role>, rep
 
     val canAnnounce: Boolean = selectableTypes.any { it in Eagerness.ANNOUNCEMENT.statementTypes }
 
-    fun requireAllows(urge: SpeakingUrge) {
+    fun validate(urge: SpeakingUrge) {
         if (urge is CounterClaimSpeakingUrge) {
             require(urge.role == counterClaimRole) { "${urge.player.name} cannot counter claim ${urge.role}" }
         }
