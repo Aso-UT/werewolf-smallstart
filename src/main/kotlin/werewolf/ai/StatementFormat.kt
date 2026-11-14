@@ -3,12 +3,14 @@ package werewolf.ai
 import werewolf.game.DiscussionContext
 import werewolf.game.DivineResult
 import werewolf.game.MediumResult
+import werewolf.game.Player
 import werewolf.game.ReportEligibility
 import werewolf.game.Role
+import werewolf.game.Statement
 import werewolf.game.StatementType
 import werewolf.game.selectableTypes
 
-data class ParsedStatement(val content: String, val typeLabel: String, val intent: String)
+data class ParsedStatement(val statement: Statement, val intent: String)
 
 class StatementFormat {
     fun buildInstruction(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): String {
@@ -32,11 +34,55 @@ class StatementFormat {
     private fun availableTypes(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): List<StatementType> =
         StatementType.entries.filter { it in context.selectableTypes(claimableRoles, reportEligibility) }
 
-    fun parse(input: String): ParsedStatement {
+    fun parse(
+        input: String,
+        speaker: Player,
+        context: DiscussionContext,
+        claimableRoles: Set<Role>,
+        reportEligibility: ReportEligibility,
+    ): ParsedStatement {
         val (body, intent) = parseBodyAndIntent(input)
         val (typeLabel, content) = parseTypeLabelAndContent(body)
-        return ParsedStatement(content, typeLabel, intent)
+        val type = context.selectableTypes(claimableRoles, reportEligibility).singleOrNull { it.displayName == typeLabel }
+            ?: throw InvalidAiInputException("選択できない発言の種類です: $typeLabel")
+        val statement = buildStatement(speaker, context, type, content, claimableRoles)
+        if (reportEligibility.disqualifies(statement)) {
+            throw InvalidAiInputException("報告可能な対象・結果ではありません: ${statement.text()}")
+        }
+        return ParsedStatement(statement, intent)
     }
+
+    private fun buildStatement(
+        speaker: Player,
+        context: DiscussionContext,
+        type: StatementType,
+        content: String,
+        claimableRoles: Set<Role>,
+    ): Statement = when (type) {
+        StatementType.PLAIN -> Statement.Plain(speaker, content)
+        StatementType.DIVINATION_REPORT -> {
+            val (targetName, resultLabel, comment) = extractReportParts(content)
+            val result = DivineResult.entries.singleOrNull { it.displayName == resultLabel }
+                ?: throw InvalidAiInputException("占い結果報告の結果が不正です: $resultLabel")
+            Statement.DivinationReport(speaker, resolveTarget(context, targetName), result, comment)
+        }
+        StatementType.MEDIUM_REPORT -> {
+            val (targetName, resultLabel, comment) = extractReportParts(content)
+            val result = MediumResult.entries.singleOrNull { it.displayName == resultLabel }
+                ?: throw InvalidAiInputException("霊媒結果報告の結果が不正です: $resultLabel")
+            Statement.MediumReport(speaker, resolveTarget(context, targetName), result, comment)
+        }
+        StatementType.ROLE_CLAIM -> {
+            val (roleName, comment) = extractRoleClaimParts(content)
+            val role = claimableRoles.singleOrNull { it.displayName == roleName }
+                ?: throw InvalidAiInputException("役職申告の役職が不正です: $roleName")
+            Statement.RoleClaim(speaker, role, comment)
+        }
+    }
+
+    private fun resolveTarget(context: DiscussionContext, targetName: String): Player =
+        context.allPlayers.singleOrNull { it.name == targetName }
+            ?: throw InvalidAiInputException("報告の対象が不正です: $targetName")
 
     private fun parseBodyAndIntent(input: String): Pair<String, String> {
         val separatorIdx = input.indexOf("[").takeIf { it >= 0 }
@@ -84,7 +130,7 @@ class StatementFormat {
             }）/補足コメント（省略可）"
     }
 
-    fun extractReportParts(content: String): Triple<String, String, String> {
+    private fun extractReportParts(content: String): Triple<String, String, String> {
         val parts = content.split("/")
         val targetName = parts.getOrNull(0)?.trim()
         if (targetName.isNullOrEmpty()) throw InvalidAiInputException("報告の形式が不正です: $content")
@@ -93,7 +139,7 @@ class StatementFormat {
         return Triple(targetName, resultLabel, parts.getOrNull(2)?.trim().orEmpty())
     }
 
-    fun extractRoleClaimParts(content: String): Pair<String, String> {
+    private fun extractRoleClaimParts(content: String): Pair<String, String> {
         val parts = content.split("/")
         val roleName = parts.getOrNull(0)?.trim()
         if (roleName.isNullOrEmpty()) throw InvalidAiInputException("役職申告の形式が不正です: $content")
