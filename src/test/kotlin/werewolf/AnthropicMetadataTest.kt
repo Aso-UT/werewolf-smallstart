@@ -1,6 +1,7 @@
 package werewolf
 
 import werewolf.ai.anthropic.AnthropicEffort
+import werewolf.ai.anthropic.AnthropicFailureMetadata
 import werewolf.ai.anthropic.AnthropicMetadata
 import werewolf.ai.anthropic.AnthropicSummableMetadata
 import werewolf.ai.anthropic.CacheDiagnostics
@@ -12,6 +13,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -152,5 +154,31 @@ class AnthropicMetadataTest {
                 " / response total 6.0s / avg 3.0s / max 4.0s",
             summable.toDisplayString(),
         )
+    }
+
+    private fun failure(maxTokens: Long = 0) = AnthropicFailureMetadata("test-model", AnthropicEffort.HIGH, maxTokens, "SocketTimeoutException")
+
+    @Test
+    fun `failure shows the kind of error after the call settings`() {
+        assertEquals("model=test-model effort=HIGH max_tokens=0 failed=SocketTimeoutException", failure().toDisplayString())
+    }
+
+    @Test
+    fun `failures are summed separately from successful calls with the same settings`() {
+        val failed = failure(maxTokens = 0).toSummable()
+        val succeeded = summable(maxTokens = 0)
+
+        assertNotEquals(succeeded.decisionMethod, failed.decisionMethod)
+        assertFailsWith<IllegalArgumentException> { failed + succeeded }
+    }
+
+    @Test
+    fun `failures add counts`() {
+        assertEquals(2, (failure().toSummable() + failure().toSummable()).count)
+    }
+
+    @Test
+    fun `failures with different max tokens are not summed together`() {
+        assertFailsWith<IllegalArgumentException> { failure(maxTokens = 0).toSummable() + failure(maxTokens = 16000).toSummable() }
     }
 }

@@ -88,7 +88,9 @@ class AnthropicLanguageModel(
             val (message, responseTime) = measureTimedValue { client.messages().create(params) }
             ruminations.add(RuminationRecord(occurredAt, buildMetadata(message, diagnostics, RUMINATION_MAX_TOKENS, responseTime)))
         } catch (e: Exception) {
-            // 反芻に失敗しても本番の呼び出しには影響しないので、記録せずに次の機会を待つ
+            val failure = AnthropicFailureMetadata(model, effort, RUMINATION_MAX_TOKENS, e.javaClass.simpleName)
+            ruminations.add(RuminationRecord(occurredAt, failure))
+            throw AnthropicApiException("Anthropic rumination failed: ${e.javaClass.simpleName}")
         }
     }
 

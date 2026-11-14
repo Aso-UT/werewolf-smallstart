@@ -102,3 +102,34 @@ data class AnthropicSummableMetadata(
 
     override fun toDisplayString() = "${tokenUsage.toDisplayString()} / ${responseTime.toDisplayString(count)}"
 }
+
+// 呼び出しに失敗したとき。例外のメッセージには API キーなどが含まれうるので、例外の種類だけを残す
+class AnthropicFailureMetadata(
+    val model: String,
+    val effort: AnthropicEffort,
+    val maxTokens: Long,
+    val error: String,
+) : ActionMetadata {
+    override fun toDisplayString() = "model=$model effort=$effort max_tokens=$maxTokens failed=$error"
+
+    override fun toSummable() = AnthropicFailureSummableMetadata(model, effort, maxTokens, count = 1)
+}
+
+// 失敗した呼び出しはトークン数などを持たないので、成功した呼び出しとは分けて件数だけを合算する
+data class AnthropicFailureSummableMetadata(
+    val model: String,
+    val effort: AnthropicEffort,
+    val maxTokens: Long,
+    override val count: Int,
+) : SummableMetadata {
+    override val decisionMethod = "Anthropic $model effort=$effort max_tokens=$maxTokens 失敗"
+
+    override fun plus(other: SummableMetadata): SummableMetadata {
+        require(other is AnthropicFailureSummableMetadata && other.decisionMethod == decisionMethod) {
+            "Cannot sum $decisionMethod with ${other.decisionMethod}"
+        }
+        return copy(count = count + other.count)
+    }
+
+    override fun toDisplayString() = ""
+}
