@@ -11,6 +11,7 @@ import com.anthropic.models.messages.TextBlockParam
 import com.anthropic.models.messages.ThinkingConfigAdaptive
 import werewolf.ai.Completion
 import werewolf.ai.LanguageModel
+import werewolf.ai.RuminationRecord
 import kotlin.time.measureTimedValue
 
 class AnthropicLanguageModel(
@@ -65,6 +66,9 @@ class AnthropicLanguageModel(
             throw AnthropicApiException("Anthropic API call failed: ${e.javaClass.simpleName}")
         }
     }
+
+    override fun drainRuminations(): List<RuminationRecord> = emptyList()
+    override fun stop() { /* ruminations are not sent yet */ }
 
     // display: SUMMARIZED を指定しているため、thinkingブロックには思考の要約が入る
     private fun extractThinkingSummary(message: Message): String = message.content()

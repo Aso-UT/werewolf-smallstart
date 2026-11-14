@@ -176,9 +176,21 @@ class AiPlayer(
 
     override fun watchEpilogue(chronicles: List<ChronicleView>, metadataTotals: List<String>) = Unit
 
-    override fun onRevealing(signal: GameOverSignal) { /* AI players record everything as they act */ }
+    // 脱落しても反芻は続けているので、ゲームが終わったここで止め、残りを記録する
+    override fun onRevealing(signal: GameOverSignal) {
+        languageModel.stop()
+        urgeLanguageModel.stop()
+        recordRuminations()
+    }
+
+    // 反芻はAIへの指示には入れず、振り返りの記録にだけ残す
+    private fun recordRuminations() {
+        (languageModel.drainRuminations() + urgeLanguageModel.drainRuminations())
+            .forEach { memorize(Rumination(this, it)) }
+    }
 
     private fun prompt(model: LanguageModel, instruction: String): Completion {
+        recordRuminations()
         val history = _myMemories.map { toHistoryEntry(it.toRecallView()) }
         val instructionText = buildString {
             appendLine("【指示】")
