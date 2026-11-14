@@ -28,13 +28,11 @@ class RuminationSchedule(private val timeSource: TimeSource = TimeSource.Monoton
     @Synchronized
     fun isDue(): Boolean = isCacheExpiring() && !isAbandoned()
 
-    // 最後に送り始めてから、反芻すべき間隔が経った
     private fun isCacheExpiring(): Boolean {
         val sentAt = lastSentAt ?: return false
         return sentAt.elapsedNow() >= INTERVAL
     }
 
-    // 最後の本番から、反芻を打ち切るべき間隔が経った
     private fun isAbandoned(): Boolean {
         val askedAt = lastAskedAt ?: return false
         return askedAt.elapsedNow() >= GIVE_UP_AFTER
