@@ -19,6 +19,7 @@ class PlayerTest {
 
     private class ChoosingPlayer(role: Role, name: String) : NothingPlayer(role, name) {
         override fun choose(context: SelectionContext): Choice = FallbackChoice(this, context)
+        override fun onRevealing(signal: GameOverSignal) { /* records everything as it acts */ }
     }
 
     private class ArbitrarySpeakerSetter(
@@ -42,6 +43,7 @@ class PlayerTest {
     private class SpeakingPlayer(role: Role, name: String) : NothingPlayer(role, name) {
         override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim =
             Claim(this, context, Statement.Plain(this, ""), claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
+        override fun onRevealing(signal: GameOverSignal) { /* records everything as it acts */ }
     }
 
     private class ArbitraryUrgedPlayerSetter(
@@ -56,6 +58,7 @@ class PlayerTest {
     private class UrgedPlayer(role: Role, name: String) : NothingPlayer(role, name) {
         override fun feelUrge(context: DiscussionContext, eligibility: UrgeEligibility) =
             SpeakingUrge(this, context, Eagerness(3), "", UnimplementedActionMetadata)
+        override fun onRevealing(signal: GameOverSignal) { /* records everything as it acts */ }
     }
 
     private class CounterClaimingPlayer(role: Role, name: String, private val counterRole: Role) : NothingPlayer(role, name) {
