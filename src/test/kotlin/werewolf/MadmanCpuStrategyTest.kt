@@ -46,8 +46,8 @@ class MadmanCpuStrategyTest {
     @Test
     fun `fake seer stays silent when all players already accused`() {
         val strategy = MadmanCpuStrategy(madman, Role.SEER)
-        GameEvent.StatementMade.send(1, madman.name, Statement.DivinationReport(madman, v1, DivineResult.WEREWOLF), allPlayers)
-        GameEvent.StatementMade.send(1, madman.name, Statement.DivinationReport(madman, v2, DivineResult.WEREWOLF), allPlayers)
+        GameEvent.StatementMade.send(listOf(Statement.DivinationReport(madman, v1, DivineResult.WEREWOLF)), allPlayers)
+        GameEvent.StatementMade.send(listOf(Statement.DivinationReport(madman, v2, DivineResult.WEREWOLF)), allPlayers)
 
         val result = strategy.buildStatement(openContext(listOf(madman, v1, v2)), emptySet(), ReportEligibility.CanLie(emptyList()))
         assertTrue(result is Statement.Plain)
@@ -83,7 +83,7 @@ class MadmanCpuStrategyTest {
     fun `fake medium stays silent after all executed players already reported`() {
         val strategy = MadmanCpuStrategy(madman, Role.MEDIUM)
         GameEvent.PlayerExecuted.send(v1, allPlayers)
-        GameEvent.StatementMade.send(1, madman.name, Statement.MediumReport(madman, v1, MediumResult.NOT_WEREWOLF), allPlayers)
+        GameEvent.StatementMade.send(listOf(Statement.MediumReport(madman, v1, MediumResult.NOT_WEREWOLF)), allPlayers)
 
         val result = strategy.buildStatement(openContext(listOf(madman, v2)), emptySet(), ReportEligibility.CanLie(emptyList()))
         assertTrue(result is Statement.Plain)

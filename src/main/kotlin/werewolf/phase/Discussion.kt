@@ -21,8 +21,8 @@ abstract class Discussion<R : Notifiable>(
     protected val allPlayers: List<Player>,
     private val dispatcher: CoroutineDispatcher,
 ) {
-    protected abstract fun sendStatement(round: Int, speakerName: String, statement: Statement, recipients: R)
-    protected abstract fun buildContext(round: Int, previousStatement: Statement?): DiscussionContext
+    protected abstract fun sendStatements(statements: List<Statement>, recipients: R)
+    protected abstract fun buildContext(round: Int, previousStatements: List<Statement>): DiscussionContext
     protected abstract fun sendDiscussionStarted()
     protected abstract fun sendDiscussionEnded(elapsed: Duration)
 
@@ -41,8 +41,8 @@ abstract class Discussion<R : Notifiable>(
             val right = grantSpeakingRight(contexts)
             val context = contexts.getValue(right.speaker)
             val statement = right.speaker.discuss(context, right)
-            sendStatement(context.round, right.speaker.name, statement, recipients)
-            history.record(statement)
+            sendStatements(listOf(statement), recipients)
+            history.record(listOf(statement))
         }
     }
 
@@ -50,7 +50,7 @@ abstract class Discussion<R : Notifiable>(
         history.totalCount >= speakers.size * AVERAGE_STATEMENTS_PER_SPEAKER
 
     private fun eligibleSpeakerContexts(history: SpeakingHistory): Map<Player, DiscussionContext> =
-        speakers.filter { canSpeak(it, history) }.associateWith { buildContext(history.nextRoundOf(it), history.lastStatement) }
+        speakers.filter { canSpeak(it, history) }.associateWith { buildContext(history.nextRoundOf(it), history.lastStatements) }
 
     private fun canSpeak(player: Player, history: SpeakingHistory): Boolean =
         !reachedPersonalLimit(player, history) && !history.isLastSpeaker(player)
@@ -88,10 +88,10 @@ open class OpenDiscussion(
         playerManager.allPlayers,
         dispatcher,
     ) {
-    override fun sendStatement(round: Int, speakerName: String, statement: Statement, recipients: AllPlayers) =
-        GameEvent.StatementMade.send(round, speakerName, statement, recipients)
-    override fun buildContext(round: Int, previousStatement: Statement?) =
-        DiscussionContext.Open(round, day, speakers, allPlayers, previousStatement)
+    override fun sendStatements(statements: List<Statement>, recipients: AllPlayers) =
+        GameEvent.StatementMade.send(statements, recipients)
+    override fun buildContext(round: Int, previousStatements: List<Statement>) =
+        DiscussionContext.Open(round, day, speakers, allPlayers, previousStatements)
     override fun sendDiscussionStarted() = GameEvent.DiscussionStarted.send(day, recipients)
     override fun sendDiscussionEnded(elapsed: Duration) = GameEvent.DiscussionEnded.send(day, elapsed, recipients)
 }

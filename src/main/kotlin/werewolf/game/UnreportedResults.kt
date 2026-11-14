@@ -4,7 +4,7 @@ class UnreportedResults(memories: List<Recallable>, self: Player) {
     private val divined = memories.filterIsInstance<GameEvent.Divined>().associate { it.target to it.result }
     private val mediumRevealed = memories.filterIsInstance<GameEvent.MediumRevealed>().associate { it.target to it.result }
     private val ownStatements = memories.filterIsInstance<GameEvent.StatementMade>()
-        .map { it.statement }.filter { it.claimant === self }
+        .flatMap { it.statements }.filter { it.claimant === self }
 
     val divinations: Map<Player, DivineResult>
         get() = divined - ownDivinationReports().keys

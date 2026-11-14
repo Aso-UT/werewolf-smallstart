@@ -31,7 +31,7 @@ class AiPlayerSpeakingUrgeTest {
 
     // 直前にZoeが占い師COした議論
     private fun afterSeerClaim(player: AiPlayer) =
-        openContext(listOf(player, zoe), previousStatement = Statement.RoleClaim(zoe, Role.SEER))
+        openContext(listOf(player, zoe), previousStatements = listOf(Statement.RoleClaim(zoe, Role.SEER)))
 
     @Test
     fun `eagerness returns counter claim level with the role the player answered`() {
@@ -131,7 +131,7 @@ class AiPlayerSpeakingUrgeTest {
         val seer = AiPlayer(Role.SEER, "Seer", lm, lm, testInstruction("Seer"))
         val wolf = ReceivingPlayer(Role.WEREWOLF, "Wolf")
         val allPlayers = AllPlayers(TestLodge(seer to Role.SEER, wolf to Role.WEREWOLF).create().playerManager)
-        GameEvent.StatementMade.send(1, seer.name, Statement.RoleClaim(seer, Role.SEER), allPlayers)
+        GameEvent.StatementMade.send(listOf(Statement.RoleClaim(seer, Role.SEER)), allPlayers)
         GameEvent.Divined.send(wolf, DivineResult.WEREWOLF, seer)
         assertEquals(Eagerness.ANNOUNCEMENT, seer.speakingUrge(openContext(listOf(seer, wolf))).eagerness)
         assertFalse(lm.instructions.first().contains("対抗COする（"))

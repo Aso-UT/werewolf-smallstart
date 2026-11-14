@@ -246,7 +246,7 @@ class AiPlayerSpeakTest {
         val seer = AiPlayer(Role.SEER, "Seer", lm, lm, testInstruction("Seer"))
         val allPlayers = AllPlayers(TestLodge(seer to Role.SEER, wolf to Role.WEREWOLF).create().playerManager)
         GameEvent.Divined.send(wolf, DivineResult.WEREWOLF, seer)
-        GameEvent.StatementMade.send(1, seer.name, Statement.DivinationReport(seer, wolf, DivineResult.WEREWOLF), allPlayers)
+        GameEvent.StatementMade.send(listOf(Statement.DivinationReport(seer, wolf, DivineResult.WEREWOLF)), allPlayers)
 
         val result = seer.discuss(openContext(listOf(seer, wolf)), SpeakingRight.Uncontested(seer))
 

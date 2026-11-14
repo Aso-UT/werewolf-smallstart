@@ -39,7 +39,7 @@ class ConclaveTest {
                     receivedEndedDay = event.day
                     heardCountWhenEnded = _log.count { it.contains(":heard:") }
                 }
-                event is GameEvent.WerewolfStatementMade -> _log.add("$name:heard:${event.speakerName}:${event.statement}")
+                event is GameEvent.WerewolfStatementMade -> event.statements.forEach { _log.add("$name:heard:${it.claimant.name}:${it.text()}") }
                 event is GameEvent.PlayerExecuted && receivesExecutionEvent -> {}
                 else -> error("unexpected event in conclave test: $event")
             }

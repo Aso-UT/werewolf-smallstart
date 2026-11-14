@@ -4,7 +4,7 @@ class UrgeEligibility(context: DiscussionContext, claimableRoles: Set<Role>, rep
     private val selectableTypes = context.selectableTypes(claimableRoles, reportEligibility)
 
     // 直前の発言で名乗られた役職（結果報告を含む）を自分もCOできるときだけ、その役職で対抗COできる
-    val counterClaimRole: Role? = context.previousStatement
+    val counterClaimRole: Role? = context.previousStatements.singleOrNull()
         ?.claimedRole
         ?.takeIf { StatementType.ROLE_CLAIM in selectableTypes && it in claimableRoles }
 

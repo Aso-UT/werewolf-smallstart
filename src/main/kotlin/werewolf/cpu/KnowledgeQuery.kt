@@ -16,7 +16,7 @@ class KnowledgeQuery(private val player: RoleAwareCpuPlayer) {
 
     fun reportedAs(result: DivineResult, candidates: List<Player>): List<Player> {
         val others = knowledge.filterIsInstance<GameEvent.StatementMade>()
-            .map { it.statement }.filterIsInstance<Statement.DivinationReport>()
+            .flatMap { it.statements }.filterIsInstance<Statement.DivinationReport>()
             .filter { it.claimant !== self }
             .associate { it.target to it.result }
         return candidates.filter { others[it] == result }
@@ -24,7 +24,7 @@ class KnowledgeQuery(private val player: RoleAwareCpuPlayer) {
 
     fun claimedSeers(): Set<Player> =
         knowledge.filterIsInstance<GameEvent.StatementMade>()
-            .map { it.statement }.filterIsInstance<Statement.DivinationReport>()
+            .flatMap { it.statements }.filterIsInstance<Statement.DivinationReport>()
             .filter { it.claimant !== self }
             .map { it.claimant }.toSet()
 }

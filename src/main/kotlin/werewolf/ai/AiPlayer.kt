@@ -44,9 +44,10 @@ class AiPlayer(
         _myMemories.add(event)
     }
 
+    // 同時発言には他の人の発言も含まれるので、自分だけの発言のときに限る
     private fun isRedundantWithOwnClaim(event: GameEvent): Boolean = when (event) {
-        is GameEvent.StatementMade -> event.speakerName == name
-        is GameEvent.WerewolfStatementMade -> event.speakerName == name
+        is GameEvent.StatementMade -> event.statements.all { it.claimant === this }
+        is GameEvent.WerewolfStatementMade -> event.statements.all { it.claimant === this }
         else -> false
     }
 

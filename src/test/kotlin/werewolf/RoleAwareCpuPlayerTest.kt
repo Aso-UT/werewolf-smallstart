@@ -33,7 +33,7 @@ class RoleAwareCpuPlayerTest {
         val setup = TestLodge(seer to Role.SEER, villager to Role.VILLAGER, wolf to Role.WEREWOLF).create()
         val allPlayers = AllPlayers(setup.playerManager)
         setup.oracle.divine(seer, wolf)
-        GameEvent.StatementMade.send(1, seer.name, seer.discuss(openContext(), SpeakingRight.Uncontested(seer)), allPlayers)
+        GameEvent.StatementMade.send(listOf(seer.discuss(openContext(), SpeakingRight.Uncontested(seer))), allPlayers)
 
         repeat(100) {
             val voted = villager.selectTarget(SelectionContext.Vote(villager, listOf(seer, villager, wolf)))
@@ -62,7 +62,7 @@ class RoleAwareCpuPlayerTest {
         val seer = ReceivingPlayer(Role.SEER, "Seer")
         val villager = ReceivingPlayer(Role.VILLAGER, "Villager")
         val allPlayers = AllPlayers(TestLodge(wolf to Role.WEREWOLF, seer to Role.SEER, villager to Role.VILLAGER).create().playerManager)
-        GameEvent.StatementMade.send(1, seer.name, Statement.DivinationReport(seer, villager, DivineResult.NOT_WEREWOLF), allPlayers)
+        GameEvent.StatementMade.send(listOf(Statement.DivinationReport(seer, villager, DivineResult.NOT_WEREWOLF)), allPlayers)
 
         repeat(100) {
             val target = wolf.selectTarget(SelectionContext.Attack(wolf, listOf(seer, villager), emptyList()))
@@ -76,7 +76,7 @@ class RoleAwareCpuPlayerTest {
         val seer = ReceivingPlayer(Role.SEER, "Seer")
         val villager = ReceivingPlayer(Role.VILLAGER, "Villager")
         val allPlayers = AllPlayers(TestLodge(hunter to Role.HUNTER, seer to Role.SEER, villager to Role.VILLAGER).create().playerManager)
-        GameEvent.StatementMade.send(1, seer.name, Statement.DivinationReport(seer, villager, DivineResult.NOT_WEREWOLF), allPlayers)
+        GameEvent.StatementMade.send(listOf(Statement.DivinationReport(seer, villager, DivineResult.NOT_WEREWOLF)), allPlayers)
 
         repeat(100) {
             val target = hunter.selectTarget(SelectionContext.Guard(hunter, listOf(seer, villager)))
@@ -90,7 +90,7 @@ class RoleAwareCpuPlayerTest {
         val seer = ReceivingPlayer(Role.SEER, "Seer")
         val villager = ReceivingPlayer(Role.VILLAGER, "Villager")
         val allPlayers = AllPlayers(TestLodge(wolf to Role.WEREWOLF, seer to Role.SEER, villager to Role.VILLAGER).create().playerManager)
-        GameEvent.StatementMade.send(1, seer.name, Statement.DivinationReport(seer, villager, DivineResult.NOT_WEREWOLF), allPlayers)
+        GameEvent.StatementMade.send(listOf(Statement.DivinationReport(seer, villager, DivineResult.NOT_WEREWOLF)), allPlayers)
 
         repeat(100) {
             val voted = wolf.selectTarget(SelectionContext.Vote(wolf, listOf(seer, villager)))
@@ -114,7 +114,7 @@ class RoleAwareCpuPlayerTest {
         val setup = TestLodge(seer to Role.SEER, villager to Role.VILLAGER, innocent to Role.VILLAGER, wolf to Role.WEREWOLF).create()
         val allPlayers = AllPlayers(setup.playerManager)
         setup.oracle.divine(seer, innocent)
-        GameEvent.StatementMade.send(1, seer.name, seer.discuss(openContext(), SpeakingRight.Uncontested(seer)), allPlayers)
+        GameEvent.StatementMade.send(listOf(seer.discuss(openContext(), SpeakingRight.Uncontested(seer))), allPlayers)
 
         repeat(100) {
             val voted = villager.selectTarget(SelectionContext.Vote(villager, listOf(seer, villager, innocent, wolf)))

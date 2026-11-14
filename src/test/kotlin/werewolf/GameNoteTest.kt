@@ -192,7 +192,7 @@ class GameNoteTest {
         InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
         val v2 = gameSetup.playerManager.allPlayers.single { it.name == "V2" }
 
-        GameEvent.StatementMade.send(1, "V2", Statement.RoleClaim(v2, Role.MEDIUM), AllPlayers(gameSetup.playerManager))
+        GameEvent.StatementMade.send(listOf(Statement.RoleClaim(v2, Role.MEDIUM)), AllPlayers(gameSetup.playerManager))
 
         assertEquals(emptyList(), io.panels.last().mediumReporters)
     }
@@ -205,7 +205,7 @@ class GameNoteTest {
         val v2 = gameSetup.playerManager.allPlayers.single { it.name == "V2" }
         val wolf = gameSetup.playerManager.allPlayers.single { it.name == "Wolf" }
 
-        GameEvent.StatementMade.send(1, "V2", Statement.MediumReport(v2, wolf, MediumResult.WEREWOLF), AllPlayers(gameSetup.playerManager))
+        GameEvent.StatementMade.send(listOf(Statement.MediumReport(v2, wolf, MediumResult.WEREWOLF)), AllPlayers(gameSetup.playerManager))
 
         assertEquals(listOf("V2"), io.panels.last().mediumReporters)
         assertEquals(emptyList(), io.panels.last().divinationReporters)
@@ -227,9 +227,9 @@ class GameNoteTest {
         val allPlayers = AllPlayers(gameSetup.playerManager)
 
         // V3 が先に占い師だと明かしたが、結果を報告したのは V2 が先
-        GameEvent.StatementMade.send(1, "V3", Statement.RoleClaim(v3, Role.SEER), allPlayers)
-        GameEvent.StatementMade.send(1, "V2", Statement.DivinationReport(v2, wolf, DivineResult.WEREWOLF), allPlayers)
-        GameEvent.StatementMade.send(1, "V3", Statement.DivinationReport(v3, wolf, DivineResult.NOT_WEREWOLF), allPlayers)
+        GameEvent.StatementMade.send(listOf(Statement.RoleClaim(v3, Role.SEER)), allPlayers)
+        GameEvent.StatementMade.send(listOf(Statement.DivinationReport(v2, wolf, DivineResult.WEREWOLF)), allPlayers)
+        GameEvent.StatementMade.send(listOf(Statement.DivinationReport(v3, wolf, DivineResult.NOT_WEREWOLF)), allPlayers)
 
         assertEquals(listOf("V3", "V2"), io.panels.last().divinationReporters)
     }
@@ -242,7 +242,7 @@ class GameNoteTest {
         val v2 = gameSetup.playerManager.allPlayers.single { it.name == "V2" }
         val allPlayers = AllPlayers(gameSetup.playerManager)
 
-        GameEvent.StatementMade.send(1, "V2", Statement.RoleClaim(v2, Role.SEER), allPlayers)
+        GameEvent.StatementMade.send(listOf(Statement.RoleClaim(v2, Role.SEER)), allPlayers)
 
         assertEquals(Role.SEER.displayName, claimedRoleOf(io.panels.last(), "V2"))
     }
@@ -256,7 +256,7 @@ class GameNoteTest {
         val wolf = gameSetup.playerManager.allPlayers.single { it.name == "Wolf" }
         val allPlayers = AllPlayers(gameSetup.playerManager)
 
-        GameEvent.StatementMade.send(1, "V2", Statement.DivinationReport(v2, wolf, DivineResult.WEREWOLF), allPlayers)
+        GameEvent.StatementMade.send(listOf(Statement.DivinationReport(v2, wolf, DivineResult.WEREWOLF)), allPlayers)
 
         assertEquals(Role.SEER.displayName, claimedRoleOf(io.panels.last(), "V2"))
     }
@@ -270,7 +270,7 @@ class GameNoteTest {
         val wolf = gameSetup.playerManager.allPlayers.single { it.name == "Wolf" }
         val allPlayers = AllPlayers(gameSetup.playerManager)
 
-        GameEvent.StatementMade.send(1, "V2", Statement.MediumReport(v2, wolf, MediumResult.WEREWOLF), allPlayers)
+        GameEvent.StatementMade.send(listOf(Statement.MediumReport(v2, wolf, MediumResult.WEREWOLF)), allPlayers)
 
         assertEquals(Role.MEDIUM.displayName, claimedRoleOf(io.panels.last(), "V2"))
     }
@@ -283,8 +283,8 @@ class GameNoteTest {
         val v2 = gameSetup.playerManager.allPlayers.single { it.name == "V2" }
         val allPlayers = AllPlayers(gameSetup.playerManager)
 
-        GameEvent.StatementMade.send(1, "V2", Statement.RoleClaim(v2, Role.SEER), allPlayers)
-        GameEvent.StatementMade.send(1, "V2", Statement.RoleClaim(v2, Role.VILLAGER), allPlayers)
+        GameEvent.StatementMade.send(listOf(Statement.RoleClaim(v2, Role.SEER)), allPlayers)
+        GameEvent.StatementMade.send(listOf(Statement.RoleClaim(v2, Role.VILLAGER)), allPlayers)
 
         assertEquals(Role.VILLAGER.displayName, claimedRoleOf(io.panels.last(), "V2"))
     }
@@ -297,7 +297,7 @@ class GameNoteTest {
         val v2 = gameSetup.playerManager.allPlayers.single { it.name == "V2" }
         val allPlayers = AllPlayers(gameSetup.playerManager)
 
-        GameEvent.StatementMade.send(1, "V2", Statement.Plain(v2, "私は${Role.SEER.displayName}です"), allPlayers)
+        GameEvent.StatementMade.send(listOf(Statement.Plain(v2, "私は${Role.SEER.displayName}です")), allPlayers)
 
         assertEquals(null, claimedRoleOf(io.panels.last(), "V2"))
     }

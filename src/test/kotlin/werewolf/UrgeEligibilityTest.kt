@@ -26,9 +26,9 @@ class UrgeEligibilityTest {
     ): UrgeEligibility {
         val players = listOf(self, claimer)
         val context = if (conclave) {
-            DiscussionContext.Conclave(1, 1, players, players, previousStatement)
+            DiscussionContext.Conclave(1, 1, players, players, listOfNotNull(previousStatement))
         } else {
-            DiscussionContext.Open(1, 1, players, players, previousStatement)
+            DiscussionContext.Open(1, 1, players, players, listOfNotNull(previousStatement))
         }
         return UrgeEligibility(context, claimableRoles, ReportEligibility.forRole(role, emptyList(), self))
     }

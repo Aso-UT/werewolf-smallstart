@@ -35,7 +35,7 @@ class GameNote {
             is GameEvent.PlayerAttacked -> playerStatuses[event.attacked.name] = PlayerStatus.ATTACKED
             is GameEvent.Divined -> divineResults[event.target.name] = event.result == DivineResult.WEREWOLF
             is GameEvent.MediumRevealed -> mediumResults[event.target.name] = event.result == MediumResult.WEREWOLF
-            is GameEvent.StatementMade -> noteStatement(event.speakerName, event.statement)
+            is GameEvent.StatementMade -> event.statements.forEach { noteStatement(it.claimant.name, it) }
             else -> Unit
         }
     }

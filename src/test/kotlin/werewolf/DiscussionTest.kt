@@ -19,8 +19,8 @@ class DiscussionTest {
         val log: List<String> get() = _log
         private val _rounds = mutableListOf<Int>()
         val rounds: List<Int> get() = _rounds
-        private val _previousStatements = mutableListOf<String?>()
-        val previousStatements: List<String?> get() = _previousStatements
+        private val _previousStatements = mutableListOf<List<String>>()
+        val previousStatements: List<List<String>> get() = _previousStatements
         var receivedStartedDay: Int? = null
         var receivedEndedDay: Int? = null
         var heardCountWhenEnded: Int? = null
@@ -37,7 +37,7 @@ class DiscussionTest {
             val statement = statements[statementIndex++]
             _log.add("$name:said:$statement")
             _rounds.add(context.round)
-            _previousStatements.add(context.previousStatement?.text())
+            _previousStatements.add(context.previousStatements.map { it.text() })
             return Claim(this, context, Statement.Plain(this, statement), claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
         }
 
@@ -48,7 +48,7 @@ class DiscussionTest {
                     receivedEndedDay = event.day
                     heardCountWhenEnded = _log.count { it.contains(":heard:") }
                 }
-                event is GameEvent.StatementMade -> _log.add("$name:heard:${event.speakerName}:${event.statement.text()}")
+                event is GameEvent.StatementMade -> event.statements.forEach { _log.add("$name:heard:${it.claimant.name}:${it.text()}") }
                 receivesExecutionEvent && event is GameEvent.PlayerExecuted -> {}
                 else -> error("unexpected event in discussion test: $event")
             }
@@ -256,8 +256,8 @@ class DiscussionTest {
 
         OpenDiscussion(playerManager, 1).conduct()
 
-        assertEquals(listOf(null, "d", "e"), alice.previousStatements)
-        assertEquals(listOf("a", "b", "c"), bob.previousStatements)
+        assertEquals(listOf(emptyList(), listOf("d"), listOf("e")), alice.previousStatements)
+        assertEquals(listOf(listOf("a"), listOf("b"), listOf("c")), bob.previousStatements)
     }
 
     @Test
