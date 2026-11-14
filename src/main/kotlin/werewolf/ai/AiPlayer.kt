@@ -53,7 +53,7 @@ class AiPlayer(
     override fun feelUrge(context: DiscussionContext, eligibility: UrgeEligibility): SpeakingUrge {
         val instruction = urgeFormat.buildInstruction(context, eligibility)
         // 発言のたびにたまって入力が膨らみ、AIも解釈しにくいため記憶には入れない
-        return askUntilValid(urgeLanguageModel, instruction) { buildUrge(context, urgeFormat.parse(it.text, eligibility), it.metadata) }
+        return askOrGiveUp(urgeLanguageModel, instruction) { buildUrge(context, urgeFormat.parse(it.text, eligibility), it.metadata) }
             ?: FallbackSpeakingUrge(this, context)
     }
 
@@ -64,7 +64,7 @@ class AiPlayer(
 
     override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
         val instruction = statementFormat.buildInstruction(context, claimableRoles, reportEligibility)
-        val claim = askUntilValid(languageModel, instruction) { completion ->
+        val claim = askOrGiveUp(languageModel, instruction) { completion ->
             val parsed = statementFormat.parse(completion.text, this, context, claimableRoles, reportEligibility)
             Claim(
                 this, context, parsed.statement, claimableRoles, reportEligibility,
@@ -86,7 +86,7 @@ class AiPlayer(
             「選んだ理由（200文字以内）：候補名」の形式で答えてください。
             例：最も怪しいと思うため：${candidates.first().name}
         """.trimIndent()
-        val choice = askUntilValid(languageModel, instruction) { completion ->
+        val choice = askOrGiveUp(languageModel, instruction) { completion ->
             val (target, intent) = parseChoiceResponse(completion.text, candidates)
             Choice(this, context, target, intent = intent, metadata = completion.metadata)
         } ?: FallbackChoice(this, context)
@@ -120,8 +120,9 @@ class AiPlayer(
             .forEach { memorize(Rumination(this, it)) }
     }
 
-    // 応答が不正な形式なら、記録してもう一度聞き直す。最後まで正しい応答を得られなければ null を返す
-    private fun <T> askUntilValid(model: LanguageModel, instruction: String, interpret: (Completion.Answer) -> T): T? {
+    // 答えを解釈できれば、その結果を返す。形式が不正なら記録して聞き直し、拒否されたら記録してすぐに諦める。
+    // 諦めたときは null を返すので、呼び出し側でフォールバックする
+    private fun <T> askOrGiveUp(model: LanguageModel, instruction: String, interpret: (Completion.Answer) -> T): T? {
         repeat(MAX_ATTEMPTS) {
             when (val completion = prompt(model, instruction)) {
                 is Completion.Answer -> try {
