@@ -52,9 +52,10 @@ private class NormalClaim(
     }
 }
 
-// 回答を得られなかったときは、何も言わなかったことにする。発言権を得た経緯で選べる発言が絞られていても、黙ることは許す
+// 回答を得られなかったときは、何も言わなかったことにする。発言権を得た経緯で選べる発言が絞られていても、黙ることは許す。
+// 空文字にしないのは、AIの履歴で発言者名だけの行になると、直後に続く指示文がその発言の中身に見えてしまうため
 class FallbackClaim(speaker: Player, context: DiscussionContext) : Claim(
-    speaker, context, Statement.Plain(speaker, ""),
-    intent = "回答取得に失敗したため空文字を返却",
+    speaker, context, Statement.Plain(speaker, "（発言なし）"),
+    intent = "回答取得に失敗したため発言なしとした",
     metadata = FallbackActionMetadata,
 )

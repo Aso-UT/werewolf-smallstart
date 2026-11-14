@@ -36,12 +36,12 @@ class AiPlayerSpeakTest {
     }
 
     @Test
-    fun `discuss retries when bracket is missing and returns empty string after two failures`() {
+    fun `discuss retries when bracket is missing and says nothing after two failures`() {
         val lm = FakeLanguageModel("no bracket", "no bracket")
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
         val result = villager.discuss(openContext(), SpeakingRight.Uncontested(villager))
         assertIs<Statement.Plain>(result)
-        assertEquals("", result.text())
+        assertEquals("（発言なし）", result.text())
     }
 
     @Test
@@ -57,7 +57,7 @@ class AiPlayerSpeakTest {
     }
 
     @Test
-    fun `discuss falls back to an empty statement even after winning with an announcement`() {
+    fun `discuss falls back to saying nothing even after winning with an announcement`() {
         val lm = FakeLanguageModel("発言する：hello[真意]", "発言する：hello[真意]")
         val madman = AiPlayer(Role.MADMAN, "Madman", lm, lm, testInstruction())
         val context = openContext(listOf(madman))
@@ -65,7 +65,7 @@ class AiPlayerSpeakTest {
 
         val result = madman.discuss(context, SpeakingRight.Won(urge))
 
-        assertEquals(Statement.Plain(madman, ""), result)
+        assertEquals(Statement.Plain(madman, "（発言なし）"), result)
     }
 
     @Test
@@ -137,7 +137,7 @@ class AiPlayerSpeakTest {
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
         villager.discuss(openContext(), SpeakingRight.Uncontested(villager))
         villager.discuss(openContext(), SpeakingRight.Uncontested(villager))
-        assertTrue(lm.histories[2].any { it.contains("回答取得に失敗したため空文字を返却") })
+        assertTrue(lm.histories[2].any { it.contains("回答取得に失敗したため発言なしとした") })
     }
 
     @Test
@@ -195,7 +195,7 @@ class AiPlayerSpeakTest {
         val seer = AiPlayer(Role.SEER, "Seer", lm, lm, testInstruction("Seer"))
         val result = seer.discuss(openContext(listOf(seer)), SpeakingRight.Uncontested(seer))
         assertIs<Statement.Plain>(result)
-        assertEquals("", result.text())
+        assertEquals("（発言なし）", result.text())
     }
 
     @Test
@@ -207,7 +207,7 @@ class AiPlayerSpeakTest {
         val seer = AiPlayer(Role.SEER, "Seer", lm, lm, testInstruction("Seer"))
         val result = seer.discuss(openContext(listOf(seer)), SpeakingRight.Uncontested(seer))
         assertIs<Statement.Plain>(result)
-        assertEquals("", result.text())
+        assertEquals("（発言なし）", result.text())
     }
 
     @Test
@@ -219,7 +219,7 @@ class AiPlayerSpeakTest {
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
         val result = villager.discuss(openContext(listOf(villager)), SpeakingRight.Uncontested(villager))
         assertIs<Statement.Plain>(result)
-        assertEquals("", result.text())
+        assertEquals("（発言なし）", result.text())
     }
 
     @Test
@@ -233,7 +233,7 @@ class AiPlayerSpeakTest {
         GameEvent.Divined.send(wolf, DivineResult.WEREWOLF, seer)
         val result = seer.discuss(openContext(listOf(seer, wolf)), SpeakingRight.Uncontested(seer))
         assertIs<Statement.Plain>(result)
-        assertEquals("", result.text())
+        assertEquals("（発言なし）", result.text())
     }
 
     @Test
@@ -251,7 +251,7 @@ class AiPlayerSpeakTest {
         val result = seer.discuss(openContext(listOf(seer, wolf)), SpeakingRight.Uncontested(seer))
 
         assertIs<Statement.Plain>(result)
-        assertEquals("", result.text())
+        assertEquals("（発言なし）", result.text())
     }
 
     @Test
@@ -264,7 +264,7 @@ class AiPlayerSpeakTest {
         val seer = AiPlayer(Role.SEER, "Seer", lm, lm, testInstruction("Seer"))
         val result = seer.discuss(openContext(listOf(seer, alice)), SpeakingRight.Uncontested(seer))
         assertIs<Statement.Plain>(result)
-        assertEquals("", result.text())
+        assertEquals("（発言なし）", result.text())
     }
 
     @Test
@@ -285,7 +285,7 @@ class AiPlayerSpeakTest {
         val lm = RefusingLanguageModel("発言する：hello[真意]")
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
         val result = villager.discuss(openContext(), SpeakingRight.Uncontested(villager))
-        assertEquals(Statement.Plain(villager, ""), result)
+        assertEquals(Statement.Plain(villager, "（発言なし）"), result)
         assertEquals(1, lm.askCount)
     }
 
