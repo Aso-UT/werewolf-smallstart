@@ -11,6 +11,11 @@ import com.anthropic.models.messages.TextBlockParam
 import com.anthropic.models.messages.ThinkingConfigAdaptive
 import werewolf.ai.Completion
 import werewolf.ai.LanguageModel
+import werewolf.ai.RuminationRecord
+import werewolf.game.Moment
+import java.util.concurrent.ConcurrentLinkedQueue
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.measureTimedValue
 
 class AnthropicLanguageModel(
@@ -19,7 +24,12 @@ class AnthropicLanguageModel(
 ) : LanguageModel {
     private val client: AnthropicClient = AnthropicOkHttpClient.fromEnv()
     private val blockManager = HistoryBlockManager()
-    private var lastCallTime: Long? = null
+    @Volatile private var lastCallTime: Long? = null
+
+    @Volatile private var lastRequest: LastRequest? = null
+    private val schedule = RuminationSchedule()
+    private val ruminations = ConcurrentLinkedQueue<RuminationRecord>()
+    private val ticker = Ticker("rumination-$model", CHECK_INTERVAL, ::ruminateIfDue)
 
     override fun ask(system: String, history: List<String>, instruction: String): Completion {
         val callStartTime = System.currentTimeMillis()
@@ -41,29 +51,60 @@ class AnthropicLanguageModel(
             .systemOfTextBlockParams(listOf(TextBlockParam.builder().text(system).build()))
             .addUserMessageOfBlockParams(buildUserBlocks(blocks, instruction))
             .build()
+        lastRequest = LastRequest(params, blockManager.committedItemCount)
+        schedule.recordAsk()
         // Catch broadly and swallow cause to prevent API key leakage via exception messages or URLs
         @Suppress("TooGenericExceptionCaught", "SwallowedException")
         return try {
             val (message, responseTime) = measureTimedValue { client.messages().create(params) }
             lastCallTime = System.currentTimeMillis()
-            val usage = message.usage()
-            val metadata = AnthropicMetadata(
-                model = model,
-                tokenUsage = TokenUsage(usage),
-                cacheDiagnostics = diagnostics,
-                stopReason = message.stopReason().map { it.asString() }.orElse("unknown"),
-                effort = effort,
-                thinkingSummary = extractThinkingSummary(message),
-                responseTime = responseTime,
-            )
             val text = message.content()
                 .mapNotNull { it.text().orElse(null) }
                 .joinToString("") { it.text() }
-            Completion(text, metadata)
+            Completion(text, buildMetadata(message, diagnostics, MAX_TOKENS, responseTime))
         } catch (e: Exception) {
             throw AnthropicApiException("Anthropic API call failed: ${e.javaClass.simpleName}")
         }
     }
+
+    override fun drainRuminations(): List<RuminationRecord> = generateSequence { ruminations.poll() }.toList()
+
+    override fun stop() = ticker.stop()
+
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
+    private fun ruminateIfDue() {
+        val request = lastRequest ?: return
+        if (!schedule.isDue()) return
+        schedule.recordRumination()
+        val occurredAt = Moment.now()
+        val diagnostics = CacheDiagnostics(
+            cachedItemCount = request.itemCount,
+            newItemCount = 0,
+            timeSinceLastCallMs = lastCallTime?.let { System.currentTimeMillis() - it },
+        )
+        try {
+            // 前回の本番のリクエストをそのまま送り直す。キャッシュの区切り位置までが本番と完全に一致するようにするため
+            val params = request.params.toBuilder().maxTokens(RUMINATION_MAX_TOKENS).build()
+            val (message, responseTime) = measureTimedValue { client.messages().create(params) }
+            ruminations.add(RuminationRecord(occurredAt, buildMetadata(message, diagnostics, RUMINATION_MAX_TOKENS, responseTime)))
+        } catch (e: Exception) {
+            val failure = AnthropicFailureMetadata(model, effort, RUMINATION_MAX_TOKENS, e.javaClass.simpleName)
+            ruminations.add(RuminationRecord(occurredAt, failure))
+            throw AnthropicApiException("Anthropic rumination failed: ${e.javaClass.simpleName}")
+        }
+    }
+
+    private fun buildMetadata(message: Message, diagnostics: CacheDiagnostics, maxTokens: Long, responseTime: Duration) =
+        AnthropicMetadata(
+            model = model,
+            tokenUsage = TokenUsage(message.usage()),
+            cacheDiagnostics = diagnostics,
+            stopReason = message.stopReason().map { it.asString() }.orElse("unknown"),
+            effort = effort,
+            maxTokens = maxTokens,
+            thinkingSummary = extractThinkingSummary(message),
+            responseTime = responseTime,
+        )
 
     // display: SUMMARIZED を指定しているため、thinkingブロックには思考の要約が入る
     private fun extractThinkingSummary(message: Message): String = message.content()
@@ -82,10 +123,15 @@ class AnthropicLanguageModel(
         add(ContentBlockParam.ofText(TextBlockParam.builder().text(instruction).build()))
     }
 
+    private class LastRequest(val params: MessageCreateParams, val itemCount: Int)
+
     class AnthropicApiException(message: String) : Exception(message)
 
     companion object {
         private const val DEFAULT_MODEL = "claude-opus-5-5"
         private const val MAX_TOKENS = 16000L
+        // max_tokens: 0 なら、キャッシュの読み書きだけをして、出力を生成せずに返る
+        private const val RUMINATION_MAX_TOKENS = 0L
+        private val CHECK_INTERVAL = 10.seconds
     }
 }

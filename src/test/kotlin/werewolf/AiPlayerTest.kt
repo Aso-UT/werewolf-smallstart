@@ -1,12 +1,16 @@
 package werewolf
 
 import werewolf.ai.AiPlayer
+import werewolf.ai.Completion
 import werewolf.ai.Instruction
 import werewolf.ai.LanguageModel
+import werewolf.ai.Rumination
+import werewolf.ai.RuminationRecord
 import werewolf.game.AllPlayers
 import werewolf.game.ChronicleView
 import werewolf.game.GameEvent
 import werewolf.game.GameOverSignal
+import werewolf.game.Moment
 import werewolf.game.Role
 import werewolf.game.SelectionContext
 import werewolf.game.SpeakingRight
@@ -118,9 +122,67 @@ class AiPlayerTest {
     }
 
     @Test
+    fun `ruminations of both models are recorded on the next prompt but not shown to the AI`() {
+        val lm = FakeLanguageModel("怪しいから：Wolf", "怪しいから：Wolf")
+        val urgeLm = FakeLanguageModel()
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, urgeLm, testInstruction())
+        val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
+        lm.pendingRuminations.add(RuminationRecord(Moment.now(), FakeActionMetadata()))
+        urgeLm.pendingRuminations.add(RuminationRecord(Moment.now(), FakeActionMetadata()))
+
+        villager.selectTarget(SelectionContext.Vote(villager, listOf(villager, wolf)))
+        villager.selectTarget(SelectionContext.Vote(villager, listOf(villager, wolf)))
+
+        assertEquals(2, villager.reveal(fakeCitizenWinSignal()).count { it is Rumination })
+        assertTrue(lm.histories[1].none { it.contains("反芻") })
+    }
+
+    @Test
+    fun `rumination keeps the moment it was sent`() {
+        val lm = FakeLanguageModel()
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
+        val sentAt = Moment.now()
+        lm.pendingRuminations.add(RuminationRecord(sentAt, FakeActionMetadata()))
+
+        val rumination = villager.reveal(fakeCitizenWinSignal()).filterIsInstance<Rumination>().single()
+
+        assertEquals(sentAt, rumination.occurredAt)
+    }
+
+    @Test
+    fun `reveal stops both models and records the remaining ruminations`() {
+        val lm = FakeLanguageModel()
+        val urgeLm = FakeLanguageModel()
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, urgeLm, testInstruction())
+        urgeLm.pendingRuminations.add(RuminationRecord(Moment.now(), FakeActionMetadata()))
+
+        val memories = villager.reveal(fakeCitizenWinSignal())
+
+        assertEquals(1, lm.stopCount)
+        assertEquals(1, urgeLm.stopCount)
+        assertEquals(1, memories.count { it is Rumination })
+    }
+
+    @Test
+    fun `revealing twice does not record ruminations twice`() {
+        val lm = FakeLanguageModel()
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
+        lm.pendingRuminations.add(RuminationRecord(Moment.now(), FakeActionMetadata()))
+
+        villager.reveal(fakeCitizenWinSignal())
+        val memories = villager.reveal(fakeCitizenWinSignal())
+
+        assertEquals(1, memories.count { it is Rumination })
+    }
+
+    @Test
     @Suppress("TooGenericExceptionThrown")
     fun `discuss throws GameOverSignal when languageModel throws`() {
-        val lm = LanguageModel { _, _, _ -> throw Exception("API error") }
+        val lm = object : LanguageModel {
+            override fun ask(system: String, history: List<String>, instruction: String): Completion = throw Exception("API error")
+            override fun drainRuminations(): List<RuminationRecord> = emptyList()
+            override fun stop() { /* nothing to stop */ }
+        }
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
         assertFailsWith<GameOverSignal> { villager.discuss(openContext(), SpeakingRight.Uncontested(villager)) }
     }

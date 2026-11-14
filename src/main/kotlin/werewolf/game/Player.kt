@@ -36,18 +36,12 @@ abstract class Player(private val role: Role) : Notifiable {
     fun speakingUrge(context: DiscussionContext): SpeakingUrge {
         val eligibility = UrgeEligibility(context, claimableRoles(), ReportEligibility.forRole(role, _memories, this))
         val urge = feelUrge(context, eligibility)
-        validate(urge, eligibility)
+        require(urge.player === this) { "${urge.player.name} is not the urged player" }
+        eligibility.validate(urge)
         _memories.add(urge)
         return urge
     }
     protected abstract fun feelUrge(context: DiscussionContext, eligibility: UrgeEligibility): SpeakingUrge
-
-    private fun validate(urge: SpeakingUrge, eligibility: UrgeEligibility) {
-        require(urge.player === this) { "${urge.player.name} is not the urged player" }
-        if (urge is CounterClaimSpeakingUrge) {
-            require(urge.role == eligibility.counterClaimRole) { "${urge.player.name} cannot counter claim ${urge.role}" }
-        }
-    }
 
     private fun claimableRoles(): Set<Role> {
         val alreadyRevealed = ClaimedRole(_memories).of(this) == role
@@ -61,8 +55,14 @@ abstract class Player(private val role: Role) : Notifiable {
     }
 
     // signal is a capability token: only callers who hold a GameOverSignal (i.e., after game over) can access memories
-    @Suppress("UnusedParameter")
-    fun reveal(signal: GameOverSignal): List<Recallable> = _memories.toList()
+    fun reveal(signal: GameOverSignal): List<Recallable> {
+        onRevealing(signal)
+        return _memories.toList()
+    }
+
+    // 記録を明かす前に、ゲームが終わったことをプレイヤー自身に伝える。まだ記録していないものがあれば、ここで記録する。
+    // reveal は振り返りのために何度も呼ばれるので、2回目以降は何もしないようにすること
+    protected abstract fun onRevealing(signal: GameOverSignal)
 
     fun buildNightAction(players: List<Player>, isFirstNight: Boolean): NightAction =
         role.buildNightAction(this, players, isFirstNight, _memories.filterIsInstance<GameEvent>())

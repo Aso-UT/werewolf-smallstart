@@ -6,6 +6,7 @@ import com.google.genai.types.GenerateContentConfig
 import com.google.genai.types.Part
 import werewolf.ai.Completion
 import werewolf.ai.LanguageModel
+import werewolf.ai.RuminationRecord
 import kotlin.time.measureTimedValue
 
 class GeminiLanguageModel(
@@ -41,6 +42,10 @@ class GeminiLanguageModel(
             throw GeminiApiException("Gemini API call failed: ${e.javaClass.simpleName}")
         }
     }
+
+    // Gemini ではプロンプトキャッシュを使っていないので、反芻はしない
+    override fun drainRuminations(): List<RuminationRecord> = emptyList()
+    override fun stop() { /* no ruminations to stop */ }
 
     class GeminiApiException(message: String) : Exception(message)
 

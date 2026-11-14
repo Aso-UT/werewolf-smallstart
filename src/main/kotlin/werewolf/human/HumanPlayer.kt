@@ -5,6 +5,7 @@ import werewolf.game.Claim
 import werewolf.game.ChronicleView
 import werewolf.game.DiscussionContext
 import werewolf.game.GameEvent
+import werewolf.game.GameOverSignal
 import werewolf.game.Player
 import werewolf.game.ReportEligibility
 import werewolf.game.Role
@@ -65,4 +66,6 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
     override fun watchEpilogue(chronicles: List<ChronicleView>, metadataTotals: List<String>) {
         io.watchEpilogue(chronicles, metadataTotals)
     }
+
+    override fun onRevealing(signal: GameOverSignal) { /* human players record everything as they act */ }
 }

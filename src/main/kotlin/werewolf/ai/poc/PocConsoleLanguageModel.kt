@@ -2,6 +2,7 @@ package werewolf.ai.poc
 
 import werewolf.ai.Completion
 import werewolf.ai.LanguageModel
+import werewolf.ai.RuminationRecord
 import werewolf.game.UnimplementedActionMetadata
 
 class PocConsoleLanguageModel : LanguageModel {
@@ -24,6 +25,10 @@ class PocConsoleLanguageModel : LanguageModel {
         print("回答 > ")
         return Completion(readLine()?.trim() ?: "", UnimplementedActionMetadata)
     }
+
+    // 人がコンソールで答えるので、キャッシュを保つ反芻はしない
+    override fun drainRuminations(): List<RuminationRecord> = emptyList()
+    override fun stop() { /* no ruminations to stop */ }
 
     companion object {
         private const val SEPARATOR_WIDTH = 50
