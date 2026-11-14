@@ -1,5 +1,6 @@
 package werewolf.ai.anthropic
 
+import com.anthropic.models.messages.RefusalStopDetails
 import com.anthropic.models.messages.Usage
 import werewolf.game.ActionMetadata
 import werewolf.game.ResponseTimeStats
@@ -45,12 +46,27 @@ data class TokenUsage(
     private fun Long.grouped(): String = String.format(Locale.ROOT, "%,d", this)
 }
 
+// 拒否されたときにAPIが返す stop_details。原因を切り分けるために記録する。
+// explanation は人間向けの説明で、文面が変わりうるため表示にだけ使い、解析には使わない
+data class RefusalDetails(
+    // cyber / bio / frontier_llm / reasoning_extraction / general_harms のいずれか。分類されないこともある
+    val category: String?,
+    val explanation: String?,
+) {
+    constructor(details: RefusalStopDetails) : this(
+        category = details.category().map { it.asString() }.orElse(null),
+        explanation = details.explanation().orElse(null),
+    )
+}
+
 @Suppress("LongParameterList")
 class AnthropicMetadata(
     val model: String,
     val tokenUsage: TokenUsage,
     val cacheDiagnostics: CacheDiagnostics,
     val stopReason: String,
+    // 拒否されたときだけある
+    val refusal: RefusalDetails?,
     val effort: AnthropicEffort,
     val maxTokens: Long,
     val thinkingSummary: String,
@@ -58,18 +74,20 @@ class AnthropicMetadata(
 ) : ActionMetadata {
     override fun toDisplayString(): String {
         val sinceLast = cacheDiagnostics.timeSinceLastCallMs?.let { "since_last=${it / MS_PER_SECOND}s" } ?: "since_last=-"
+        val category = refusal?.let { " category=${it.category ?: "-"}" }.orEmpty()
         val stats = "model=$model in=${tokenUsage.input} out=${tokenUsage.output} thinking=${tokenUsage.thinking}" +
             " cache_create=${tokenUsage.cacheCreationInput} cache_read=${tokenUsage.cacheReadInput}" +
             " cached=${cacheDiagnostics.cachedItemCount} new=${cacheDiagnostics.newItemCount} $sinceLast" +
-            " response=${responseTime.toSecondsString()} stop=$stopReason effort=$effort max_tokens=$maxTokens"
-        val summary = singleLineThinkingSummary()
-        return if (summary.isEmpty()) stats else "$stats | 思考要約: $summary"
+            " response=${responseTime.toSecondsString()} stop=$stopReason$category effort=$effort max_tokens=$maxTokens"
+        val explanation = refusal?.explanation?.let(::singleLine)?.takeIf { it.isNotEmpty() }
+        val summary = singleLine(thinkingSummary).takeIf { it.isNotEmpty() }
+        return listOfNotNull(stats, explanation?.let { "拒否の説明: $it" }, summary?.let { "思考要約: $it" }).joinToString(" | ")
     }
 
     override fun toSummable() = AnthropicSummableMetadata(model, effort, maxTokens, tokenUsage, ResponseTimeStats(responseTime), count = 1)
 
     // コンソールの「[...]」表示が崩れないよう、改行などの連続する空白を1つの空白にまとめる
-    private fun singleLineThinkingSummary(): String = thinkingSummary.trim().replace(WHITESPACE, " ")
+    private fun singleLine(text: String): String = text.trim().replace(WHITESPACE, " ")
 
     companion object {
         private const val MS_PER_SECOND = 1000

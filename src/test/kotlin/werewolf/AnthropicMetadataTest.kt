@@ -5,6 +5,7 @@ import werewolf.ai.anthropic.AnthropicFailureMetadata
 import werewolf.ai.anthropic.AnthropicMetadata
 import werewolf.ai.anthropic.AnthropicSummableMetadata
 import werewolf.ai.anthropic.CacheDiagnostics
+import werewolf.ai.anthropic.RefusalDetails
 import werewolf.ai.anthropic.TokenUsage
 import werewolf.game.ResponseTimeStats
 import werewolf.game.UnimplementedSummableMetadata
@@ -20,11 +21,12 @@ import kotlin.time.Duration.Companion.seconds
 
 class AnthropicMetadataTest {
 
-    private fun metadata(thinkingSummary: String) = AnthropicMetadata(
+    private fun metadata(thinkingSummary: String, refusal: RefusalDetails? = null) = AnthropicMetadata(
         model = "test-model",
         tokenUsage = TokenUsage(input = 1, output = 2, cacheCreationInput = 0, cacheReadInput = 0, thinking = 0),
         cacheDiagnostics = CacheDiagnostics(cachedItemCount = 0, newItemCount = 1, timeSinceLastCallMs = null),
-        stopReason = "end_turn",
+        stopReason = if (refusal == null) "end_turn" else "refusal",
+        refusal = refusal,
         effort = AnthropicEffort.HIGH,
         maxTokens = 16000,
         thinkingSummary = thinkingSummary,
@@ -43,6 +45,34 @@ class AnthropicMetadataTest {
         val display = metadata("").toDisplayString()
 
         assertTrue(display.endsWith(" effort=HIGH max_tokens=16000"))
+    }
+
+    @Test
+    fun `refusal category is shown after stop reason`() {
+        val display = metadata("", RefusalDetails(category = "general_harms", explanation = null)).toDisplayString()
+
+        assertTrue(display.contains(" stop=refusal category=general_harms effort=HIGH "))
+    }
+
+    @Test
+    fun `refusal without category is shown with a dash`() {
+        val display = metadata("", RefusalDetails(category = null, explanation = null)).toDisplayString()
+
+        assertTrue(display.contains(" stop=refusal category=- effort=HIGH "))
+    }
+
+    @Test
+    fun `refusal explanation is appended on a single line before thinking summary`() {
+        val display = metadata("報告する", RefusalDetails(category = "cyber", explanation = "The request\nwas declined.")).toDisplayString()
+
+        assertTrue(display.endsWith(" max_tokens=16000 | 拒否の説明: The request was declined. | 思考要約: 報告する"))
+    }
+
+    @Test
+    fun `category is not shown when not refused`() {
+        val display = metadata("").toDisplayString()
+
+        assertFalse(display.contains("category="))
     }
 
     @Test

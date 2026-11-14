@@ -126,11 +126,11 @@ class ClaimTest {
     }
 
     @Test
-    fun `FallbackClaim has empty statement and failure reason in chronicle`() {
+    fun `FallbackClaim states that nothing was said and records failure reason in chronicle`() {
         val speaker = NothingPlayer(Role.VILLAGER, "Speaker")
         val context = openContext(listOf(speaker))
         val claim = FallbackClaim(speaker, context)
-        assertEquals("", claim.statement.text())
+        assertEquals("（発言なし）", claim.statement.text())
         val fallbackClaimChronicle = claim.toChronicleView()
         assertIs<ChronicleView.Action>(fallbackClaimChronicle)
         assertContains(fallbackClaimChronicle.intent, "失敗")

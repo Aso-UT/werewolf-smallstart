@@ -23,7 +23,7 @@ class PocConsoleLanguageModel : LanguageModel {
         println(user)
         println("=".repeat(SEPARATOR_WIDTH))
         print("回答 > ")
-        return Completion(readLine()?.trim() ?: "", UnimplementedActionMetadata)
+        return Completion.Answer(readLine()?.trim() ?: "", UnimplementedActionMetadata)
     }
 
     // 人がコンソールで答えるので、キャッシュを保つ反芻はしない
