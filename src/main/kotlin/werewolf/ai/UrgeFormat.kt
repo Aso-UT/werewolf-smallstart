@@ -48,7 +48,9 @@ class UrgeFormat {
         val levels = selectableLevels(eligibility)
         return listOf(
             "【${context.title} - 発言意欲】次の発言者を決めます。今どれだけ発言したいかを、以下の段階から一つ選んでください。",
-            "最も高い段階を選んだ人が発言します（同じ段階の人が複数いればランダム）。",
+            "最も高い段階を選んだ人が発言します。同じ段階の人が複数いれば、" +
+                "${Level.COUNTER_CLAIM.eagerness.value}と${Level.ANNOUNCEMENT.eagerness.value}では全員が同時に発言し、" +
+                "${Level.URGENT.eagerness.value}以下ではランダムに一人が発言します。",
             levels.joinToString("\n") { "${it.eagerness.value}：${it.description(eligibility)}" },
             "",
         ).plus(answerFormat(levels)).joinToString("\n")

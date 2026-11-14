@@ -5,6 +5,7 @@ import werewolf.phase.*
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class DiscussionTest {
 
@@ -67,6 +68,95 @@ class DiscussionTest {
             val statement = Statement.RoleClaim(this, Role.SEER)
             return Claim(this, context, statement, claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
         }
+    }
+
+    // 一度だけ urgeOf の返す意欲で発言を希望し、本当の役職（COできなければ普通の発言）を名乗る。
+    // その後は何も言いたくない。届いた発言は、発言ごとに発言者の名前で記録する
+    private class ClaimingPlayer(
+        role: Role,
+        name: String,
+        private val urgeOf: (ClaimingPlayer, DiscussionContext, UrgeEligibility) -> SpeakingUrge? = { _, _, _ -> null },
+    ) : ReceivingPlayer(role, name) {
+        val heard = mutableListOf<List<String>>()
+        val previousSpeakersWhenSpoke = mutableListOf<List<String>>()
+        private var claimed = false
+
+        override fun feelUrge(context: DiscussionContext, eligibility: UrgeEligibility): SpeakingUrge =
+            urgeOf(this, context, eligibility)?.takeUnless { claimed }
+                ?: SpeakingUrge(this, context, Eagerness.NOTHING, "", UnimplementedActionMetadata)
+
+        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
+            previousSpeakersWhenSpoke.add(context.previousStatements.map { it.claimant.name })
+            val role = claimableRoles.firstOrNull()?.takeUnless { claimed }
+            val statement = role?.let { Statement.RoleClaim(this, it) } ?: Statement.Plain(this, "")
+            claimed = claimed || role != null
+            return Claim(this, context, statement, claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
+        }
+
+        override fun onReceive(event: GameEvent) {
+            if (event is GameEvent.StatementMade) heard.add(event.statements.map { it.claimant.name })
+        }
+    }
+
+    private fun urge(eagerness: Eagerness): (ClaimingPlayer, DiscussionContext, UrgeEligibility) -> SpeakingUrge? =
+        { player, context, _ -> SpeakingUrge(player, context, eagerness, "", UnimplementedActionMetadata) }
+
+    @Test
+    fun `players tied at announcement speak at once as one simultaneous statement`() {
+        val seer = ClaimingPlayer(Role.SEER, "Seer", urge(Eagerness.ANNOUNCEMENT))
+        val medium = ClaimingPlayer(Role.MEDIUM, "Medium", urge(Eagerness.ANNOUNCEMENT))
+        val villager = ClaimingPlayer(Role.VILLAGER, "Villager")
+        val playerManager = TestLodge(seer to Role.SEER, medium to Role.MEDIUM, villager to Role.VILLAGER).create().playerManager
+
+        OpenDiscussion(playerManager, 1).conduct()
+
+        assertEquals(listOf("Seer", "Medium"), villager.heard.first())
+    }
+
+    @Test
+    fun `players in a simultaneous statement do not speak right after it and the next speaker hears all of it`() {
+        val seer = ClaimingPlayer(Role.SEER, "Seer", urge(Eagerness.ANNOUNCEMENT))
+        val medium = ClaimingPlayer(Role.MEDIUM, "Medium", urge(Eagerness.ANNOUNCEMENT))
+        val villager = ClaimingPlayer(Role.VILLAGER, "Villager")
+        val playerManager = TestLodge(seer to Role.SEER, medium to Role.MEDIUM, villager to Role.VILLAGER).create().playerManager
+
+        OpenDiscussion(playerManager, 1).conduct()
+
+        assertEquals(listOf("Villager"), villager.heard[1])
+        assertEquals(listOf("Seer", "Medium"), villager.previousSpeakersWhenSpoke.first())
+    }
+
+    @Test
+    fun `counter claims and announcements are not mixed into one simultaneous statement`() {
+        val seer = ClaimingPlayer(Role.SEER, "Seer", urge(Eagerness.ANNOUNCEMENT))
+        val madman = ClaimingPlayer(Role.MADMAN, "Madman") { player, context, eligibility ->
+            eligibility.counterClaimRoles.firstOrNull()?.let { CounterClaimSpeakingUrge(player, context, it, "", UnimplementedActionMetadata) }
+        }
+        // 最初の発言の後で、COを希望する
+        val medium = ClaimingPlayer(Role.MEDIUM, "Medium") { player, context, _ ->
+            context.previousStatements.takeIf { it.isNotEmpty() }
+                ?.let { SpeakingUrge(player, context, Eagerness.ANNOUNCEMENT, "", UnimplementedActionMetadata) }
+        }
+        val villager = ClaimingPlayer(Role.VILLAGER, "Villager")
+        val playerManager = TestLodge(
+            seer to Role.SEER, madman to Role.MADMAN, medium to Role.MEDIUM, villager to Role.VILLAGER,
+        ).create().playerManager
+
+        OpenDiscussion(playerManager, 1).conduct()
+
+        assertEquals(listOf(listOf("Seer"), listOf("Madman"), listOf("Medium")), villager.heard.take(3))
+    }
+
+    @Test
+    fun `players tied below announcement speak one at a time`() {
+        val alice = ClaimingPlayer(Role.VILLAGER, "Alice", urge(Eagerness.URGENT))
+        val bob = ClaimingPlayer(Role.VILLAGER, "Bob", urge(Eagerness.URGENT))
+        val charlie = ClaimingPlayer(Role.VILLAGER, "Charlie", urge(Eagerness.URGENT))
+        val playerManager = TestLodge(alice to Role.VILLAGER, bob to Role.VILLAGER, charlie to Role.VILLAGER).create().playerManager
+
+        OpenDiscussion(playerManager, 1).conduct()
+
+        assertTrue(alice.heard.all { it.size == 1 })
     }
 
     // 発言するほど意欲が下がり、同じ発言回数なら priority が小さい方が意欲が高い。

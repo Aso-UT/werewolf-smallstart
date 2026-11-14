@@ -9,7 +9,6 @@ import werewolf.game.Notifiable
 import werewolf.game.Player
 import werewolf.game.PlayerManager
 import werewolf.game.SpeakingRight
-import werewolf.game.SpeakingUrge
 import werewolf.game.Statement
 import kotlin.time.Duration
 import kotlin.time.measureTime
@@ -21,6 +20,8 @@ abstract class Discussion<R : Notifiable>(
     protected val allPlayers: List<Player>,
     private val dispatcher: CoroutineDispatcher,
 ) {
+    private val speakingRightGrant = SpeakingRightGrant(dispatcher)
+
     protected abstract fun sendStatements(statements: List<Statement>, recipients: R)
     protected abstract fun buildContext(round: Int, previousStatements: List<Statement>): DiscussionContext
     protected abstract fun sendDiscussionStarted()
@@ -38,12 +39,16 @@ abstract class Discussion<R : Notifiable>(
         while (!reachedTotalLimit(history)) {
             val contexts = eligibleSpeakerContexts(history)
             if (contexts.isEmpty()) return
-            val right = grantSpeakingRight(contexts)
-            val context = contexts.getValue(right.speaker)
-            val statement = right.speaker.discuss(context, right)
-            sendStatements(listOf(statement), recipients)
-            history.record(listOf(statement))
+            val statements = speak(speakingRightGrant.grant(contexts), contexts)
+            sendStatements(statements, recipients)
+            history.record(statements)
         }
+    }
+
+    // 発言権を得た人が複数いれば、互いの発言を知らないまま並列に発言する
+    private fun speak(rights: List<SpeakingRight>, contexts: Map<Player, DiscussionContext>): List<Statement> {
+        val rightOf = rights.associateBy { it.speaker }
+        return rightOf.keys.askInParallel(dispatcher) { it.discuss(contexts.getValue(it), rightOf.getValue(it)) }.values.toList()
     }
 
     private fun reachedTotalLimit(history: SpeakingHistory): Boolean =
@@ -57,18 +62,6 @@ abstract class Discussion<R : Notifiable>(
 
     private fun reachedPersonalLimit(player: Player, history: SpeakingHistory): Boolean =
         history.countOf(player) >= MAX_STATEMENTS_PER_SPEAKER
-
-    private fun grantSpeakingRight(contexts: Map<Player, DiscussionContext>): SpeakingRight =
-        contexts.keys.singleOrNull()?.let { SpeakingRight.Uncontested(it) }
-            ?: SpeakingRight.Won(mostEagerUrges(collectUrges(contexts)).random())
-
-    private fun mostEagerUrges(urges: List<SpeakingUrge>): List<SpeakingUrge> {
-        val highest = urges.maxOf { it.eagerness }
-        return urges.filter { it.eagerness == highest }
-    }
-
-    private fun collectUrges(contexts: Map<Player, DiscussionContext>): List<SpeakingUrge> =
-        contexts.keys.askInParallel(dispatcher) { it.speakingUrge(contexts.getValue(it)) }.values.toList()
 
     companion object {
         private const val MAX_STATEMENTS_PER_SPEAKER = 4
