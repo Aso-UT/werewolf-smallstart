@@ -71,7 +71,6 @@ class AnthropicLanguageModel(
 
     override fun stop() = ticker.stop()
 
-    // ticker から定期的に呼ばれる。例外を外に出すと以降の確認が止まるため、すべてここで受け止める
     @Suppress("TooGenericExceptionCaught", "SwallowedException")
     private fun ruminateIfDue() {
         val request = lastRequest ?: return
