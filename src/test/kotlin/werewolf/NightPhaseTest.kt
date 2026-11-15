@@ -23,8 +23,8 @@ class NightPhaseTest {
         val heardStatements = mutableListOf<GameEvent.WerewolfStatementMade>()
         override fun feelUrge(context: DiscussionContext, eligibility: UrgeEligibility) =
             SpeakingUrge(this, context, Eagerness.DEFAULT, "", UnimplementedActionMetadata)
-        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim =
-            Claim(this, context, Statement.Plain(this, ""), claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
+        override fun speak(context: DiscussionContext, reportEligibility: ReportEligibility): Claim =
+            Claim(this, context, Statement.Plain(this, ""), reportEligibility, "", UnimplementedActionMetadata)
         override fun onReceive(event: GameEvent) {
             if (event is GameEvent.WerewolfStatementMade) heardStatements.add(event)
         }

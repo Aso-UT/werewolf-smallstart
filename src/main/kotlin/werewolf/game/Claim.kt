@@ -16,20 +16,17 @@ sealed class Claim(
             speaker: Player,
             context: DiscussionContext,
             statement: Statement,
-            claimableRoles: Set<Role>,
             reportEligibility: ReportEligibility,
             intent: String,
             metadata: ActionMetadata,
-        ): Claim = NormalClaim(speaker, context, statement, claimableRoles, reportEligibility, intent, metadata)
+        ): Claim = NormalClaim(speaker, context, statement, reportEligibility, intent, metadata)
     }
 }
 
-@Suppress("LongParameterList")
 private class NormalClaim(
     speaker: Player,
     context: DiscussionContext,
     statement: Statement,
-    claimableRoles: Set<Role>,
     reportEligibility: ReportEligibility,
     intent: String,
     metadata: ActionMetadata,
@@ -38,8 +35,8 @@ private class NormalClaim(
         require(statement.type in context.availableTypes) {
             "${statement.type} is not available in ${context.title}"
         }
-        require(statement.type in context.selectableTypes(claimableRoles, reportEligibility)) {
-            "${statement.type} is not available for ${speaker.name} now. context:${context.title}, claimable roles: $claimableRoles."
+        require(statement.type in context.selectableTypes(reportEligibility)) {
+            "${statement.type} is not available for ${speaker.name} now in ${context.title}"
         }
         require(!reportEligibility.disqualifies(statement)) {
             "${statement.type} is not reportable by ${speaker.name} with the given target/result: ${statement.text()}"

@@ -27,8 +27,8 @@ class PlayerTest {
         name: String,
         private val speakerToSet: Player,
     ) : NothingPlayer(role, name) {
-        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim =
-            Claim(speakerToSet, context, Statement.Plain(speakerToSet, ""), claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
+        override fun speak(context: DiscussionContext, reportEligibility: ReportEligibility): Claim =
+            Claim(speakerToSet, context, Statement.Plain(speakerToSet, ""), reportEligibility, "", UnimplementedActionMetadata)
     }
 
     private class ArbitraryClaimantSetter(
@@ -36,13 +36,13 @@ class PlayerTest {
         name: String,
         private val claimantToSet: Player,
     ) : NothingPlayer(role, name) {
-        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim =
-            Claim(this, context, Statement.Plain(claimantToSet, ""), claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
+        override fun speak(context: DiscussionContext, reportEligibility: ReportEligibility): Claim =
+            Claim(this, context, Statement.Plain(claimantToSet, ""), reportEligibility, "", UnimplementedActionMetadata)
     }
 
     private class SpeakingPlayer(role: Role, name: String) : NothingPlayer(role, name) {
-        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim =
-            Claim(this, context, Statement.Plain(this, ""), claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
+        override fun speak(context: DiscussionContext, reportEligibility: ReportEligibility): Claim =
+            Claim(this, context, Statement.Plain(this, ""), reportEligibility, "", UnimplementedActionMetadata)
         override fun onRevealing(signal: GameOverSignal) { /* records everything as it acts */ }
     }
 
@@ -69,21 +69,21 @@ class PlayerTest {
     private class CapturingSpeakerPlayer(role: Role, name: String) : ReceivingPlayer(role, name) {
         var receivedClaimableRoles: Set<Role>? = null
         var receivedReportEligibility: ReportEligibility? = null
-        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
-            receivedClaimableRoles = claimableRoles
+        override fun speak(context: DiscussionContext, reportEligibility: ReportEligibility): Claim {
+            receivedClaimableRoles = context.availableTypes.filterIsInstance<StatementType.RoleClaim>().map { it.role }.toSet()
             receivedReportEligibility = reportEligibility
-            return Claim(this, context, Statement.Plain(this, ""), claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
+            return Claim(this, context, Statement.Plain(this, ""), reportEligibility, "", UnimplementedActionMetadata)
         }
     }
 
     // 選べる発言の種類を記録し、選べる役職COの一つをCOする
     private class RecordingClaimer(role: Role, name: String) : ReceivingPlayer(role, name) {
         var receivedTypes: Set<StatementType>? = null
-        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
-            val types = context.selectableTypes(claimableRoles, reportEligibility)
+        override fun speak(context: DiscussionContext, reportEligibility: ReportEligibility): Claim {
+            val types = context.selectableTypes(reportEligibility)
             receivedTypes = types
             val statement = Statement.RoleClaim(this, types.filterIsInstance<StatementType.RoleClaim>().first().role)
-            return Claim(this, context, statement, claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
+            return Claim(this, context, statement, reportEligibility, "", UnimplementedActionMetadata)
         }
     }
 

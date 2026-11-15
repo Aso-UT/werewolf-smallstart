@@ -11,8 +11,8 @@ import werewolf.game.selectableTypes
 
 class MediumCpuStrategy(self: RoleAwareCpuPlayer) : RoleAwareCpuStrategy(self, Role.MEDIUM, CitizenVoting(self)) {
 
-    override fun buildStatement(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Statement {
-        if (StatementType.MediumReport !in context.selectableTypes(claimableRoles, reportEligibility)) return Statement.Plain(self, "")
+    override fun buildStatement(context: DiscussionContext, reportEligibility: ReportEligibility): Statement {
+        if (StatementType.MediumReport !in context.selectableTypes(reportEligibility)) return Statement.Plain(self, "")
         val (target, result) = (reportEligibility as ReportEligibility.Honest).mediums.entries.first()
         return Statement.MediumReport(self, target, result)
     }

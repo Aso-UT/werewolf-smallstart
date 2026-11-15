@@ -9,7 +9,7 @@ import werewolf.game.Statement
 
 class VillagerCpuStrategy(self: RoleAwareCpuPlayer) : RoleAwareCpuStrategy(self, Role.VILLAGER, CitizenVoting(self)) {
 
-    override fun buildStatement(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility) =
+    override fun buildStatement(context: DiscussionContext, reportEligibility: ReportEligibility) =
         Statement.Plain(self, "")
 
     override fun selectTargetForOthers(context: SelectionContext, candidates: List<Player>): Player =

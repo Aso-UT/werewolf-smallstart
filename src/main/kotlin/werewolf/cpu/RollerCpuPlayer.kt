@@ -18,7 +18,7 @@ class RollerCpuPlayer(role: Role, override val name: String) : CpuPlayer(role) {
         return Choice(this, context, candidates[selectCount++ % candidates.size], "順番通りに選択", UnimplementedActionMetadata)
     }
 
-    override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim =
-        Claim(this, context, Statement.Plain(this, ""), claimableRoles, reportEligibility, "発言戦略なし", UnimplementedActionMetadata)
+    override fun speak(context: DiscussionContext, reportEligibility: ReportEligibility): Claim =
+        Claim(this, context, Statement.Plain(this, ""), reportEligibility, "発言戦略なし", UnimplementedActionMetadata)
     override fun onReceive(event: GameEvent) { /* does not use received events */ }
 }

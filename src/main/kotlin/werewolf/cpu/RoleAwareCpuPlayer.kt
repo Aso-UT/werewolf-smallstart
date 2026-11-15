@@ -19,9 +19,9 @@ class RoleAwareCpuPlayer(val myRole: Role, override val name: String) : CpuPlaye
     ).single { it.appliesTo() }
 
     override fun onReceive(event: GameEvent) { _knowledge.add(event) }
-    override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
-        val statement = strategy.buildStatement(context, claimableRoles, reportEligibility)
-        return Claim(this, context, statement, claimableRoles, reportEligibility, "役職戦略に基づく発言", UnimplementedActionMetadata)
+    override fun speak(context: DiscussionContext, reportEligibility: ReportEligibility): Claim {
+        val statement = strategy.buildStatement(context, reportEligibility)
+        return Claim(this, context, statement, reportEligibility, "役職戦略に基づく発言", UnimplementedActionMetadata)
     }
     override fun choose(context: SelectionContext) = Choice(this, context, strategy.selectTarget(context), "戦略による選択", UnimplementedActionMetadata)
 }

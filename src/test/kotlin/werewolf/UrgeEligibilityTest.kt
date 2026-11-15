@@ -10,6 +10,7 @@ import werewolf.game.MediumResult
 import werewolf.game.ReportEligibility
 import werewolf.game.Role
 import werewolf.game.Statement
+import werewolf.game.StatementType
 import werewolf.game.Turn
 import werewolf.game.UrgeEligibility
 
@@ -32,7 +33,7 @@ class UrgeEligibilityTest {
         } else {
             DiscussionContext.Open(1, 1, players, players, lastTurn)
         }
-        return UrgeEligibility(context, claimableRoles, ReportEligibility.forRole(role, emptyList(), self))
+        return UrgeEligibility(context.narrowedTo(StatementType.claimingOnly(claimableRoles)), ReportEligibility.forRole(role, emptyList(), self))
     }
 
     @Test

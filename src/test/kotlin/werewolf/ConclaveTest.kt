@@ -26,10 +26,10 @@ class ConclaveTest {
         override fun feelUrge(context: DiscussionContext, eligibility: UrgeEligibility) =
             SpeakingUrge(this, context, Eagerness(eagerness), "", UnimplementedActionMetadata)
 
-        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
+        override fun speak(context: DiscussionContext, reportEligibility: ReportEligibility): Claim {
             val statement = statements[statementIndex++]
             _log.add("$name:said:$statement")
-            return Claim(this, context, Statement.Plain(this, statement), claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
+            return Claim(this, context, Statement.Plain(this, statement), reportEligibility, "", UnimplementedActionMetadata)
         }
 
         override fun onReceive(event: GameEvent) {

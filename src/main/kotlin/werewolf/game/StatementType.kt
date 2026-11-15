@@ -10,5 +10,8 @@ sealed class StatementType(val displayName: String, val claimedRole: Role?) {
     companion object {
         // 種類の初期化中に親クラスの初期化が走るため、すぐには作らずに初めて使うときに作る
         val all: Set<StatementType> by lazy { setOf(Plain, DivinationReport, MediumReport) + Role.entries.map { RoleClaim(it) } }
+
+        // 役職COは指定した役職のものだけに限った、すべての種類
+        fun claimingOnly(roles: Set<Role>): Set<StatementType> = all.filter { it !is RoleClaim || it.role in roles }.toSet()
     }
 }

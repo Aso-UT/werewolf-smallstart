@@ -13,8 +13,8 @@ class StatementComposer(private val io: HumanPrompt, private val selection: Huma
         private const val COMMENT_PROMPT = "補足があれば入力してください"
     }
 
-    fun compose(speaker: Player, context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Statement {
-        val types = StatementType.all.filter { it in context.selectableTypes(claimableRoles, reportEligibility) }
+    fun compose(speaker: Player, context: DiscussionContext, reportEligibility: ReportEligibility): Statement {
+        val types = StatementType.all.filter { it in context.selectableTypes(reportEligibility) }
         return when (selectType(context, types)) {
             StatementType.Plain -> composePlain(speaker, context)
             StatementType.DivinationReport -> composeDivinationReport(speaker, reportEligibility)

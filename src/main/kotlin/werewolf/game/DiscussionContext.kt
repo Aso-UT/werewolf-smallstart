@@ -39,7 +39,5 @@ sealed class DiscussionContext {
     }
 }
 
-fun DiscussionContext.selectableTypes(claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Set<StatementType> {
-    val types = availableTypes.filter { it !is StatementType.RoleClaim || it.role in claimableRoles }.toSet()
-    return types - reportEligibility.disallowedTypes()
-}
+fun DiscussionContext.selectableTypes(reportEligibility: ReportEligibility): Set<StatementType> =
+    availableTypes - reportEligibility.disallowedTypes()

@@ -1,7 +1,7 @@
 package werewolf.game
 
-class UrgeEligibility(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility) {
-    private val selectableTypes = context.selectableTypes(claimableRoles, reportEligibility)
+class UrgeEligibility(context: DiscussionContext, reportEligibility: ReportEligibility) {
+    private val selectableTypes = context.selectableTypes(reportEligibility)
 
     val counterClaimRoles: Set<Role> =
         context.lastTurn?.mapNotNull { it.claimedRole }.orEmpty().filter { StatementType.RoleClaim(it) in selectableTypes }.toSet()

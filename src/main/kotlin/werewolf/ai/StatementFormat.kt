@@ -13,8 +13,8 @@ import werewolf.game.selectableTypes
 data class ParsedStatement(val statement: Statement, val intent: String)
 
 class StatementFormat {
-    fun buildInstruction(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): String {
-        val types = selectableTypes(context, claimableRoles, reportEligibility)
+    fun buildInstruction(context: DiscussionContext, reportEligibility: ReportEligibility): String {
+        val types = selectableTypes(context, reportEligibility)
         val typeFormats = kindsOf(types).joinToString("\n") { "・${formatDescription(it, types, reportEligibility)}" }
         // trimIndent()はテンプレート内の複数行にまたがる補間値には対応できないため、行単位で組み立てる
         return listOf(
@@ -31,8 +31,8 @@ class StatementFormat {
         ).joinToString("\n")
     }
 
-    private fun selectableTypes(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): List<StatementType> =
-        StatementType.all.filter { it in context.selectableTypes(claimableRoles, reportEligibility) }
+    private fun selectableTypes(context: DiscussionContext, reportEligibility: ReportEligibility): List<StatementType> =
+        StatementType.all.filter { it in context.selectableTypes(reportEligibility) }
 
     // 役職COは名乗る役職ごとに種類が分かれるが、AIにはまず「役職を開示する」として一つにまとめて見せ、役職は内容で答えさせる
     private fun kindsOf(types: List<StatementType>): List<StatementType> = types.distinctBy { it.displayName }
@@ -43,12 +43,11 @@ class StatementFormat {
         input: String,
         speaker: Player,
         context: DiscussionContext,
-        claimableRoles: Set<Role>,
         reportEligibility: ReportEligibility,
     ): ParsedStatement {
         val (body, intent) = parseBodyAndIntent(input)
         val (typeLabel, content) = parseTypeLabelAndContent(body)
-        val types = selectableTypes(context, claimableRoles, reportEligibility)
+        val types = selectableTypes(context, reportEligibility)
         val kind = kindsOf(types).matchAnswer("選択できない発言の種類です: $typeLabel") { it.displayName == typeLabel }
         val statement = buildStatement(speaker, context, kind, content, claimableRolesIn(types))
         if (reportEligibility.disqualifies(statement)) {
