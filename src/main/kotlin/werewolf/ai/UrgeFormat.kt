@@ -10,9 +10,11 @@ data class ParsedUrge(val eagerness: Eagerness, val intent: String, val counterC
 class UrgeFormat {
     private enum class Level(val eagerness: Eagerness) {
         COUNTER_CLAIM(Eagerness.COUNTER_CLAIM) {
-            override fun isSelectable(eligibility: UrgeEligibility) = eligibility.counterClaimRole != null
-            override fun description(eligibility: UrgeEligibility) =
-                "対抗COする（他の人の役職COに続いて、同じ役職をすぐさまCOする。対抗COできる役職：${checkNotNull(eligibility.counterClaimRole).displayName}）"
+            override fun isSelectable(eligibility: UrgeEligibility) = eligibility.counterClaimRoles.isNotEmpty()
+            override fun description(eligibility: UrgeEligibility): String {
+                val roleNames = eligibility.counterClaimRoles.joinToString("、") { it.displayName }
+                return "対抗COする（他の人の役職COに続いて、同じ役職をすぐさまCOする。対抗COできる役職：$roleNames）"
+            }
         },
         ANNOUNCEMENT(Eagerness.ANNOUNCEMENT) {
             override fun isSelectable(eligibility: UrgeEligibility) = eligibility.canAnnounce
@@ -46,7 +48,9 @@ class UrgeFormat {
         val levels = selectableLevels(eligibility)
         return listOf(
             "【${context.title} - 発言意欲】次の発言者を決めます。今どれだけ発言したいかを、以下の段階から一つ選んでください。",
-            "最も高い段階を選んだ人が発言します（同じ段階の人が複数いればランダム）。",
+            "最も高い段階を選んだ人が発言します。同じ段階の人が複数いれば、" +
+                "${Level.COUNTER_CLAIM.eagerness.value}と${Level.ANNOUNCEMENT.eagerness.value}では全員が同時に発言し、" +
+                "${Level.URGENT.eagerness.value}以下ではランダムに一人が発言します。",
             levels.joinToString("\n") { "${it.eagerness.value}：${it.description(eligibility)}" },
             "",
         ).plus(answerFormat(levels)).joinToString("\n")
@@ -94,7 +98,7 @@ class UrgeFormat {
 
     private fun counterClaimRoleOf(roleName: String, eligibility: UrgeEligibility): Role {
         if (roleName.isEmpty()) throw InvalidAiInputException("対抗COする役職が添えられていません")
-        return eligibility.counterClaimRole?.takeIf { it.displayName == roleName }
+        return eligibility.counterClaimRoles.singleOrNull { it.displayName == roleName }
             ?: throw InvalidAiInputException("対抗COできない役職です: $roleName")
     }
 

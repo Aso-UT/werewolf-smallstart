@@ -5,6 +5,7 @@ import werewolf.phase.*
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class DiscussionTest {
 
@@ -19,8 +20,8 @@ class DiscussionTest {
         val log: List<String> get() = _log
         private val _rounds = mutableListOf<Int>()
         val rounds: List<Int> get() = _rounds
-        private val _previousStatements = mutableListOf<String?>()
-        val previousStatements: List<String?> get() = _previousStatements
+        private val _lastTurnStatements = mutableListOf<List<String>>()
+        val lastTurnStatements: List<List<String>> get() = _lastTurnStatements
         var receivedStartedDay: Int? = null
         var receivedEndedDay: Int? = null
         var heardCountWhenEnded: Int? = null
@@ -37,7 +38,7 @@ class DiscussionTest {
             val statement = statements[statementIndex++]
             _log.add("$name:said:$statement")
             _rounds.add(context.round)
-            _previousStatements.add(context.previousStatement?.text())
+            _lastTurnStatements.add(context.lastTurn?.map { it.text() }.orEmpty())
             return Claim(this, context, Statement.Plain(this, statement), claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
         }
 
@@ -48,7 +49,7 @@ class DiscussionTest {
                     receivedEndedDay = event.day
                     heardCountWhenEnded = _log.count { it.contains(":heard:") }
                 }
-                event is GameEvent.StatementMade -> _log.add("$name:heard:${event.speakerName}:${event.statement.text()}")
+                event is GameEvent.StatementMade -> event.turn.forEach { _log.add("$name:heard:${it.claimant.name}:${it.text()}") }
                 receivesExecutionEvent && event is GameEvent.PlayerExecuted -> {}
                 else -> error("unexpected event in discussion test: $event")
             }
@@ -67,6 +68,96 @@ class DiscussionTest {
             val statement = Statement.RoleClaim(this, Role.SEER)
             return Claim(this, context, statement, claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
         }
+    }
+
+    // urgeOf の返す意欲で一度だけ発言を希望し、本当の役職を名乗る（COできなければ普通の発言をする）。
+    // 発言した後は何も言いたくない。希望し続けると、後のターンで別の人の希望と同点になって同時発言に加わり、
+    // 何番目のターンで誰が発言するかを確かめられなくなるため。
+    // 届いた発言は、ターンごとに発言者の名前で記録する
+    private class SpeakOncePlayer(
+        role: Role,
+        name: String,
+        private val urgeOf: (SpeakOncePlayer, DiscussionContext, UrgeEligibility) -> SpeakingUrge? = { _, _, _ -> null },
+    ) : ReceivingPlayer(role, name) {
+        val heard = mutableListOf<List<String>>()
+        val lastTurnSpeakersWhenSpoke = mutableListOf<List<String>>()
+        private var spoke = false
+
+        override fun feelUrge(context: DiscussionContext, eligibility: UrgeEligibility): SpeakingUrge =
+            urgeOf(this, context, eligibility)?.takeUnless { spoke }
+                ?: SpeakingUrge(this, context, Eagerness.NOTHING, "", UnimplementedActionMetadata)
+
+        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
+            lastTurnSpeakersWhenSpoke.add(context.lastTurn?.speakers?.map { it.name }.orEmpty())
+            val role = claimableRoles.firstOrNull()?.takeUnless { spoke }
+            val statement = role?.let { Statement.RoleClaim(this, it) } ?: Statement.Plain(this, "")
+            spoke = true
+            return Claim(this, context, statement, claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
+        }
+
+        override fun onReceive(event: GameEvent) {
+            if (event is GameEvent.StatementMade) heard.add(event.turn.map { it.claimant.name })
+        }
+    }
+
+    private fun urge(eagerness: Eagerness): (SpeakOncePlayer, DiscussionContext, UrgeEligibility) -> SpeakingUrge? =
+        { player, context, _ -> SpeakingUrge(player, context, eagerness, "", UnimplementedActionMetadata) }
+
+    @Test
+    fun `players tied at announcement speak at once as one simultaneous statement`() {
+        val seer = SpeakOncePlayer(Role.SEER, "Seer", urge(Eagerness.ANNOUNCEMENT))
+        val medium = SpeakOncePlayer(Role.MEDIUM, "Medium", urge(Eagerness.ANNOUNCEMENT))
+        val villager = SpeakOncePlayer(Role.VILLAGER, "Villager")
+        val playerManager = TestLodge(seer to Role.SEER, medium to Role.MEDIUM, villager to Role.VILLAGER).create().playerManager
+
+        OpenDiscussion(playerManager, 1).conduct()
+
+        assertEquals(listOf("Seer", "Medium"), villager.heard.first())
+    }
+
+    @Test
+    fun `players in a simultaneous statement do not speak right after it and the next speaker hears all of it`() {
+        val seer = SpeakOncePlayer(Role.SEER, "Seer", urge(Eagerness.ANNOUNCEMENT))
+        val medium = SpeakOncePlayer(Role.MEDIUM, "Medium", urge(Eagerness.ANNOUNCEMENT))
+        val villager = SpeakOncePlayer(Role.VILLAGER, "Villager")
+        val playerManager = TestLodge(seer to Role.SEER, medium to Role.MEDIUM, villager to Role.VILLAGER).create().playerManager
+
+        OpenDiscussion(playerManager, 1).conduct()
+
+        assertEquals(listOf("Villager"), villager.heard[1])
+        assertEquals(listOf("Seer", "Medium"), villager.lastTurnSpeakersWhenSpoke.first())
+    }
+
+    @Test
+    fun `counter claims and announcements are not mixed into one simultaneous statement`() {
+        val seer = SpeakOncePlayer(Role.SEER, "Seer", urge(Eagerness.ANNOUNCEMENT))
+        val madman = SpeakOncePlayer(Role.MADMAN, "Madman") { player, context, eligibility ->
+            eligibility.counterClaimRoles.firstOrNull()?.let { CounterClaimSpeakingUrge(player, context, it, "", UnimplementedActionMetadata) }
+        }
+        // 最初の発言の後で、COを希望する
+        val medium = SpeakOncePlayer(Role.MEDIUM, "Medium") { player, context, _ ->
+            context.lastTurn?.let { SpeakingUrge(player, context, Eagerness.ANNOUNCEMENT, "", UnimplementedActionMetadata) }
+        }
+        val villager = SpeakOncePlayer(Role.VILLAGER, "Villager")
+        val playerManager = TestLodge(
+            seer to Role.SEER, madman to Role.MADMAN, medium to Role.MEDIUM, villager to Role.VILLAGER,
+        ).create().playerManager
+
+        OpenDiscussion(playerManager, 1).conduct()
+
+        assertEquals(listOf(listOf("Seer"), listOf("Madman"), listOf("Medium")), villager.heard.take(3))
+    }
+
+    @Test
+    fun `players tied below announcement speak one at a time`() {
+        val alice = SpeakOncePlayer(Role.VILLAGER, "Alice", urge(Eagerness.URGENT))
+        val bob = SpeakOncePlayer(Role.VILLAGER, "Bob", urge(Eagerness.URGENT))
+        val charlie = SpeakOncePlayer(Role.VILLAGER, "Charlie", urge(Eagerness.URGENT))
+        val playerManager = TestLodge(alice to Role.VILLAGER, bob to Role.VILLAGER, charlie to Role.VILLAGER).create().playerManager
+
+        OpenDiscussion(playerManager, 1).conduct()
+
+        assertTrue(alice.heard.all { it.size == 1 })
     }
 
     // 発言するほど意欲が下がり、同じ発言回数なら priority が小さい方が意欲が高い。
@@ -256,8 +347,8 @@ class DiscussionTest {
 
         OpenDiscussion(playerManager, 1).conduct()
 
-        assertEquals(listOf(null, "d", "e"), alice.previousStatements)
-        assertEquals(listOf("a", "b", "c"), bob.previousStatements)
+        assertEquals(listOf(emptyList(), listOf("d"), listOf("e")), alice.lastTurnStatements)
+        assertEquals(listOf(listOf("a"), listOf("b"), listOf("c")), bob.lastTurnStatements)
     }
 
     @Test

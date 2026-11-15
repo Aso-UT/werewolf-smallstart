@@ -5,7 +5,7 @@ sealed class DiscussionContext {
     abstract val day: Int
     abstract val players: List<Player>
     abstract val allPlayers: List<Player>
-    abstract val previousStatement: Statement?
+    abstract val lastTurn: Turn?
     abstract val title: String
     abstract val description: String
     abstract val availableTypes: Set<StatementType>
@@ -17,7 +17,7 @@ sealed class DiscussionContext {
         override val day: Int,
         override val players: List<Player>,
         override val allPlayers: List<Player>,
-        override val previousStatement: Statement? = null,
+        override val lastTurn: Turn? = null,
         override val availableTypes: Set<StatementType> = StatementType.entries.toSet(),
     ) : DiscussionContext() {
         override val title = GameEvent.StatementMade.TITLE
@@ -30,7 +30,7 @@ sealed class DiscussionContext {
         override val day: Int,
         override val players: List<Player>,
         override val allPlayers: List<Player>,
-        override val previousStatement: Statement? = null,
+        override val lastTurn: Turn? = null,
         override val availableTypes: Set<StatementType> = setOf(StatementType.PLAIN),
     ) : DiscussionContext() {
         override val title = GameEvent.WerewolfStatementMade.TITLE

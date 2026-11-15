@@ -15,6 +15,7 @@ import werewolf.game.Role
 import werewolf.game.SelectionContext
 import werewolf.game.SpeakingRight
 import werewolf.game.Statement
+import werewolf.game.Turn
 
 import kotlin.test.Test
 import kotlin.test.assertContains
@@ -63,10 +64,29 @@ class AiPlayerTest {
         val setup = TestLodge(villager to Role.VILLAGER, wolf to Role.WEREWOLF).create()
 
         val statement = villager.discuss(openContext(), SpeakingRight.Uncontested(villager))
-        GameEvent.StatementMade.send(1, "Villager", statement, AllPlayers(setup.playerManager))
+        GameEvent.StatementMade.send(Turn(statement), AllPlayers(setup.playerManager))
         villager.selectTarget(SelectionContext.Vote(villager, listOf(villager, wolf)))
 
         assertEquals(1, lm.histories[1].count { it.contains("hello") })
+    }
+
+    @Test
+    fun `simultaneous statement appears as one entry and marks the player's own remark`() {
+        val lm = FakeLanguageModel("発言する：[真意]")
+        val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
+        val alice = ReceivingPlayer(Role.VILLAGER, "Alice")
+        val setup = TestLodge(villager to Role.VILLAGER, alice to Role.VILLAGER).create()
+
+        GameEvent.StatementMade.send(
+            Turn(Statement.RoleClaim(alice, Role.SEER), Statement.RoleClaim(villager, Role.SEER)),
+            AllPlayers(setup.playerManager),
+        )
+        villager.discuss(openContext(), SpeakingRight.Uncontested(villager))
+
+        assertContains(
+            lm.histories.first(),
+            "<議論（同時発言）>\nAlice: 私の役職は「占い師」です。\nVillager（あなた）: 私の役職は「占い師」です。",
+        )
     }
 
     @Test
@@ -77,7 +97,7 @@ class AiPlayerTest {
         val setup = TestLodge(villager to Role.VILLAGER, alice to Role.VILLAGER).create()
         val allPlayers = AllPlayers(setup.playerManager)
 
-        GameEvent.StatementMade.send(1, "Alice", Statement.Plain(alice, "怪しい人がいます"), allPlayers)
+        GameEvent.StatementMade.send(Turn(Statement.Plain(alice, "怪しい人がいます")), allPlayers)
         villager.discuss(openContext(), SpeakingRight.Uncontested(villager))
 
         assertContains(lm.prompts.first(), "Alice: 怪しい人がいます")

@@ -7,6 +7,7 @@ import werewolf.game.DiscussionContext
 import werewolf.game.Eagerness
 import werewolf.game.Role
 import werewolf.game.Statement
+import werewolf.game.Turn
 import werewolf.human.HumanPlayer
 
 class HumanPlayerSpeakingUrgeTest {
@@ -25,7 +26,7 @@ class HumanPlayerSpeakingUrgeTest {
 
     // 直前に別の人が占い師COした議論
     private fun afterSeerClaim(player: HumanPlayer) =
-        openContext(listOf(player, seerClaimer), previousStatement = Statement.RoleClaim(seerClaimer, Role.SEER))
+        openContext(listOf(player, seerClaimer), lastTurn = Turn(Statement.RoleClaim(seerClaimer, Role.SEER)))
 
     @Test
     fun `a villager is offered only the speak button`() {
@@ -45,6 +46,23 @@ class HumanPlayerSpeakingUrgeTest {
         madman.speakingUrge(afterSeerClaim(madman))
 
         assertEquals(listOf("対抗CO（占い師）", "CO・結果報告", "発言を希望"), io.offeredButtons)
+    }
+
+    @Test
+    fun `a counter claim button is offered for each role claimed in a simultaneous statement`() {
+        val io = ButtonPressingIO(pressing = "対抗CO（霊能者）")
+        val madman = HumanPlayer(Role.MADMAN, "Human", io)
+        val mediumClaimer = ReceivingPlayer(Role.MEDIUM, "MediumClaimer")
+        val context = openContext(
+            listOf(madman, seerClaimer, mediumClaimer),
+            lastTurn = Turn(Statement.RoleClaim(seerClaimer, Role.SEER), Statement.RoleClaim(mediumClaimer, Role.MEDIUM)),
+        )
+
+        madman.speakingUrge(context)
+
+        assertEquals(listOf("対抗CO（占い師）", "対抗CO（霊能者）", "CO・結果報告", "発言を希望"), io.offeredButtons)
+        val urge = madman.reveal(fakeCitizenWinSignal()).filterIsInstance<CounterClaimSpeakingUrge>().single()
+        assertEquals(Role.MEDIUM, urge.role)
     }
 
     @Test

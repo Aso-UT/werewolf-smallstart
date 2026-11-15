@@ -85,17 +85,15 @@ sealed class GameEvent : Recallable() {
     }
 
     @ConsistentCopyVisibility
-    data class StatementMade private constructor(val round: Int, val speakerName: String, val statement: Statement, private val allPlayers: AllPlayers) : GameEvent() {
+    data class StatementMade private constructor(val turn: Turn, private val allPlayers: AllPlayers) : GameEvent() {
         override val title = TITLE
-        override fun body() = statement.text()
+        override fun body() = turn.body()
         override val recipients: Notifiable = allPlayers
-        override fun toRecallView(): RecallView = RecallView.AttributedObservation(title, speakerName, body())
-        override fun toChronicleView(): ChronicleView =
-            error("StatementMade is excluded from chronicles by GameRecap.isRedundantWithClaim")
+        override fun toRecallView(): RecallView = turn.toRecallView(title)
+        override fun toChronicleView(): ChronicleView = turn.toChronicleView(title, recipients.recipientName)
         companion object {
             const val TITLE = "議論"
-            fun send(round: Int, speakerName: String, statement: Statement, allPlayers: AllPlayers) =
-                StatementMade(round, speakerName, statement, allPlayers).dispatch()
+            fun send(turn: Turn, allPlayers: AllPlayers) = StatementMade(turn, allPlayers).dispatch()
         }
     }
 
@@ -211,17 +209,15 @@ sealed class GameEvent : Recallable() {
     }
 
     @ConsistentCopyVisibility
-    data class WerewolfStatementMade private constructor(val round: Int, val speakerName: String, val statement: String, private val wolves: Wolves) : GameEvent() {
+    data class WerewolfStatementMade private constructor(val turn: Turn, private val wolves: Wolves) : GameEvent() {
         override val title = TITLE
-        override fun body() = statement
+        override fun body() = turn.body()
         override val recipients: Notifiable = wolves
-        override fun toRecallView(): RecallView = RecallView.AttributedObservation(title, speakerName, body())
-        override fun toChronicleView(): ChronicleView =
-            error("WerewolfStatementMade is excluded from chronicles by GameRecap.isRedundantWithClaim")
+        override fun toRecallView(): RecallView = turn.toRecallView(title)
+        override fun toChronicleView(): ChronicleView = turn.toChronicleView(title, recipients.recipientName)
         companion object {
             const val TITLE = "密談"
-            fun send(round: Int, speakerName: String, statement: String, wolves: Wolves) =
-                WerewolfStatementMade(round, speakerName, statement, wolves).dispatch()
+            fun send(turn: Turn, wolves: Wolves) = WerewolfStatementMade(turn, wolves).dispatch()
         }
     }
 }

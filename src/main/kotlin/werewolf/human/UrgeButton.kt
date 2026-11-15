@@ -37,11 +37,11 @@ sealed class UrgeButton(val label: String, val isHidden: Boolean) {
     }
 
     companion object {
-        fun available(eligibility: UrgeEligibility): List<UrgeButton> = listOfNotNull(
-            eligibility.counterClaimRole?.let { CounterClaim(it) },
-            Announcement.takeIf { eligibility.canAnnounce },
-            Speak,
-            Pass,
-        )
+        fun available(eligibility: UrgeEligibility): List<UrgeButton> =
+            eligibility.counterClaimRoles.map { CounterClaim(it) } + listOfNotNull(
+                Announcement.takeIf { eligibility.canAnnounce },
+                Speak,
+                Pass,
+            )
     }
 }
