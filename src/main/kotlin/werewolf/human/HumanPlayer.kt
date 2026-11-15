@@ -49,11 +49,11 @@ class HumanPlayer(role: Role, override val name: String, private val io: HumanIO
         return buttons.single { it.label == label }
     }
 
-    override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
+    override fun speak(context: DiscussionContext, reportEligibility: ReportEligibility): Claim {
         val (statement, metadata) = measured(HumanActionKind.STATEMENT) {
-            composer.compose(this, context, claimableRoles, reportEligibility)
+            composer.compose(this, context, reportEligibility)
         }
-        return Claim(this, context, statement, claimableRoles, reportEligibility, "プレイヤーが発言", metadata)
+        return Claim(this, context, statement, reportEligibility, "プレイヤーが発言", metadata)
     }
 
     // 問い合わせに答えられるようになってから、行動が決まるまでの時間を測る

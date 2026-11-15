@@ -17,10 +17,10 @@ class MadmanCpuStrategy(
     private val impersonating: Role = listOf(Role.SEER, Role.MEDIUM).random(),
 ) : RoleAwareCpuStrategy(self, Role.MADMAN, WerewolfVoting(self)) {
 
-    override fun buildStatement(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Statement {
+    override fun buildStatement(context: DiscussionContext, reportEligibility: ReportEligibility): Statement {
         if (context.round > 1) return Statement.Plain(self, "")
-        val impersonatedType = if (impersonating == Role.SEER) StatementType.DIVINATION_REPORT else StatementType.MEDIUM_REPORT
-        if (impersonatedType !in context.selectableTypes(claimableRoles, reportEligibility)) return Statement.Plain(self, "")
+        val impersonatedType = if (impersonating == Role.SEER) StatementType.DivinationReport else StatementType.MediumReport
+        if (impersonatedType !in context.selectableTypes(reportEligibility)) return Statement.Plain(self, "")
         return if (impersonating == Role.SEER) fakeSeerStatement(context) else fakeMediumStatement()
     }
 

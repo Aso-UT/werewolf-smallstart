@@ -6,7 +6,7 @@ data class Eagerness(val value: Int) : Comparable<Eagerness> {
 
     // この意欲で発言権を得たときに選べる発言の種類
     val statementTypes: Set<StatementType>
-        get() = if (this >= ANNOUNCEMENT) ANNOUNCEMENT_TYPES else StatementType.entries.toSet()
+        get() = if (this >= ANNOUNCEMENT) ANNOUNCEMENT_TYPES else StatementType.all
 
     companion object {
         val COUNTER_CLAIM = Eagerness(5)
@@ -18,6 +18,7 @@ data class Eagerness(val value: Int) : Comparable<Eagerness> {
 
         val DEFAULT = OPINION
 
-        private val ANNOUNCEMENT_TYPES = setOf(StatementType.ROLE_CLAIM, StatementType.DIVINATION_REPORT, StatementType.MEDIUM_REPORT)
+        // COと結果報告。どちらも何かの役職を名乗る
+        private val ANNOUNCEMENT_TYPES = StatementType.all.filter { it.claimedRole != null }.toSet()
     }
 }

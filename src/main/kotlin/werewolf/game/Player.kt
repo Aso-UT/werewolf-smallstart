@@ -24,17 +24,17 @@ abstract class Player(private val role: Role) : Notifiable {
     fun discuss(context: DiscussionContext, right: SpeakingRight): Statement {
         require(right.speaker === this) { "${right.speaker.name} has the right to speak, not $name" }
         val reportEligibility = ReportEligibility.forRole(role, _memories, this)
-        val claim = speak(right.narrow(context), right.narrowClaimableRoles(claimableRoles()), reportEligibility)
+        val claim = speak(right.narrow(withClaimableRoles(context)), reportEligibility)
         require(claim.speaker === this) { "${claim.speaker.name} is not the speaking player" }
         require(claim.statement.claimant === this) { "${claim.statement.claimant.name} is not the statement's claimant" }
         _memories.add(claim)
         return claim.statement
     }
-    protected abstract fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim
+    protected abstract fun speak(context: DiscussionContext, reportEligibility: ReportEligibility): Claim
 
     // 議論の発言者を選ぶために、発言のたびに全員から並列に呼ばれる
     fun speakingUrge(context: DiscussionContext): SpeakingUrge {
-        val eligibility = UrgeEligibility(context, claimableRoles(), ReportEligibility.forRole(role, _memories, this))
+        val eligibility = UrgeEligibility(withClaimableRoles(context), ReportEligibility.forRole(role, _memories, this))
         val urge = feelUrge(context, eligibility)
         require(urge.player === this) { "${urge.player.name} is not the urged player" }
         eligibility.validate(urge)
@@ -43,9 +43,10 @@ abstract class Player(private val role: Role) : Notifiable {
     }
     protected abstract fun feelUrge(context: DiscussionContext, eligibility: UrgeEligibility): SpeakingUrge
 
-    private fun claimableRoles(): Set<Role> {
+    // COできない役職の役職COを、選べる発言の種類から外す
+    private fun withClaimableRoles(context: DiscussionContext): DiscussionContext {
         val alreadyRevealed = ClaimedRole(_memories).of(this) == role
-        return RoleClaimPolicy.claimableRoles(role, alreadyRevealed)
+        return context.narrowedTo(StatementType.claimingOnly(RoleClaimPolicy.claimableRoles(role, alreadyRevealed)))
     }
 
     abstract fun watchEpilogue(chronicles: List<ChronicleView>, metadataTotals: List<String>)

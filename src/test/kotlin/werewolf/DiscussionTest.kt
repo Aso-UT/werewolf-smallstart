@@ -34,12 +34,12 @@ class DiscussionTest {
             return SpeakingUrge(this, context, eagernessOf(context), "", UnimplementedActionMetadata)
         }
 
-        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
+        override fun speak(context: DiscussionContext, reportEligibility: ReportEligibility): Claim {
             val statement = statements[statementIndex++]
             _log.add("$name:said:$statement")
             _rounds.add(context.round)
             _lastTurnStatements.add(context.lastTurn?.map { it.text() }.orEmpty())
-            return Claim(this, context, Statement.Plain(this, statement), claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
+            return Claim(this, context, Statement.Plain(this, statement), reportEligibility, "", UnimplementedActionMetadata)
         }
 
         override fun onReceive(event: GameEvent) {
@@ -63,10 +63,10 @@ class DiscussionTest {
         override fun feelUrge(context: DiscussionContext, eligibility: UrgeEligibility) =
             SpeakingUrge(this, context, Eagerness.ANNOUNCEMENT, "", UnimplementedActionMetadata)
 
-        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
-            receivedTypes.add(context.selectableTypes(claimableRoles, reportEligibility))
+        override fun speak(context: DiscussionContext, reportEligibility: ReportEligibility): Claim {
+            receivedTypes.add(context.selectableTypes(reportEligibility))
             val statement = Statement.RoleClaim(this, Role.SEER)
-            return Claim(this, context, statement, claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
+            return Claim(this, context, statement, reportEligibility, "", UnimplementedActionMetadata)
         }
     }
 
@@ -87,12 +87,13 @@ class DiscussionTest {
             urgeOf(this, context, eligibility)?.takeUnless { spoke }
                 ?: SpeakingUrge(this, context, Eagerness.NOTHING, "", UnimplementedActionMetadata)
 
-        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
+        override fun speak(context: DiscussionContext, reportEligibility: ReportEligibility): Claim {
             lastTurnSpeakersWhenSpoke.add(context.lastTurn?.speakers?.map { it.name }.orEmpty())
-            val role = claimableRoles.firstOrNull()?.takeUnless { spoke }
+            val roleClaims = context.selectableTypes(reportEligibility).filterIsInstance<StatementType.RoleClaim>()
+            val role = roleClaims.firstOrNull()?.role?.takeUnless { spoke }
             val statement = role?.let { Statement.RoleClaim(this, it) } ?: Statement.Plain(this, "")
             spoke = true
-            return Claim(this, context, statement, claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
+            return Claim(this, context, statement, reportEligibility, "", UnimplementedActionMetadata)
         }
 
         override fun onReceive(event: GameEvent) {
@@ -360,8 +361,9 @@ class DiscussionTest {
         OpenDiscussion(playerManager, 1).conduct()
 
         // 2人では、最初の1回だけ意欲で発言者を決め、その後は交互に競争なしで発言する
-        val announcementTypes = setOf(StatementType.ROLE_CLAIM, StatementType.DIVINATION_REPORT, StatementType.MEDIUM_REPORT)
-        val allTypes = StatementType.entries.toSet()
+        // 狂人は村人を名乗れない
+        val allTypes = StatementType.all - StatementType.RoleClaim(Role.VILLAGER)
+        val announcementTypes = allTypes - StatementType.Plain
         assertEquals(listOf(announcementTypes, allTypes, allTypes), madman.receivedTypes)
     }
 

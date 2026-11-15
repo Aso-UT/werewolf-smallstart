@@ -64,12 +64,12 @@ class AiPlayer(
             ?.let { CounterClaimSpeakingUrge(this, context, it, parsed.intent, metadata) }
             ?: SpeakingUrge(this, context, parsed.eagerness, parsed.intent, metadata)
 
-    override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
-        val instruction = statementFormat.buildInstruction(context, claimableRoles, reportEligibility)
+    override fun speak(context: DiscussionContext, reportEligibility: ReportEligibility): Claim {
+        val instruction = statementFormat.buildInstruction(context, reportEligibility)
         val claim = askOrGiveUp(languageModel, instruction) { completion ->
-            val parsed = statementFormat.parse(completion.text, this, context, claimableRoles, reportEligibility)
+            val parsed = statementFormat.parse(completion.text, this, context, reportEligibility)
             Claim(
-                this, context, parsed.statement, claimableRoles, reportEligibility,
+                this, context, parsed.statement, reportEligibility,
                 intent = parsed.intent,
                 metadata = completion.metadata,
             )

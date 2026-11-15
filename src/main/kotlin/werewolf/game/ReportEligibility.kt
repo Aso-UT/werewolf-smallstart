@@ -13,8 +13,8 @@ sealed class ReportEligibility {
         val mediums: Map<Player, MediumResult> = emptyMap(),
     ) : ReportEligibility() {
         override fun disallowedTypes(): Set<StatementType> = buildSet {
-            if (divinations.isEmpty()) add(StatementType.DIVINATION_REPORT)
-            if (mediums.isEmpty()) add(StatementType.MEDIUM_REPORT)
+            if (divinations.isEmpty()) add(StatementType.DivinationReport)
+            if (mediums.isEmpty()) add(StatementType.MediumReport)
         }
 
         override fun disqualifies(statement: Statement): Boolean = when (statement) {

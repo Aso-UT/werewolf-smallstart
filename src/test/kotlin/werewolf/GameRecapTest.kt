@@ -14,8 +14,8 @@ class GameRecapTest {
     private class SpeakingPlayer(role: Role, name: String) : ReceivingPlayer(role, name) {
         override fun feelUrge(context: DiscussionContext, eligibility: UrgeEligibility) =
             SpeakingUrge(this, context, Eagerness.DEFAULT, "", UnimplementedActionMetadata)
-        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim =
-            Claim(this, context, Statement.Plain(this, "$name speaks"), claimableRoles, reportEligibility, "intent", UnimplementedActionMetadata)
+        override fun speak(context: DiscussionContext, reportEligibility: ReportEligibility): Claim =
+            Claim(this, context, Statement.Plain(this, "$name speaks"), reportEligibility, "intent", UnimplementedActionMetadata)
     }
 
     private class ChoosingPlayer(role: Role, name: String, vararg metadata: ActionMetadata) : ReceivingPlayer(role, name) {

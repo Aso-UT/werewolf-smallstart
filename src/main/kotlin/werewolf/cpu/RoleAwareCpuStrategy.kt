@@ -14,7 +14,7 @@ abstract class RoleAwareCpuStrategy(
 ) {
     fun appliesTo() = self.myRole == targetRole
 
-    abstract fun buildStatement(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Statement
+    abstract fun buildStatement(context: DiscussionContext, reportEligibility: ReportEligibility): Statement
 
     fun selectTarget(context: SelectionContext): Player {
         val candidates = context.candidates()

@@ -10,7 +10,7 @@ import werewolf.game.Statement
 class WerewolfCpuStrategy(self: RoleAwareCpuPlayer) : RoleAwareCpuStrategy(self, Role.WEREWOLF, WerewolfVoting(self)) {
     private val query = KnowledgeQuery(self)
 
-    override fun buildStatement(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility) =
+    override fun buildStatement(context: DiscussionContext, reportEligibility: ReportEligibility) =
         Statement.Plain(self, "")
 
     override fun selectTargetForOthers(context: SelectionContext, candidates: List<Player>): Player =

@@ -18,9 +18,9 @@ class DayPhaseTest {
         override fun onReceive(event: GameEvent) { receivedEvents += event }
         override fun feelUrge(context: DiscussionContext, eligibility: UrgeEligibility) =
             SpeakingUrge(this, context, Eagerness.DEFAULT, "", UnimplementedActionMetadata)
-        override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
+        override fun speak(context: DiscussionContext, reportEligibility: ReportEligibility): Claim {
             discussedCount++
-            return Claim(this, context, Statement.Plain(this, ""), claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
+            return Claim(this, context, Statement.Plain(this, ""), reportEligibility, "", UnimplementedActionMetadata)
         }
         override fun choose(context: SelectionContext): Choice =
             Choice(this, context, voteTarget?.takeIf { it in context.candidates() } ?: context.candidates().first(), "テスト用投票", UnimplementedActionMetadata)

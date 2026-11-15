@@ -17,7 +17,7 @@ class ClaimTest {
         val context = DiscussionContext.Conclave(1, 1, listOf(speaker), listOf(speaker))
         val statement = Statement.DivinationReport(speaker, speaker, DivineResult.WEREWOLF)
         assertFailsWith<IllegalArgumentException> {
-            Claim(speaker, context, statement, emptySet(), ReportEligibility.Honest(), "意図", UnimplementedActionMetadata)
+            Claim(speaker, context, statement, ReportEligibility.Honest(), "意図", UnimplementedActionMetadata)
         }
     }
 
@@ -25,37 +25,26 @@ class ClaimTest {
     fun `Claim does not throw when statement type is available`() {
         val speaker = NothingPlayer(Role.VILLAGER, "Speaker")
         val context = openContext(listOf(speaker))
-        assertNotNull(Claim(speaker, context, Statement.Plain(speaker, "発言"), emptySet(), ReportEligibility.Honest(), "意図", UnimplementedActionMetadata))
+        assertNotNull(Claim(speaker, context, Statement.Plain(speaker, "発言"), ReportEligibility.Honest(), "意図", UnimplementedActionMetadata))
     }
 
     @Test
-    fun `Claim throws when statement type is ROLE_CLAIM but speaker has no claimable role`() {
-        val speaker = NothingPlayer(Role.VILLAGER, "Speaker")
-        val context = openContext(listOf(speaker))
-        val statement = Statement.RoleClaim(speaker, Role.SEER)
-        val exception = assertFailsWith<IllegalArgumentException> {
-            Claim(speaker, context, statement, emptySet(), ReportEligibility.Honest(), "意図", UnimplementedActionMetadata)
-        }
-        assertContains(exception.message.orEmpty(), "is not available for")
-    }
-
-    @Test
-    fun `Claim throws when statement is RoleClaim for a role outside claimable roles`() {
+    fun `Claim throws when the role claim is not among the selectable types`() {
         val speaker = NothingPlayer(Role.SEER, "Speaker")
-        val context = openContext(listOf(speaker))
+        val context = openContext(listOf(speaker)).narrowedTo(StatementType.claimingOnly(setOf(Role.SEER)))
         val statement = Statement.RoleClaim(speaker, Role.WEREWOLF)
         val exception = assertFailsWith<IllegalArgumentException> {
-            Claim(speaker, context, statement, setOf(Role.SEER), ReportEligibility.Honest(), "意図", UnimplementedActionMetadata)
+            Claim(speaker, context, statement, ReportEligibility.Honest(), "意図", UnimplementedActionMetadata)
         }
-        assertContains(exception.message.orEmpty(), "is not claimable by")
+        assertContains(exception.message.orEmpty(), "is not available")
     }
 
     @Test
-    fun `Claim does not throw when statement is RoleClaim for a claimable role`() {
+    fun `Claim does not throw when the role claim is among the selectable types`() {
         val speaker = NothingPlayer(Role.SEER, "Speaker")
-        val context = openContext(listOf(speaker))
+        val context = openContext(listOf(speaker)).narrowedTo(StatementType.claimingOnly(setOf(Role.SEER)))
         val statement = Statement.RoleClaim(speaker, Role.SEER)
-        assertNotNull(Claim(speaker, context, statement, setOf(Role.SEER), ReportEligibility.Honest(), "意図", UnimplementedActionMetadata))
+        assertNotNull(Claim(speaker, context, statement, ReportEligibility.Honest(), "意図", UnimplementedActionMetadata))
     }
 
     @Test
@@ -66,7 +55,7 @@ class ClaimTest {
         val statement = Statement.DivinationReport(speaker, target, DivineResult.WEREWOLF)
         val reportEligibility = ReportEligibility.Honest(divinations = mapOf(target to DivineResult.NOT_WEREWOLF))
         val exception = assertFailsWith<IllegalArgumentException> {
-            Claim(speaker, context, statement, emptySet(), reportEligibility, "意図", UnimplementedActionMetadata)
+            Claim(speaker, context, statement, reportEligibility, "意図", UnimplementedActionMetadata)
         }
         assertContains(exception.message.orEmpty(), "is not reportable by")
     }
@@ -75,7 +64,7 @@ class ClaimTest {
     fun `toRecallView returns action with context title, content and intent`() {
         val speaker = NothingPlayer(Role.VILLAGER, "Speaker")
         val context = openContext(listOf(speaker))
-        val claim = Claim(speaker, context, Statement.Plain(speaker, "発言内容"), emptySet(), ReportEligibility.Honest(), "真意内容", UnimplementedActionMetadata)
+        val claim = Claim(speaker, context, Statement.Plain(speaker, "発言内容"), ReportEligibility.Honest(), "真意内容", UnimplementedActionMetadata)
         assertEquals(RecallView.SelfAction("議論", "発言内容", "真意内容"), claim.toRecallView())
     }
 
@@ -83,7 +72,7 @@ class ClaimTest {
     fun `toChronicleView returns action with speaker, context title, content and intent`() {
         val speaker = NothingPlayer(Role.VILLAGER, "Speaker")
         val context = openContext(listOf(speaker))
-        val claim = Claim(speaker, context, Statement.Plain(speaker, "発言内容"), emptySet(), ReportEligibility.Honest(), "真意内容", UnimplementedActionMetadata)
+        val claim = Claim(speaker, context, Statement.Plain(speaker, "発言内容"), ReportEligibility.Honest(), "真意内容", UnimplementedActionMetadata)
         assertEquals(ChronicleView.Action("Speaker", "議論", "発言内容", "真意内容"), claim.toChronicleView())
     }
 
@@ -91,7 +80,7 @@ class ClaimTest {
     fun `metadata display is appended to intent only in chronicle`() {
         val speaker = NothingPlayer(Role.VILLAGER, "Speaker")
         val context = openContext(listOf(speaker))
-        val claim = Claim(speaker, context, Statement.Plain(speaker, "発言内容"), emptySet(), ReportEligibility.Honest(), "真意内容", FakeActionMetadata("model=test"))
+        val claim = Claim(speaker, context, Statement.Plain(speaker, "発言内容"), ReportEligibility.Honest(), "真意内容", FakeActionMetadata("model=test"))
         assertEquals(RecallView.SelfAction("議論", "発言内容", "真意内容"), claim.toRecallView())
         assertEquals(ChronicleView.Action("Speaker", "議論", "発言内容", "真意内容 | model=test"), claim.toChronicleView())
     }
