@@ -360,8 +360,9 @@ class DiscussionTest {
         OpenDiscussion(playerManager, 1).conduct()
 
         // 2人では、最初の1回だけ意欲で発言者を決め、その後は交互に競争なしで発言する
-        val announcementTypes = setOf(StatementType.ROLE_CLAIM, StatementType.DIVINATION_REPORT, StatementType.MEDIUM_REPORT)
-        val allTypes = StatementType.entries.toSet()
+        // 狂人は村人を名乗れない
+        val allTypes = StatementType.all - StatementType.RoleClaim(Role.VILLAGER)
+        val announcementTypes = allTypes - StatementType.Plain
         assertEquals(listOf(announcementTypes, allTypes, allTypes), madman.receivedTypes)
     }
 

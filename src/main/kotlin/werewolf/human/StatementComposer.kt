@@ -13,18 +13,19 @@ class StatementComposer(private val io: HumanPrompt, private val selection: Huma
         private const val COMMENT_PROMPT = "補足があれば入力してください"
     }
 
-    fun compose(speaker: Player, context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Statement =
-        when (selectType(context, claimableRoles, reportEligibility)) {
-            StatementType.PLAIN -> composePlain(speaker, context)
-            StatementType.DIVINATION_REPORT -> composeDivinationReport(speaker, reportEligibility)
-            StatementType.MEDIUM_REPORT -> composeMediumReport(speaker, reportEligibility)
-            StatementType.ROLE_CLAIM -> composeRoleClaim(speaker, claimableRoles)
+    fun compose(speaker: Player, context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Statement {
+        val types = StatementType.all.filter { it in context.selectableTypes(claimableRoles, reportEligibility) }
+        return when (selectType(context, types)) {
+            StatementType.Plain -> composePlain(speaker, context)
+            StatementType.DivinationReport -> composeDivinationReport(speaker, reportEligibility)
+            StatementType.MediumReport -> composeMediumReport(speaker, reportEligibility)
+            is StatementType.RoleClaim -> composeRoleClaim(speaker, types.filterIsInstance<StatementType.RoleClaim>().map { it.role })
         }
-
-    private fun selectType(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): StatementType {
-        val types = StatementType.entries.filter { it in context.selectableTypes(claimableRoles, reportEligibility) }
-        return selection.select(context.title, context.description, types) { it.displayName }
     }
+
+    // 役職COは、まず役職COすることを選び、名乗る役職はその後で選ぶ
+    private fun selectType(context: DiscussionContext, types: List<StatementType>): StatementType =
+        selection.select(context.title, context.description, types.distinctBy { it.displayName }) { it.displayName }
 
     private fun composePlain(speaker: Player, context: DiscussionContext): Statement =
         Statement.Plain(speaker, io.promptFreeText(context.title, "発言してください"))
@@ -43,8 +44,8 @@ class StatementComposer(private val io: HumanPrompt, private val selection: Huma
         return Statement.MediumReport(speaker, target, result, comment)
     }
 
-    private fun composeRoleClaim(speaker: Player, claimableRoles: Set<Role>): Statement {
-        val role = selection.select("役職申告 - 役職", "申告する役職を選んでください", claimableRoles.toList()) { it.displayName }
+    private fun composeRoleClaim(speaker: Player, claimableRoles: List<Role>): Statement {
+        val role = selection.select("役職申告 - 役職", "申告する役職を選んでください", claimableRoles) { it.displayName }
         val comment = io.promptFreeText("役職申告 - 補足", COMMENT_PROMPT)
         return Statement.RoleClaim(speaker, role, comment)
     }

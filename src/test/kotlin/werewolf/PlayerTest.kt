@@ -88,6 +88,9 @@ class PlayerTest {
         }
     }
 
+    // 狂人が選べる発言の種類。村人だけは名乗れない
+    private val madmanTypes = StatementType.all - StatementType.RoleClaim(Role.VILLAGER)
+
     // 明かされる直前に、まだ記録していなかった行動を記録する
     private class LateRecordingPlayer(role: Role, name: String) : NothingPlayer(role, name) {
         override fun onRevealing(signal: GameOverSignal) {
@@ -153,7 +156,7 @@ class PlayerTest {
     fun `uncontested speaker can make any statement`() {
         val player = RecordingClaimer(Role.MADMAN, "Player")
         player.discuss(openContext(listOf(player)), SpeakingRight.Uncontested(player))
-        assertEquals(StatementType.entries.toSet(), player.receivedTypes)
+        assertEquals(madmanTypes, player.receivedTypes)
     }
 
     @Test
@@ -164,7 +167,7 @@ class PlayerTest {
 
         player.discuss(context, SpeakingRight.Won(urge))
 
-        assertEquals(setOf(StatementType.ROLE_CLAIM, StatementType.DIVINATION_REPORT, StatementType.MEDIUM_REPORT), player.receivedTypes)
+        assertEquals(madmanTypes - StatementType.Plain, player.receivedTypes)
     }
 
     @Test
@@ -184,7 +187,7 @@ class PlayerTest {
 
         player.discuss(context, SpeakingRight.Won(urge))
 
-        assertEquals(setOf(StatementType.ROLE_CLAIM, StatementType.DIVINATION_REPORT), player.receivedTypes)
+        assertEquals(setOf(StatementType.RoleClaim(Role.SEER), StatementType.DivinationReport), player.receivedTypes)
         assertEquals(setOf(Role.SEER), player.receivedClaimableRoles)
     }
 

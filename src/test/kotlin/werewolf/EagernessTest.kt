@@ -3,10 +3,12 @@ package werewolf
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import werewolf.game.Eagerness
+import werewolf.game.Role
 import werewolf.game.StatementType
 
 class EagernessTest {
-    private val announcementTypes = setOf(StatementType.ROLE_CLAIM, StatementType.DIVINATION_REPORT, StatementType.MEDIUM_REPORT)
+    private val announcementTypes =
+        setOf(StatementType.DivinationReport, StatementType.MediumReport) + Role.entries.map { StatementType.RoleClaim(it) }
 
     @Test
     fun `counter claims and announcements allow only claims and reports`() {
@@ -16,7 +18,7 @@ class EagernessTest {
 
     @Test
     fun `eagerness below announcements allows any statement type`() {
-        assertEquals(StatementType.entries.toSet(), Eagerness.URGENT.statementTypes)
-        assertEquals(StatementType.entries.toSet(), Eagerness.UNWILLING.statementTypes)
+        assertEquals(StatementType.all, Eagerness.URGENT.statementTypes)
+        assertEquals(StatementType.all, Eagerness.UNWILLING.statementTypes)
     }
 }

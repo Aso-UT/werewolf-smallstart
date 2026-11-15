@@ -44,11 +44,6 @@ private class NormalClaim(
         require(!reportEligibility.disqualifies(statement)) {
             "${statement.type} is not reportable by ${speaker.name} with the given target/result: ${statement.text()}"
         }
-        if (statement is Statement.RoleClaim) {
-            require(statement.role in claimableRoles) {
-                "${statement.role} is not claimable by ${speaker.name}"
-            }
-        }
     }
 }
 

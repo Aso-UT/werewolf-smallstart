@@ -149,7 +149,7 @@ class HumanPlayerTest {
     }
 
     @Test
-    fun `speak in conclave uses PLAIN without prompting for type`() {
+    fun `speak in conclave uses Plain without prompting for type`() {
         val io = CapturingIO(freeTextAnswer = "hello")
         val human = HumanPlayer(Role.WEREWOLF, "Human", io)
         val context = DiscussionContext.Conclave(1, 1, listOf(human), listOf(human))
@@ -162,21 +162,21 @@ class HumanPlayerTest {
 
     @Test
     fun `speak in open discussion prompts for type then returns plain statement`() {
-        val io = CapturingIO(StatementType.PLAIN.displayName, freeTextAnswer = "hello")
+        val io = CapturingIO(StatementType.Plain.displayName, freeTextAnswer = "hello")
         val human = HumanPlayer(Role.WEREWOLF, "Human", io)
         val context = DiscussionContext.Open(1, 1, listOf(human), listOf(human))
 
         val statement = human.discuss(context, SpeakingRight.Uncontested(human))
 
         assertEquals(Statement.Plain(human, "hello"), statement)
-        assertTrue(io.promptedChoices.single().options.contains(StatementType.PLAIN.displayName))
+        assertTrue(io.promptedChoices.single().options.contains(StatementType.Plain.displayName))
     }
 
     @Test
-    fun `speak with DIVINATION_REPORT prompts for target among multiple divinations and auto-fills the true result`() {
+    fun `speak with DivinationReport prompts for target among multiple divinations and auto-fills the true result`() {
         val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
         val villager = NothingPlayer(Role.VILLAGER, "Villager")
-        val io = CapturingIO(StatementType.DIVINATION_REPORT.displayName, "Wolf")
+        val io = CapturingIO(StatementType.DivinationReport.displayName, "Wolf")
         val human = HumanPlayer(Role.SEER, "Human", io)
         GameEvent.Divined.send(wolf, DivineResult.WEREWOLF, human)
         GameEvent.Divined.send(villager, DivineResult.NOT_WEREWOLF, human)
@@ -189,10 +189,10 @@ class HumanPlayerTest {
     }
 
     @Test
-    fun `speak with MEDIUM_REPORT prompts for target among multiple mediums and auto-fills the true result`() {
+    fun `speak with MediumReport prompts for target among multiple mediums and auto-fills the true result`() {
         val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
         val villager = NothingPlayer(Role.VILLAGER, "Villager")
-        val io = CapturingIO(StatementType.MEDIUM_REPORT.displayName, "Wolf")
+        val io = CapturingIO(StatementType.MediumReport.displayName, "Wolf")
         val human = HumanPlayer(Role.MEDIUM, "Human", io)
         GameEvent.MediumRevealed.send(wolf, MediumResult.WEREWOLF, human)
         GameEvent.MediumRevealed.send(villager, MediumResult.NOT_WEREWOLF, human)
@@ -205,10 +205,10 @@ class HumanPlayerTest {
     }
 
     @Test
-    fun `speak with DIVINATION_REPORT attaches the entered comment`() {
+    fun `speak with DivinationReport attaches the entered comment`() {
         val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
         val io = CapturingIO(
-            StatementType.DIVINATION_REPORT.displayName,
+            StatementType.DivinationReport.displayName,
             freeTextAnswer = "昨日の議論で怪しいと思っていました",
         )
         val human = HumanPlayer(Role.SEER, "Human", io)
@@ -224,10 +224,10 @@ class HumanPlayerTest {
     }
 
     @Test
-    fun `speak with MEDIUM_REPORT attaches the entered comment`() {
+    fun `speak with MediumReport attaches the entered comment`() {
         val villager = NothingPlayer(Role.VILLAGER, "Villager")
         val io = CapturingIO(
-            StatementType.MEDIUM_REPORT.displayName,
+            StatementType.MediumReport.displayName,
             freeTextAnswer = "無実の方を処刑してしまい申し訳ない気持ちです",
         )
         val human = HumanPlayer(Role.MEDIUM, "Human", io)
@@ -243,11 +243,11 @@ class HumanPlayerTest {
     }
 
     @Test
-    fun `speak with DIVINATION_REPORT as werewolf allows freely choosing any target and result`() {
+    fun `speak with DivinationReport as werewolf allows freely choosing any target and result`() {
         val villager1 = ReceivingPlayer(Role.VILLAGER, "V1")
         val villager2 = ReceivingPlayer(Role.VILLAGER, "V2")
         val io = CapturingIO(
-            StatementType.DIVINATION_REPORT.displayName,
+            StatementType.DivinationReport.displayName,
             "V1",
             DivineResult.WEREWOLF.displayName,
         )
@@ -265,8 +265,8 @@ class HumanPlayerTest {
     }
 
     @Test
-    fun `speak with ROLE_CLAIM prompts for role`() {
-        val io = CapturingIO(StatementType.ROLE_CLAIM.displayName, Role.SEER.displayName)
+    fun `speak with RoleClaim prompts for role`() {
+        val io = CapturingIO(StatementType.RoleClaim(Role.SEER).displayName, Role.SEER.displayName)
         val human = HumanPlayer(Role.MADMAN, "Human", io)
         val context = DiscussionContext.Open(1, 1, listOf(human), listOf(human))
 
@@ -277,7 +277,7 @@ class HumanPlayerTest {
     }
 
     @Test
-    fun `villager has only PLAIN available and is not prompted for type`() {
+    fun `villager has only Plain available and is not prompted for type`() {
         val io = CapturingIO(freeTextAnswer = "hello")
         val human = HumanPlayer(Role.VILLAGER, "Human", io)
         val context = DiscussionContext.Open(1, 1, listOf(human), listOf(human))
@@ -289,8 +289,8 @@ class HumanPlayerTest {
     }
 
     @Test
-    fun `speak with ROLE_CLAIM skips role prompt when only one role is claimable`() {
-        val io = CapturingIO(StatementType.ROLE_CLAIM.displayName)
+    fun `speak with RoleClaim skips role prompt when only one role is claimable`() {
+        val io = CapturingIO(StatementType.RoleClaim(Role.SEER).displayName)
         val human = HumanPlayer(Role.SEER, "Human", io)
         val context = DiscussionContext.Open(1, 1, listOf(human), listOf(human))
 
@@ -315,9 +315,9 @@ class HumanPlayerTest {
     }
 
     @Test
-    fun `speak with ROLE_CLAIM attaches the entered comment`() {
+    fun `speak with RoleClaim attaches the entered comment`() {
         val io = CapturingIO(
-            StatementType.ROLE_CLAIM.displayName,
+            StatementType.RoleClaim(Role.SEER).displayName,
             Role.SEER.displayName,
             freeTextAnswer = "信じてください",
         )

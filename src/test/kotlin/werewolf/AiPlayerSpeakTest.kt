@@ -98,7 +98,7 @@ class AiPlayerSpeakTest {
     }
 
     @Test
-    fun `discuss prompt omits ROLE_CLAIM format when no role is claimable`() {
+    fun `discuss prompt omits RoleClaim format when no role is claimable`() {
         val lm = FakeLanguageModel("発言する：hello[真意]")
         val villager = AiPlayer(Role.VILLAGER, "Villager", lm, lm, testInstruction())
         villager.discuss(openContext(), SpeakingRight.Uncontested(villager))
@@ -106,7 +106,7 @@ class AiPlayerSpeakTest {
     }
 
     @Test
-    fun `discuss uses the typed format even when only PLAIN is available`() {
+    fun `discuss uses the typed format even when only Plain is available`() {
         val lm = FakeLanguageModel("発言する：hello[真意]")
         val wolf = AiPlayer(Role.WEREWOLF, "Wolf", lm, lm, testInstruction("Wolf"))
         val context = DiscussionContext.Conclave(1, 1, listOf(wolf), listOf(wolf))
@@ -142,7 +142,7 @@ class AiPlayerSpeakTest {
     }
 
     @Test
-    fun `discuss selects DIVINATION_REPORT and builds a report with target result and comment`() {
+    fun `discuss selects DivinationReport and builds a report with target result and comment`() {
         val wolf = NothingPlayer(Role.WEREWOLF, "Wolf")
         val lm = FakeLanguageModel("占い結果を報告する：Wolf/人狼/怪しい発言が多かったので[占い師として信頼を得るため]")
         val seer = AiPlayer(Role.SEER, "Seer", lm, lm, testInstruction("Seer"))
@@ -155,7 +155,7 @@ class AiPlayerSpeakTest {
     }
 
     @Test
-    fun `discuss selects MEDIUM_REPORT and omits comment when not provided`() {
+    fun `discuss selects MediumReport and omits comment when not provided`() {
         val villager = NothingPlayer(Role.VILLAGER, "Villager")
         val lm = FakeLanguageModel("霊媒結果を報告する：Villager/人狼以外[霊能者として信頼を得るため]")
         val medium = AiPlayer(Role.MEDIUM, "Medium", lm, lm, testInstruction("Medium"))
@@ -168,7 +168,7 @@ class AiPlayerSpeakTest {
     }
 
     @Test
-    fun `discuss selects ROLE_CLAIM and builds a role claim with comment`() {
+    fun `discuss selects RoleClaim and builds a role claim with comment`() {
         val lm = FakeLanguageModel("役職を開示する：占い師/信じてください[占い師として信頼を得るため]")
         val madman = AiPlayer(Role.MADMAN, "Madman", lm, lm, testInstruction("Madman"))
         val result = madman.discuss(openContext(listOf(madman)), SpeakingRight.Uncontested(madman))
@@ -178,7 +178,7 @@ class AiPlayerSpeakTest {
     }
 
     @Test
-    fun `discuss selects ROLE_CLAIM and omits comment when not provided`() {
+    fun `discuss selects RoleClaim and omits comment when not provided`() {
         val lm = FakeLanguageModel("役職を開示する：占い師[占い師として信頼を得るため]")
         val seer = AiPlayer(Role.SEER, "Seer", lm, lm, testInstruction("Seer"))
         val result = seer.discuss(openContext(listOf(seer)), SpeakingRight.Uncontested(seer))
@@ -212,7 +212,7 @@ class AiPlayerSpeakTest {
     }
 
     @Test
-    fun `discuss falls back when villager attempts ROLE_CLAIM`() {
+    fun `discuss falls back when villager attempts RoleClaim`() {
         val lm = FakeLanguageModel(
             "役職を開示する：占い師[意図]",
             "役職を開示する：占い師[意図]",

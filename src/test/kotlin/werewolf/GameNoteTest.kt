@@ -236,7 +236,7 @@ class GameNoteTest {
     }
 
     @Test
-    fun `ROLE_CLAIM statement appears as the player's claimed role`() {
+    fun `RoleClaim statement appears as the player's claimed role`() {
         val io = CapturingIO()
         val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
         InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()
@@ -291,7 +291,7 @@ class GameNoteTest {
     }
 
     @Test
-    fun `mentioning a role in a PLAIN statement is not treated as a claim`() {
+    fun `mentioning a role in a Plain statement is not treated as a claim`() {
         val io = CapturingIO()
         val gameSetup = createGameWithHuman(io, "V2" to Role.VILLAGER, "Wolf" to Role.WEREWOLF)
         InitialPhase(gameSetup.playerManager, gameSetup.oracle).proceed()

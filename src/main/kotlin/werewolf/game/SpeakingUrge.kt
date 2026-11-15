@@ -53,8 +53,7 @@ class CounterClaimSpeakingUrge(
     metadata: ActionMetadata,
 ) : SpeakingUrge(player, context, Eagerness.COUNTER_CLAIM, intent, metadata) {
     override val content get() = "意欲 ${eagerness.value}（${role.displayName}で対抗CO）"
-    override val statementTypes get() =
-        setOf(StatementType.ROLE_CLAIM) + StatementType.entries.filter { it.reporterRole == role }
+    override val statementTypes get() = StatementType.all.filter { it.claimedRole == role }.toSet()
     override fun narrowClaimableRoles(claimableRoles: Set<Role>) = claimableRoles intersect setOf(role)
 }
 

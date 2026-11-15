@@ -4,11 +4,7 @@ class UrgeEligibility(context: DiscussionContext, claimableRoles: Set<Role>, rep
     private val selectableTypes = context.selectableTypes(claimableRoles, reportEligibility)
 
     val counterClaimRoles: Set<Role> =
-        if (StatementType.ROLE_CLAIM in selectableTypes) {
-            context.lastTurn?.mapNotNull { it.claimedRole }.orEmpty().filter { it in claimableRoles }.toSet()
-        } else {
-            emptySet()
-        }
+        context.lastTurn?.mapNotNull { it.claimedRole }.orEmpty().filter { StatementType.RoleClaim(it) in selectableTypes }.toSet()
 
     val canAnnounce: Boolean = selectableTypes.any { it in Eagerness.ANNOUNCEMENT.statementTypes }
 

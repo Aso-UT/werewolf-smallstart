@@ -18,7 +18,7 @@ sealed class DiscussionContext {
         override val players: List<Player>,
         override val allPlayers: List<Player>,
         override val lastTurn: Turn? = null,
-        override val availableTypes: Set<StatementType> = StatementType.entries.toSet(),
+        override val availableTypes: Set<StatementType> = StatementType.all,
     ) : DiscussionContext() {
         override val title = GameEvent.StatementMade.TITLE
         override val description = "全プレイヤーに向けた議論です。"
@@ -31,7 +31,7 @@ sealed class DiscussionContext {
         override val players: List<Player>,
         override val allPlayers: List<Player>,
         override val lastTurn: Turn? = null,
-        override val availableTypes: Set<StatementType> = setOf(StatementType.PLAIN),
+        override val availableTypes: Set<StatementType> = setOf(StatementType.Plain),
     ) : DiscussionContext() {
         override val title = GameEvent.WerewolfStatementMade.TITLE
         override val description = "この会話は人狼にしか聞こえません。"
@@ -40,6 +40,6 @@ sealed class DiscussionContext {
 }
 
 fun DiscussionContext.selectableTypes(claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Set<StatementType> {
-    val types = if (claimableRoles.isEmpty()) availableTypes - StatementType.ROLE_CLAIM else availableTypes
+    val types = availableTypes.filter { it !is StatementType.RoleClaim || it.role in claimableRoles }.toSet()
     return types - reportEligibility.disallowedTypes()
 }

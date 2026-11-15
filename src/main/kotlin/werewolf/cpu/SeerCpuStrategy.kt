@@ -12,7 +12,7 @@ import werewolf.game.selectableTypes
 class SeerCpuStrategy(self: RoleAwareCpuPlayer) : RoleAwareCpuStrategy(self, Role.SEER, SeerVoting(self)) {
 
     override fun buildStatement(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Statement {
-        if (StatementType.DIVINATION_REPORT !in context.selectableTypes(claimableRoles, reportEligibility)) return Statement.Plain(self, "")
+        if (StatementType.DivinationReport !in context.selectableTypes(claimableRoles, reportEligibility)) return Statement.Plain(self, "")
         val (target, result) = (reportEligibility as ReportEligibility.Honest).divinations.entries.first()
         return Statement.DivinationReport(self, target, result)
     }
