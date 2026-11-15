@@ -157,8 +157,8 @@ private fun RecallView.toJson(): String = when (this) {
         """{"type":"observation","title":${category.jsonEncode()},"body":${content.jsonEncode()}}"""
     is RecallView.AttributedObservation ->
         """{"type":"attributedObservation","title":${category.jsonEncode()},"actor":${actor.jsonEncode()},"body":${content.jsonEncode()}}"""
-    is RecallView.SimultaneousObservation ->
-        """{"type":"simultaneousObservation","title":${category.jsonEncode()},""" +
+    is RecallView.SimultaneousRemarks ->
+        """{"type":"simultaneousRemarks","title":${category.jsonEncode()},""" +
             """"remarks":${remarks.joinToString(",", "[", "]") { it.toJson() }}}"""
     is RecallView.SelfAction ->
         """{"type":"action","title":${category.jsonEncode()},"body":${content.jsonEncode()},"intent":${intent.jsonEncode()}}"""

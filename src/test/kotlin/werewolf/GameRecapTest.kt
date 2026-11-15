@@ -109,6 +109,29 @@ class GameRecapTest {
     }
 
     @Test
+    fun `a simultaneous statement appears in chronicles so that its simultaneity can be read`() {
+        val v1 = ReceivingPlayer(Role.VILLAGER, "V1")
+        val v2 = ReceivingPlayer(Role.VILLAGER, "V2")
+        val pm = playerManager(v1, v2)
+
+        GameEvent.StatementMade.send(listOf(Statement.Plain(v1, "a"), Statement.Plain(v2, "b")), AllPlayers(pm))
+
+        val chronicle = assertIs<ChronicleView.Observation>(GameRecap(pm, anySignal()).chronicles().single())
+        assertEquals("議論（同時発言）", chronicle.category)
+        assertEquals("V1: a\nV2: b", chronicle.content)
+    }
+
+    @Test
+    fun `a statement by one player is left to the claim in chronicles`() {
+        val v1 = ReceivingPlayer(Role.VILLAGER, "V1")
+        val pm = playerManager(v1, ReceivingPlayer(Role.VILLAGER, "V2"))
+
+        GameEvent.StatementMade.send(listOf(Statement.Plain(v1, "a")), AllPlayers(pm))
+
+        assertTrue(GameRecap(pm, anySignal()).chronicles().isEmpty())
+    }
+
+    @Test
     fun `metadata totals sum actions by decision method and by player`() {
         val p1 = ChoosingPlayer(
             Role.VILLAGER, "P1",

@@ -25,8 +25,8 @@ open class Conclave(
     ) {
     override fun sendStatements(statements: List<Statement>, recipients: Wolves) =
         GameEvent.WerewolfStatementMade.send(statements, recipients)
-    override fun buildContext(round: Int, previousStatements: List<Statement>) =
-        DiscussionContext.Conclave(round, day, speakers, allPlayers, previousStatements)
+    override fun buildContext(round: Int, lastTurnStatements: List<Statement>) =
+        DiscussionContext.Conclave(round, day, speakers, allPlayers, lastTurnStatements)
     override fun sendDiscussionStarted() = GameEvent.ConclaveStarted.send(day, recipients)
     override fun sendDiscussionEnded(elapsed: Duration) = GameEvent.ConclaveEnded.send(day, elapsed, recipients)
 }

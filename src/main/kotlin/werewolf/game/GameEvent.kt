@@ -84,18 +84,17 @@ sealed class GameEvent : Recallable() {
         }
     }
 
-    // 同時発言では、複数人の発言を全体で一つの発言として届ける
     @ConsistentCopyVisibility
     data class StatementMade private constructor(val statements: List<Statement>, private val allPlayers: AllPlayers) : GameEvent() {
         init {
             require(statements.isNotEmpty()) { "StatementMade needs at least one statement" }
         }
+        val isSimultaneous: Boolean get() = statements.isSimultaneous()
         override val title = TITLE
         override fun body() = statements.body()
         override val recipients: Notifiable = allPlayers
         override fun toRecallView(): RecallView = statements.toRecallView(title)
-        override fun toChronicleView(): ChronicleView =
-            error("StatementMade is excluded from chronicles by GameRecap.isRedundantWithClaim")
+        override fun toChronicleView(): ChronicleView = statements.toChronicleView(title, recipients)
         companion object {
             const val TITLE = "議論"
             fun send(statements: List<Statement>, allPlayers: AllPlayers) =
@@ -214,18 +213,17 @@ sealed class GameEvent : Recallable() {
         }
     }
 
-    // 議論と同じく、同時発言は全体で一つの発言として届ける
     @ConsistentCopyVisibility
     data class WerewolfStatementMade private constructor(val statements: List<Statement>, private val wolves: Wolves) : GameEvent() {
         init {
             require(statements.isNotEmpty()) { "WerewolfStatementMade needs at least one statement" }
         }
+        val isSimultaneous: Boolean get() = statements.isSimultaneous()
         override val title = TITLE
         override fun body() = statements.body()
         override val recipients: Notifiable = wolves
         override fun toRecallView(): RecallView = statements.toRecallView(title)
-        override fun toChronicleView(): ChronicleView =
-            error("WerewolfStatementMade is excluded from chronicles by GameRecap.isRedundantWithClaim")
+        override fun toChronicleView(): ChronicleView = statements.toChronicleView(title, recipients)
         companion object {
             const val TITLE = "密談"
             fun send(statements: List<Statement>, wolves: Wolves) =
@@ -237,7 +235,15 @@ sealed class GameEvent : Recallable() {
 // 一人の発言なら発言者つきで、同時発言なら全員の発言をひとまとまりで思い出す
 private fun List<Statement>.toRecallView(title: String): RecallView =
     singleOrNull()?.let { RecallView.AttributedObservation(title, it.claimant.name, it.text()) }
-        ?: RecallView.SimultaneousObservation(title, map { Remark(it.claimant.name, it.text()) })
+        ?: RecallView.SimultaneousRemarks(title, map { Remark(it.claimant.name, it.text()) })
+
+private fun List<Statement>.isSimultaneous(): Boolean = size > 1
+
+// 一人ずつの発言は各人のClaimで年代記に載るので、ここで載せるのは同時に発言したという事実のため
+private fun List<Statement>.toChronicleView(title: String, recipients: Notifiable): ChronicleView {
+    check(isSimultaneous()) { "A single statement is excluded from chronicles by GameRecap.isRedundantWithClaim" }
+    return ChronicleView.Observation(recipients.recipientName, "${title}（同時発言）", body())
+}
 
 private fun List<Statement>.body(): String =
     singleOrNull()?.text() ?: joinToString("\n") { "${it.claimant.name}: ${it.text()}" }

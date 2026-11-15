@@ -23,7 +23,7 @@ abstract class Discussion<R : Notifiable>(
     private val speakingRightGrant = SpeakingRightGrant(dispatcher)
 
     protected abstract fun sendStatements(statements: List<Statement>, recipients: R)
-    protected abstract fun buildContext(round: Int, previousStatements: List<Statement>): DiscussionContext
+    protected abstract fun buildContext(round: Int, lastTurnStatements: List<Statement>): DiscussionContext
     protected abstract fun sendDiscussionStarted()
     protected abstract fun sendDiscussionEnded(elapsed: Duration)
 
@@ -55,10 +55,10 @@ abstract class Discussion<R : Notifiable>(
         history.totalCount >= speakers.size * AVERAGE_STATEMENTS_PER_SPEAKER
 
     private fun eligibleSpeakerContexts(history: SpeakingHistory): Map<Player, DiscussionContext> =
-        speakers.filter { canSpeak(it, history) }.associateWith { buildContext(history.nextRoundOf(it), history.lastStatements) }
+        speakers.filter { canSpeak(it, history) }.associateWith { buildContext(history.nextRoundOf(it), history.lastTurnStatements) }
 
     private fun canSpeak(player: Player, history: SpeakingHistory): Boolean =
-        !reachedPersonalLimit(player, history) && !history.isLastSpeaker(player)
+        !reachedPersonalLimit(player, history) && !history.isLastTurnSpeaker(player)
 
     private fun reachedPersonalLimit(player: Player, history: SpeakingHistory): Boolean =
         history.countOf(player) >= MAX_STATEMENTS_PER_SPEAKER
@@ -83,8 +83,8 @@ open class OpenDiscussion(
     ) {
     override fun sendStatements(statements: List<Statement>, recipients: AllPlayers) =
         GameEvent.StatementMade.send(statements, recipients)
-    override fun buildContext(round: Int, previousStatements: List<Statement>) =
-        DiscussionContext.Open(round, day, speakers, allPlayers, previousStatements)
+    override fun buildContext(round: Int, lastTurnStatements: List<Statement>) =
+        DiscussionContext.Open(round, day, speakers, allPlayers, lastTurnStatements)
     override fun sendDiscussionStarted() = GameEvent.DiscussionStarted.send(day, recipients)
     override fun sendDiscussionEnded(elapsed: Duration) = GameEvent.DiscussionEnded.send(day, elapsed, recipients)
 }

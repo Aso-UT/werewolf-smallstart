@@ -10,8 +10,7 @@
   type LogEntry =
     | { type: 'observation'; title: string; body: string }
     | { type: 'attributedObservation'; title: string; actor: string; body: string }
-    // 同時発言。並びは時間の前後を意味しない
-    | { type: 'simultaneousObservation'; title: string; remarks: Remark[] }
+    | { type: 'simultaneousRemarks'; title: string; remarks: Remark[] }
     | { type: 'action'; title: string; body: string; intent: string }
     | { type: 'epilogue'; chronicles: Chronicle[]; metadataTotals: string[] }
 
@@ -76,8 +75,8 @@
       case 'attributedObservation':
         push({ type: 'attributedObservation', title: msg.title as string, actor: msg.actor as string, body: msg.body as string })
         break
-      case 'simultaneousObservation':
-        push({ type: 'simultaneousObservation', title: msg.title as string, remarks: msg.remarks as Remark[] })
+      case 'simultaneousRemarks':
+        push({ type: 'simultaneousRemarks', title: msg.title as string, remarks: msg.remarks as Remark[] })
         break
       case 'action':
         push({ type: 'action', title: msg.title as string, body: msg.body as string, intent: msg.intent as string })
@@ -259,7 +258,7 @@
             <span class="title">[{entry.title}]</span>
             {entry.actor}{#if role}<span class="role-badge">{role}</span>{/if}: {entry.body}
           </div>
-        {:else if entry.type === 'simultaneousObservation'}
+        {:else if entry.type === 'simultaneousRemarks'}
           <div class="event simultaneous">
             <span class="title">[{entry.title}（同時発言）]</span>
             {#each entry.remarks as remark}

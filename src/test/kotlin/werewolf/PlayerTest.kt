@@ -208,7 +208,7 @@ class PlayerTest {
     fun `speakingUrge throws when counter claiming a role other than the one just claimed`() {
         val claimer = NothingPlayer(Role.SEER, "Claimer")
         val player = CounterClaimingPlayer(Role.MADMAN, "Player", counterRole = Role.MEDIUM)
-        val context = openContext(listOf(player, claimer), previousStatements = listOf(Statement.RoleClaim(claimer, Role.SEER)))
+        val context = openContext(listOf(player, claimer), lastTurnStatements = listOf(Statement.RoleClaim(claimer, Role.SEER)))
         assertFailsWith<IllegalArgumentException> { player.speakingUrge(context) }
     }
 

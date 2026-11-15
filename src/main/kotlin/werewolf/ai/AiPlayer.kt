@@ -44,7 +44,8 @@ class AiPlayer(
         _myMemories.add(event)
     }
 
-    // 同時発言には他の人の発言も含まれるので、自分だけの発言のときに限る
+    // 自分単独の発言ならClaimと重複するので除く。
+    // 自分とほかの人が同時に発言したときは、ほかの人の発言を読ませるために重複を承知で含める
     private fun isRedundantWithOwnClaim(event: GameEvent): Boolean = when (event) {
         is GameEvent.StatementMade -> event.statements.all { it.claimant === this }
         is GameEvent.WerewolfStatementMade -> event.statements.all { it.claimant === this }
@@ -169,14 +170,14 @@ class AiPlayer(
     private fun toHistoryEntry(view: RecallView): String = when (view) {
         is RecallView.Observation -> "<${view.category}> ${view.content}"
         is RecallView.AttributedObservation -> "<${view.category}> ${view.actor}: ${view.content}"
-        is RecallView.SimultaneousObservation -> buildString {
+        is RecallView.SimultaneousRemarks -> buildString {
             append("<${view.category}（同時発言）>")
             view.remarks.forEach { append("\n${actorLabel(it.actor)}: ${it.content}") }
         }
         is RecallView.SelfAction -> "<${view.category}> ${name}（あなた）: ${view.content}　〔あなたのメモ：${view.intent}〕"
     }
 
-    // 同時発言には自分の発言も含まれるので、どれが自分のものかわかるようにする
+    // 自分とほかの人が同時に発言したときに、どれが自分の発言かわかるようにする
     private fun actorLabel(actor: String): String = if (actor == name) "${name}（あなた）" else actor
 
     companion object {

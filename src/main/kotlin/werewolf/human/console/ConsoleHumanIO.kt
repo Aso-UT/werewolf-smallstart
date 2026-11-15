@@ -35,7 +35,7 @@ class ConsoleHumanIO : HumanIO {
     override fun display(view: RecallView) = when (view) {
         is RecallView.Observation -> println("[${view.category}] ${view.content}")
         is RecallView.AttributedObservation -> println("[${view.category}] ${view.actor}: ${view.content}")
-        is RecallView.SimultaneousObservation ->
+        is RecallView.SimultaneousRemarks ->
             println("[${view.category}（同時発言）]" + view.remarks.joinToString("") { "\n  ${it.actor}: ${it.content}" })
         is RecallView.SelfAction -> println("[${view.category}] ${view.content}\n  [${view.intent}]")
     }

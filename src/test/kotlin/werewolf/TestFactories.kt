@@ -18,5 +18,5 @@ fun openContext(
     players: List<Player> = emptyList(),
     round: Int = 1,
     day: Int = 1,
-    previousStatements: List<Statement> = emptyList(),
-) = DiscussionContext.Open(round, day, players, players, previousStatements)
+    lastTurnStatements: List<Statement> = emptyList(),
+) = DiscussionContext.Open(round, day, players, players, lastTurnStatements)

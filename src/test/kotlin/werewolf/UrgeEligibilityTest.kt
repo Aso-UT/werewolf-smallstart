@@ -19,16 +19,16 @@ class UrgeEligibilityTest {
     private val madmanClaimable = setOf(Role.SEER, Role.MEDIUM, Role.HUNTER, Role.WEREWOLF, Role.MADMAN)
 
     private fun eligibility(
-        vararg previousStatements: Statement,
+        vararg lastTurnStatements: Statement,
         claimableRoles: Set<Role> = madmanClaimable,
         role: Role = Role.MADMAN,
         conclave: Boolean = false,
     ): UrgeEligibility {
         val players = listOf(self, claimer, another)
         val context = if (conclave) {
-            DiscussionContext.Conclave(1, 1, players, players, previousStatements.toList())
+            DiscussionContext.Conclave(1, 1, players, players, lastTurnStatements.toList())
         } else {
-            DiscussionContext.Open(1, 1, players, players, previousStatements.toList())
+            DiscussionContext.Open(1, 1, players, players, lastTurnStatements.toList())
         }
         return UrgeEligibility(context, claimableRoles, ReportEligibility.forRole(role, emptyList(), self))
     }
