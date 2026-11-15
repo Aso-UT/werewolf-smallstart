@@ -7,10 +7,9 @@ import werewolf.game.Player
 import werewolf.game.SpeakingRight
 import werewolf.game.SpeakingUrge
 
-// 発言できる人たちの発言意欲を聞いて、次に誰が発言権を得るかを決める
+// 発言できる人が複数いるとき、発言意欲を聞いて、次に誰が発言権を得るかを決める
 class SpeakingRightGrant(private val dispatcher: CoroutineDispatcher) {
-    fun grant(contexts: Map<Player, DiscussionContext>): List<SpeakingRight> {
-        contexts.keys.singleOrNull()?.let { return listOf(SpeakingRight.Uncontested(it)) }
+    fun contest(contexts: Map<Player, DiscussionContext>): List<SpeakingRight> {
         val winners = mostEagerUrges(collectUrges(contexts))
         val speaking = if (speaksSimultaneously(winners)) winners else listOf(winners.random())
         return speaking.map { SpeakingRight.Won(it) }

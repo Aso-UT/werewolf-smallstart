@@ -10,6 +10,8 @@ import werewolf.game.Player
 import werewolf.game.PlayerManager
 import werewolf.game.SpeakingRight
 import werewolf.game.Turn
+import werewolf.util.Cardinality
+import werewolf.util.cardinality
 import kotlin.time.Duration
 import kotlin.time.measureTime
 
@@ -38,8 +40,12 @@ abstract class Discussion<R : Notifiable>(
         val history = SpeakingHistory()
         while (!reachedTotalLimit(history)) {
             val contexts = eligibleSpeakerContexts(history)
-            if (contexts.isEmpty()) return
-            val turn = speak(speakingRightGrant.grant(contexts), contexts)
+            val rights = when (val eligible = contexts.keys.cardinality()) {
+                Cardinality.None -> return
+                is Cardinality.One -> listOf(SpeakingRight.Uncontested(eligible.value))
+                is Cardinality.Many -> speakingRightGrant.contest(contexts)
+            }
+            val turn = speak(rights, contexts)
             sendStatements(turn, recipients)
             history.record(turn)
         }
