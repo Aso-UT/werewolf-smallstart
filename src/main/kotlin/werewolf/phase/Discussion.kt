@@ -9,7 +9,7 @@ import werewolf.game.Notifiable
 import werewolf.game.Player
 import werewolf.game.PlayerManager
 import werewolf.game.SpeakingRight
-import werewolf.game.Statement
+import werewolf.game.Turn
 import kotlin.time.Duration
 import kotlin.time.measureTime
 
@@ -22,8 +22,8 @@ abstract class Discussion<R : Notifiable>(
 ) {
     private val speakingRightGrant = SpeakingRightGrant(dispatcher)
 
-    protected abstract fun sendStatements(statements: List<Statement>, recipients: R)
-    protected abstract fun buildContext(round: Int, lastTurnStatements: List<Statement>): DiscussionContext
+    protected abstract fun sendStatements(turn: Turn, recipients: R)
+    protected abstract fun buildContext(round: Int, lastTurn: Turn?): DiscussionContext
     protected abstract fun sendDiscussionStarted()
     protected abstract fun sendDiscussionEnded(elapsed: Duration)
 
@@ -39,23 +39,23 @@ abstract class Discussion<R : Notifiable>(
         while (!reachedTotalLimit(history)) {
             val contexts = eligibleSpeakerContexts(history)
             if (contexts.isEmpty()) return
-            val statements = speak(speakingRightGrant.grant(contexts), contexts)
-            sendStatements(statements, recipients)
-            history.record(statements)
+            val turn = speak(speakingRightGrant.grant(contexts), contexts)
+            sendStatements(turn, recipients)
+            history.record(turn)
         }
     }
 
     // 発言権を得た人が複数いれば、互いの発言を知らないまま並列に発言する
-    private fun speak(rights: List<SpeakingRight>, contexts: Map<Player, DiscussionContext>): List<Statement> {
+    private fun speak(rights: List<SpeakingRight>, contexts: Map<Player, DiscussionContext>): Turn {
         val rightOf = rights.associateBy { it.speaker }
-        return rightOf.keys.askInParallel(dispatcher) { it.discuss(contexts.getValue(it), rightOf.getValue(it)) }.values.toList()
+        return Turn(rightOf.keys.askInParallel(dispatcher) { it.discuss(contexts.getValue(it), rightOf.getValue(it)) }.values.toList())
     }
 
     private fun reachedTotalLimit(history: SpeakingHistory): Boolean =
         history.totalCount >= speakers.size * AVERAGE_STATEMENTS_PER_SPEAKER
 
     private fun eligibleSpeakerContexts(history: SpeakingHistory): Map<Player, DiscussionContext> =
-        speakers.filter { canSpeak(it, history) }.associateWith { buildContext(history.nextRoundOf(it), history.lastTurnStatements) }
+        speakers.filter { canSpeak(it, history) }.associateWith { buildContext(history.nextRoundOf(it), history.lastTurn) }
 
     private fun canSpeak(player: Player, history: SpeakingHistory): Boolean =
         !reachedPersonalLimit(player, history) && !history.isLastTurnSpeaker(player)
@@ -81,10 +81,10 @@ open class OpenDiscussion(
         playerManager.allPlayers,
         dispatcher,
     ) {
-    override fun sendStatements(statements: List<Statement>, recipients: AllPlayers) =
-        GameEvent.StatementMade.send(statements, recipients)
-    override fun buildContext(round: Int, lastTurnStatements: List<Statement>) =
-        DiscussionContext.Open(round, day, speakers, allPlayers, lastTurnStatements)
+    override fun sendStatements(turn: Turn, recipients: AllPlayers) =
+        GameEvent.StatementMade.send(turn, recipients)
+    override fun buildContext(round: Int, lastTurn: Turn?) =
+        DiscussionContext.Open(round, day, speakers, allPlayers, lastTurn)
     override fun sendDiscussionStarted() = GameEvent.DiscussionStarted.send(day, recipients)
     override fun sendDiscussionEnded(elapsed: Duration) = GameEvent.DiscussionEnded.send(day, elapsed, recipients)
 }

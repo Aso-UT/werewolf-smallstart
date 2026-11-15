@@ -5,7 +5,7 @@ class UrgeEligibility(context: DiscussionContext, claimableRoles: Set<Role>, rep
 
     val counterClaimRoles: Set<Role> =
         if (StatementType.ROLE_CLAIM in selectableTypes) {
-            context.lastTurnStatements.mapNotNull { it.claimedRole }.filter { it in claimableRoles }.toSet()
+            context.lastTurn?.mapNotNull { it.claimedRole }.orEmpty().filter { it in claimableRoles }.toSet()
         } else {
             emptySet()
         }

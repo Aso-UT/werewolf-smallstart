@@ -85,20 +85,15 @@ sealed class GameEvent : Recallable() {
     }
 
     @ConsistentCopyVisibility
-    data class StatementMade private constructor(val statements: List<Statement>, private val allPlayers: AllPlayers) : GameEvent() {
-        init {
-            require(statements.isNotEmpty()) { "StatementMade needs at least one statement" }
-        }
-        val isSimultaneous: Boolean get() = statements.isSimultaneous()
+    data class StatementMade private constructor(val turn: Turn, private val allPlayers: AllPlayers) : GameEvent() {
         override val title = TITLE
-        override fun body() = statements.body()
+        override fun body() = turn.body()
         override val recipients: Notifiable = allPlayers
-        override fun toRecallView(): RecallView = statements.toRecallView(title)
-        override fun toChronicleView(): ChronicleView = statements.toChronicleView(title, recipients)
+        override fun toRecallView(): RecallView = turn.toRecallView(title)
+        override fun toChronicleView(): ChronicleView = turn.toChronicleView(title, recipients.recipientName)
         companion object {
             const val TITLE = "議論"
-            fun send(statements: List<Statement>, allPlayers: AllPlayers) =
-                StatementMade(statements, allPlayers).dispatch()
+            fun send(turn: Turn, allPlayers: AllPlayers) = StatementMade(turn, allPlayers).dispatch()
         }
     }
 
@@ -214,35 +209,15 @@ sealed class GameEvent : Recallable() {
     }
 
     @ConsistentCopyVisibility
-    data class WerewolfStatementMade private constructor(val statements: List<Statement>, private val wolves: Wolves) : GameEvent() {
-        init {
-            require(statements.isNotEmpty()) { "WerewolfStatementMade needs at least one statement" }
-        }
-        val isSimultaneous: Boolean get() = statements.isSimultaneous()
+    data class WerewolfStatementMade private constructor(val turn: Turn, private val wolves: Wolves) : GameEvent() {
         override val title = TITLE
-        override fun body() = statements.body()
+        override fun body() = turn.body()
         override val recipients: Notifiable = wolves
-        override fun toRecallView(): RecallView = statements.toRecallView(title)
-        override fun toChronicleView(): ChronicleView = statements.toChronicleView(title, recipients)
+        override fun toRecallView(): RecallView = turn.toRecallView(title)
+        override fun toChronicleView(): ChronicleView = turn.toChronicleView(title, recipients.recipientName)
         companion object {
             const val TITLE = "密談"
-            fun send(statements: List<Statement>, wolves: Wolves) =
-                WerewolfStatementMade(statements, wolves).dispatch()
+            fun send(turn: Turn, wolves: Wolves) = WerewolfStatementMade(turn, wolves).dispatch()
         }
     }
 }
-
-private fun List<Statement>.toRecallView(title: String): RecallView =
-    singleOrNull()?.let { RecallView.AttributedObservation(title, it.claimant.name, it.text()) }
-        ?: RecallView.SimultaneousRemarks(title, map { Remark(it.claimant.name, it.text()) })
-
-private fun List<Statement>.isSimultaneous(): Boolean = size > 1
-
-// 一人の発言は各人のClaimでエピローグに載るので、ここで載せるのは同時に発言したという事実を残すため
-private fun List<Statement>.toChronicleView(title: String, recipients: Notifiable): ChronicleView {
-    check(isSimultaneous()) { "A single statement is excluded from chronicles by GameRecap.isRedundantWithClaim" }
-    return ChronicleView.Observation(recipients.recipientName, "${title}（同時発言）", body())
-}
-
-private fun List<Statement>.body(): String =
-    singleOrNull()?.text() ?: joinToString("\n") { "${it.claimant.name}: ${it.text()}" }

@@ -15,6 +15,7 @@ import werewolf.game.SelectionContext
 import werewolf.game.SpeakingRight
 import werewolf.game.Side
 import werewolf.game.Statement
+import werewolf.game.Turn
 import werewolf.game.StatementType
 import werewolf.game.TimeOfDay
 import werewolf.game.Wolves
@@ -304,7 +305,7 @@ class HumanPlayerTest {
         val io = CapturingIO(freeTextAnswer = "hello")
         val human = HumanPlayer(Role.SEER, "Human", io)
         val allPlayers = AllPlayers(TestLodge(human to Role.SEER).create().playerManager)
-        GameEvent.StatementMade.send(listOf(Statement.RoleClaim(human, Role.SEER)), allPlayers)
+        GameEvent.StatementMade.send(Turn(Statement.RoleClaim(human, Role.SEER)), allPlayers)
         val context = DiscussionContext.Open(2, 1, listOf(human), listOf(human))
 
         val statement = human.discuss(context, SpeakingRight.Uncontested(human))

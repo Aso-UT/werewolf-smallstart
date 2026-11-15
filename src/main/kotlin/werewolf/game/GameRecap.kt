@@ -42,8 +42,8 @@ class GameRecap(private val playerManager: PlayerManager, private val signal: Ga
             .sortedBy { it.occurredAt }
 
     private fun isRedundantWithClaim(recallable: Recallable): Boolean = when (recallable) {
-        is GameEvent.StatementMade -> !recallable.isSimultaneous
-        is GameEvent.WerewolfStatementMade -> !recallable.isSimultaneous
+        is GameEvent.StatementMade -> !recallable.turn.isSimultaneous
+        is GameEvent.WerewolfStatementMade -> !recallable.turn.isSimultaneous
         else -> false
     }
 }

@@ -47,8 +47,8 @@ class AiPlayer(
     // 自分単独の発言ならClaimと重複するので除く。
     // 自分とほかの人が同時に発言したときは、ほかの人の発言を読ませるために重複を承知で含める
     private fun isRedundantWithOwnClaim(event: GameEvent): Boolean = when (event) {
-        is GameEvent.StatementMade -> event.statements.all { it.claimant === this }
-        is GameEvent.WerewolfStatementMade -> event.statements.all { it.claimant === this }
+        is GameEvent.StatementMade -> event.turn.all { it.claimant === this }
+        is GameEvent.WerewolfStatementMade -> event.turn.all { it.claimant === this }
         else -> false
     }
 

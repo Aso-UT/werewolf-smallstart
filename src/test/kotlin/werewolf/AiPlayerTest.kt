@@ -15,6 +15,7 @@ import werewolf.game.Role
 import werewolf.game.SelectionContext
 import werewolf.game.SpeakingRight
 import werewolf.game.Statement
+import werewolf.game.Turn
 
 import kotlin.test.Test
 import kotlin.test.assertContains
@@ -63,7 +64,7 @@ class AiPlayerTest {
         val setup = TestLodge(villager to Role.VILLAGER, wolf to Role.WEREWOLF).create()
 
         val statement = villager.discuss(openContext(), SpeakingRight.Uncontested(villager))
-        GameEvent.StatementMade.send(listOf(statement), AllPlayers(setup.playerManager))
+        GameEvent.StatementMade.send(Turn(statement), AllPlayers(setup.playerManager))
         villager.selectTarget(SelectionContext.Vote(villager, listOf(villager, wolf)))
 
         assertEquals(1, lm.histories[1].count { it.contains("hello") })
@@ -77,7 +78,7 @@ class AiPlayerTest {
         val setup = TestLodge(villager to Role.VILLAGER, alice to Role.VILLAGER).create()
 
         GameEvent.StatementMade.send(
-            listOf(Statement.RoleClaim(alice, Role.SEER), Statement.RoleClaim(villager, Role.SEER)),
+            Turn(Statement.RoleClaim(alice, Role.SEER), Statement.RoleClaim(villager, Role.SEER)),
             AllPlayers(setup.playerManager),
         )
         villager.discuss(openContext(), SpeakingRight.Uncontested(villager))
@@ -96,7 +97,7 @@ class AiPlayerTest {
         val setup = TestLodge(villager to Role.VILLAGER, alice to Role.VILLAGER).create()
         val allPlayers = AllPlayers(setup.playerManager)
 
-        GameEvent.StatementMade.send(listOf(Statement.Plain(alice, "怪しい人がいます")), allPlayers)
+        GameEvent.StatementMade.send(Turn(Statement.Plain(alice, "怪しい人がいます")), allPlayers)
         villager.discuss(openContext(), SpeakingRight.Uncontested(villager))
 
         assertContains(lm.prompts.first(), "Alice: 怪しい人がいます")

@@ -114,7 +114,7 @@ class GameRecapTest {
         val v2 = ReceivingPlayer(Role.VILLAGER, "V2")
         val pm = playerManager(v1, v2)
 
-        GameEvent.StatementMade.send(listOf(Statement.Plain(v1, "a"), Statement.Plain(v2, "b")), AllPlayers(pm))
+        GameEvent.StatementMade.send(Turn(Statement.Plain(v1, "a"), Statement.Plain(v2, "b")), AllPlayers(pm))
 
         val chronicle = assertIs<ChronicleView.Observation>(GameRecap(pm, anySignal()).chronicles().single())
         assertEquals("議論（同時発言）", chronicle.category)
@@ -126,7 +126,7 @@ class GameRecapTest {
         val v1 = ReceivingPlayer(Role.VILLAGER, "V1")
         val pm = playerManager(v1, ReceivingPlayer(Role.VILLAGER, "V2"))
 
-        GameEvent.StatementMade.send(listOf(Statement.Plain(v1, "a")), AllPlayers(pm))
+        GameEvent.StatementMade.send(Turn(Statement.Plain(v1, "a")), AllPlayers(pm))
 
         assertTrue(GameRecap(pm, anySignal()).chronicles().isEmpty())
     }

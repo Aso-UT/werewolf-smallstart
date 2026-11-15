@@ -10,6 +10,7 @@ import werewolf.game.MediumResult
 import werewolf.game.ReportEligibility
 import werewolf.game.Role
 import werewolf.game.Statement
+import werewolf.game.Turn
 import werewolf.game.UrgeEligibility
 
 class UrgeEligibilityTest {
@@ -25,10 +26,11 @@ class UrgeEligibilityTest {
         conclave: Boolean = false,
     ): UrgeEligibility {
         val players = listOf(self, claimer, another)
+        val lastTurn = lastTurnStatements.takeIf { it.isNotEmpty() }?.let { Turn(*it) }
         val context = if (conclave) {
-            DiscussionContext.Conclave(1, 1, players, players, lastTurnStatements.toList())
+            DiscussionContext.Conclave(1, 1, players, players, lastTurn)
         } else {
-            DiscussionContext.Open(1, 1, players, players, lastTurnStatements.toList())
+            DiscussionContext.Open(1, 1, players, players, lastTurn)
         }
         return UrgeEligibility(context, claimableRoles, ReportEligibility.forRole(role, emptyList(), self))
     }

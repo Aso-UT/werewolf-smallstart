@@ -38,7 +38,7 @@ class DiscussionTest {
             val statement = statements[statementIndex++]
             _log.add("$name:said:$statement")
             _rounds.add(context.round)
-            _lastTurnStatements.add(context.lastTurnStatements.map { it.text() })
+            _lastTurnStatements.add(context.lastTurn?.map { it.text() }.orEmpty())
             return Claim(this, context, Statement.Plain(this, statement), claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
         }
 
@@ -49,7 +49,7 @@ class DiscussionTest {
                     receivedEndedDay = event.day
                     heardCountWhenEnded = _log.count { it.contains(":heard:") }
                 }
-                event is GameEvent.StatementMade -> event.statements.forEach { _log.add("$name:heard:${it.claimant.name}:${it.text()}") }
+                event is GameEvent.StatementMade -> event.turn.forEach { _log.add("$name:heard:${it.claimant.name}:${it.text()}") }
                 receivesExecutionEvent && event is GameEvent.PlayerExecuted -> {}
                 else -> error("unexpected event in discussion test: $event")
             }
@@ -88,7 +88,7 @@ class DiscussionTest {
                 ?: SpeakingUrge(this, context, Eagerness.NOTHING, "", UnimplementedActionMetadata)
 
         override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
-            lastTurnSpeakersWhenSpoke.add(context.lastTurnStatements.map { it.claimant.name })
+            lastTurnSpeakersWhenSpoke.add(context.lastTurn?.speakers?.map { it.name }.orEmpty())
             val role = claimableRoles.firstOrNull()?.takeUnless { spoke }
             val statement = role?.let { Statement.RoleClaim(this, it) } ?: Statement.Plain(this, "")
             spoke = true
@@ -96,7 +96,7 @@ class DiscussionTest {
         }
 
         override fun onReceive(event: GameEvent) {
-            if (event is GameEvent.StatementMade) heard.add(event.statements.map { it.claimant.name })
+            if (event is GameEvent.StatementMade) heard.add(event.turn.map { it.claimant.name })
         }
     }
 
@@ -136,8 +136,7 @@ class DiscussionTest {
         }
         // 最初の発言の後で、COを希望する
         val medium = SpeakOncePlayer(Role.MEDIUM, "Medium") { player, context, _ ->
-            context.lastTurnStatements.takeIf { it.isNotEmpty() }
-                ?.let { SpeakingUrge(player, context, Eagerness.ANNOUNCEMENT, "", UnimplementedActionMetadata) }
+            context.lastTurn?.let { SpeakingUrge(player, context, Eagerness.ANNOUNCEMENT, "", UnimplementedActionMetadata) }
         }
         val villager = SpeakOncePlayer(Role.VILLAGER, "Villager")
         val playerManager = TestLodge(

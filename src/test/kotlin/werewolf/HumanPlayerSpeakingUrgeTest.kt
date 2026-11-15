@@ -7,6 +7,7 @@ import werewolf.game.DiscussionContext
 import werewolf.game.Eagerness
 import werewolf.game.Role
 import werewolf.game.Statement
+import werewolf.game.Turn
 import werewolf.human.HumanPlayer
 
 class HumanPlayerSpeakingUrgeTest {
@@ -25,7 +26,7 @@ class HumanPlayerSpeakingUrgeTest {
 
     // 直前に別の人が占い師COした議論
     private fun afterSeerClaim(player: HumanPlayer) =
-        openContext(listOf(player, seerClaimer), lastTurnStatements = listOf(Statement.RoleClaim(seerClaimer, Role.SEER)))
+        openContext(listOf(player, seerClaimer), lastTurn = Turn(Statement.RoleClaim(seerClaimer, Role.SEER)))
 
     @Test
     fun `a villager is offered only the speak button`() {
@@ -54,7 +55,7 @@ class HumanPlayerSpeakingUrgeTest {
         val mediumClaimer = ReceivingPlayer(Role.MEDIUM, "MediumClaimer")
         val context = openContext(
             listOf(madman, seerClaimer, mediumClaimer),
-            lastTurnStatements = listOf(Statement.RoleClaim(seerClaimer, Role.SEER), Statement.RoleClaim(mediumClaimer, Role.MEDIUM)),
+            lastTurn = Turn(Statement.RoleClaim(seerClaimer, Role.SEER), Statement.RoleClaim(mediumClaimer, Role.MEDIUM)),
         )
 
         madman.speakingUrge(context)

@@ -10,6 +10,7 @@ import werewolf.game.GameEvent
 import werewolf.game.Role
 import werewolf.game.SpeakingRight
 import werewolf.game.Statement
+import werewolf.game.Turn
 
 import kotlin.test.Test
 import kotlin.test.assertContains
@@ -31,7 +32,7 @@ class AiPlayerSpeakingUrgeTest {
 
     // 直前にZoeが占い師COした議論
     private fun afterSeerClaim(player: AiPlayer) =
-        openContext(listOf(player, zoe), lastTurnStatements = listOf(Statement.RoleClaim(zoe, Role.SEER)))
+        openContext(listOf(player, zoe), lastTurn = Turn(Statement.RoleClaim(zoe, Role.SEER)))
 
     @Test
     fun `eagerness returns counter claim level with the role the player answered`() {
@@ -132,7 +133,7 @@ class AiPlayerSpeakingUrgeTest {
         val yan = ReceivingPlayer(Role.MEDIUM, "Yan")
         val context = openContext(
             listOf(madman, zoe, yan),
-            lastTurnStatements = listOf(Statement.RoleClaim(zoe, Role.SEER), Statement.RoleClaim(yan, Role.MEDIUM)),
+            lastTurn = Turn(Statement.RoleClaim(zoe, Role.SEER), Statement.RoleClaim(yan, Role.MEDIUM)),
         )
         assertEquals(Eagerness.COUNTER_CLAIM, madman.speakingUrge(context).eagerness)
         assertContains(lm.instructions.first(), "対抗COできる役職：占い師、霊能者）")
@@ -146,7 +147,7 @@ class AiPlayerSpeakingUrgeTest {
         val seer = AiPlayer(Role.SEER, "Seer", lm, lm, testInstruction("Seer"))
         val wolf = ReceivingPlayer(Role.WEREWOLF, "Wolf")
         val allPlayers = AllPlayers(TestLodge(seer to Role.SEER, wolf to Role.WEREWOLF).create().playerManager)
-        GameEvent.StatementMade.send(listOf(Statement.RoleClaim(seer, Role.SEER)), allPlayers)
+        GameEvent.StatementMade.send(Turn(Statement.RoleClaim(seer, Role.SEER)), allPlayers)
         GameEvent.Divined.send(wolf, DivineResult.WEREWOLF, seer)
         assertEquals(Eagerness.ANNOUNCEMENT, seer.speakingUrge(openContext(listOf(seer, wolf))).eagerness)
         assertFalse(lm.instructions.first().contains("対抗COする（"))

@@ -1,23 +1,22 @@
 package werewolf.phase
 
 import werewolf.game.Player
-import werewolf.game.Statement
+import werewolf.game.Turn
 
-// 一つのターンでは、一人か複数人が同時に発言する
 class SpeakingHistory {
-    private val turns = mutableListOf<List<Statement>>()
+    private val turns = mutableListOf<Turn>()
 
-    val totalCount: Int get() = turns.sumOf { it.size }
+    val totalCount: Int get() = turns.sumOf { it.count() }
 
-    val lastTurnStatements: List<Statement> get() = turns.lastOrNull().orEmpty()
+    val lastTurn: Turn? get() = turns.lastOrNull()
 
     fun countOf(player: Player): Int = turns.sumOf { turn -> turn.count { it.claimant === player } }
 
     fun nextRoundOf(player: Player): Int = countOf(player) + 1
 
-    fun isLastTurnSpeaker(player: Player): Boolean = lastTurnStatements.any { it.claimant === player }
+    fun isLastTurnSpeaker(player: Player): Boolean = lastTurn?.speakers.orEmpty().any { it === player }
 
-    fun record(statements: List<Statement>) {
-        turns.add(statements)
+    fun record(turn: Turn) {
+        turns.add(turn)
     }
 }
