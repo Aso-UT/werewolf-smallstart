@@ -102,8 +102,7 @@ class AiPlayer(
             ?: throw InvalidAiInputException("「理由：候補名」の形式ではありません: $input")
         val intent = input.substring(0, separatorIdx).trim()
         val targetString = input.substring(separatorIdx + 1).trim()
-        val target = candidates.firstOrNull { it.name == targetString }
-            ?: throw InvalidAiInputException("候補に存在しないターゲットです: $targetString")
+        val target = candidates.matchAnswer("候補に存在しないターゲットです: $targetString") { it.name == targetString }
         return target to intent
     }
 

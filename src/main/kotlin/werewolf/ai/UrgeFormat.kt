@@ -83,8 +83,7 @@ class UrgeFormat {
     }
 
     private fun selectableLevelOf(levelNumber: String, eligibility: UrgeEligibility): Level =
-        selectableLevels(eligibility).singleOrNull { it.eagerness.value.toString() == levelNumber }
-            ?: throw InvalidAiInputException("選択できない段階です: $levelNumber")
+        selectableLevels(eligibility).matchAnswer("選択できない段階です: $levelNumber") { it.eagerness.value.toString() == levelNumber }
 
     private fun roleOf(level: Level, roleName: String, eligibility: UrgeEligibility): Role? =
         if (level == Level.COUNTER_CLAIM) counterClaimRoleOf(roleName, eligibility) else rejectRole(roleName)
@@ -98,8 +97,7 @@ class UrgeFormat {
 
     private fun counterClaimRoleOf(roleName: String, eligibility: UrgeEligibility): Role {
         if (roleName.isEmpty()) throw InvalidAiInputException("対抗COする役職が添えられていません")
-        return eligibility.counterClaimRoles.singleOrNull { it.displayName == roleName }
-            ?: throw InvalidAiInputException("対抗COできない役職です: $roleName")
+        return eligibility.counterClaimRoles.matchAnswer("対抗COできない役職です: $roleName") { it.displayName == roleName }
     }
 
     private fun rejectRole(roleName: String): Role? {
