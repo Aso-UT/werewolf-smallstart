@@ -43,8 +43,8 @@ class StatementFormat {
     ): ParsedStatement {
         val (body, intent) = parseBodyAndIntent(input)
         val (typeLabel, content) = parseTypeLabelAndContent(body)
-        val type = context.selectableTypes(claimableRoles, reportEligibility).singleOrNull { it.displayName == typeLabel }
-            ?: throw InvalidAiInputException("選択できない発言の種類です: $typeLabel")
+        val type = context.selectableTypes(claimableRoles, reportEligibility)
+            .matchAnswer("選択できない発言の種類です: $typeLabel") { it.displayName == typeLabel }
         val statement = buildStatement(speaker, context, type, content, claimableRoles)
         if (reportEligibility.disqualifies(statement)) {
             throw InvalidAiInputException("報告可能な対象・結果ではありません: ${statement.text()}")
@@ -62,27 +62,23 @@ class StatementFormat {
         StatementType.PLAIN -> Statement.Plain(speaker, content)
         StatementType.DIVINATION_REPORT -> {
             val (targetName, resultLabel, comment) = extractReportParts(content)
-            val result = DivineResult.entries.singleOrNull { it.displayName == resultLabel }
-                ?: throw InvalidAiInputException("占い結果報告の結果が不正です: $resultLabel")
+            val result = DivineResult.entries.matchAnswer("占い結果報告の結果が不正です: $resultLabel") { it.displayName == resultLabel }
             Statement.DivinationReport(speaker, resolveTarget(context, targetName), result, comment)
         }
         StatementType.MEDIUM_REPORT -> {
             val (targetName, resultLabel, comment) = extractReportParts(content)
-            val result = MediumResult.entries.singleOrNull { it.displayName == resultLabel }
-                ?: throw InvalidAiInputException("霊媒結果報告の結果が不正です: $resultLabel")
+            val result = MediumResult.entries.matchAnswer("霊媒結果報告の結果が不正です: $resultLabel") { it.displayName == resultLabel }
             Statement.MediumReport(speaker, resolveTarget(context, targetName), result, comment)
         }
         StatementType.ROLE_CLAIM -> {
             val (roleName, comment) = extractRoleClaimParts(content)
-            val role = claimableRoles.singleOrNull { it.displayName == roleName }
-                ?: throw InvalidAiInputException("役職申告の役職が不正です: $roleName")
+            val role = claimableRoles.matchAnswer("役職申告の役職が不正です: $roleName") { it.displayName == roleName }
             Statement.RoleClaim(speaker, role, comment)
         }
     }
 
     private fun resolveTarget(context: DiscussionContext, targetName: String): Player =
-        context.allPlayers.singleOrNull { it.name == targetName }
-            ?: throw InvalidAiInputException("報告の対象が不正です: $targetName")
+        context.allPlayers.matchAnswer("報告の対象が不正です: $targetName") { it.name == targetName }
 
     private fun parseBodyAndIntent(input: String): Pair<String, String> {
         val separatorIdx = input.indexOf("[").takeIf { it >= 0 }
