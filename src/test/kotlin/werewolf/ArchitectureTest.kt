@@ -44,6 +44,15 @@ class ArchitectureTest {
                 "werewolf.phase..", "werewolf.cpu..", "werewolf.ai..", "werewolf.lodge.."
             )
 
+    // ゲーム上の役割を持たない汎用の道具なので、どのパッケージにも依存しない
+    @ArchTest
+    val utilMustNotDependOnOtherPackages: ArchRule =
+        noClasses().that().resideInAPackage("werewolf.util..")
+            .should().dependOnClassesThat().resideInAnyPackage(
+                "werewolf.game..", "werewolf.phase..", "werewolf.cpu..", "werewolf.ai..",
+                "werewolf.human..", "werewolf.lodge..", "werewolf.view.."
+            )
+
     @ArchTest
     val lodgeMustNotDependOnPhase: ArchRule =
         noClasses().that().resideInAPackage("werewolf.lodge..")
