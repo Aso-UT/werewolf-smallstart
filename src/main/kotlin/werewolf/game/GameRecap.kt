@@ -6,18 +6,20 @@ class GameRecap(private val playerManager: PlayerManager, private val signal: Ga
             .filterNot { isRedundantWithClaim(it) }
             .map { it.toChronicleView() }
 
-    // 行動の付随情報を、判断方式別と、判断方式・プレイヤー別に合算した表示行
+    // 行動の付随情報を判断方式ごとにまとめ、全体の合計と、プレイヤー別の合計を表示する
     fun metadataTotals(): List<String> {
-        val byPlayer = playerManager.allPlayers.associate { it.name to sumByDecisionMethod(summablesOf(it)) }
-        val totals = sumByDecisionMethod(byPlayer.values.flatMap { it.values })
+        val byMethod = allPlayerMetadata().groupBy { it.metadata.decisionMethod }
         return listOf("【判断方式別合計】") +
-            totals.map { (decisionMethod, total) -> "$decisionMethod ${countAndBody(total)}" } +
+            byMethod.map { (method, entries) -> "$method ${countAndBody(sum(entries))}" } +
             "【判断方式・プレイヤー別合計】" +
-            totals.keys.flatMap { listOf(it) + playerLines(byPlayer, it) }
+            byMethod.flatMap { (method, entries) -> listOf(method) + playerLines(entries) }
     }
 
-    private fun playerLines(byPlayer: Map<String, Map<String, SummableMetadata>>, decisionMethod: String): List<String> =
-        byPlayer.mapNotNull { (name, totals) -> totals[decisionMethod]?.let { "  [$name] ${countAndBody(it)}" } }
+    private fun playerLines(entries: List<PlayerMetadata>): List<String> =
+        entries.groupBy { it.playerName }.map { (name, own) -> "  [$name] ${countAndBody(sum(own))}" }
+
+    private fun allPlayerMetadata(): List<PlayerMetadata> =
+        playerManager.allPlayers.flatMap { player -> summablesOf(player).map { PlayerMetadata(player.name, it) } }
 
     private fun summablesOf(player: Player): List<SummableMetadata> =
         player.reveal(signal)
@@ -25,8 +27,8 @@ class GameRecap(private val playerManager: PlayerManager, private val signal: Ga
             .filterIsInstance<PlayerAction>()
             .map { it.metadata.toSummable() }
 
-    private fun sumByDecisionMethod(summables: List<SummableMetadata>): Map<String, SummableMetadata> =
-        summables.groupBy { it.decisionMethod }.mapValues { (_, sameMethod) -> sameMethod.reduce(SummableMetadata::plus) }
+    private fun sum(entries: List<PlayerMetadata>): SummableMetadata =
+        entries.map { it.metadata }.reduce(SummableMetadata::plus)
 
     private fun countAndBody(total: SummableMetadata): String {
         val body = total.toDisplayString()
@@ -44,4 +46,7 @@ class GameRecap(private val playerManager: PlayerManager, private val signal: Ga
         is GameEvent.WerewolfStatementMade -> !recallable.turn.isSimultaneous
         else -> false
     }
+
+    // 誰の行動かと、その付随情報
+    private class PlayerMetadata(val playerName: String, val metadata: SummableMetadata)
 }
