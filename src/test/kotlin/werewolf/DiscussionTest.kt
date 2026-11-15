@@ -89,7 +89,8 @@ class DiscussionTest {
 
         override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
             lastTurnSpeakersWhenSpoke.add(context.lastTurn?.speakers?.map { it.name }.orEmpty())
-            val role = claimableRoles.firstOrNull()?.takeUnless { spoke }
+            val roleClaims = context.selectableTypes(claimableRoles, reportEligibility).filterIsInstance<StatementType.RoleClaim>()
+            val role = roleClaims.firstOrNull()?.role?.takeUnless { spoke }
             val statement = role?.let { Statement.RoleClaim(this, it) } ?: Statement.Plain(this, "")
             spoke = true
             return Claim(this, context, statement, claimableRoles, reportEligibility, "", UnimplementedActionMetadata)

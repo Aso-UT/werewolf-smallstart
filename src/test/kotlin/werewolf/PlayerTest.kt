@@ -76,14 +76,13 @@ class PlayerTest {
         }
     }
 
-    // 選べる発言の種類とCOできる役職を記録し、COできる役職の一つをCOする
+    // 選べる発言の種類を記録し、選べる役職COの一つをCOする
     private class RecordingClaimer(role: Role, name: String) : ReceivingPlayer(role, name) {
         var receivedTypes: Set<StatementType>? = null
-        var receivedClaimableRoles: Set<Role>? = null
         override fun speak(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility): Claim {
-            receivedTypes = context.selectableTypes(claimableRoles, reportEligibility)
-            receivedClaimableRoles = claimableRoles
-            val statement = Statement.RoleClaim(this, claimableRoles.first())
+            val types = context.selectableTypes(claimableRoles, reportEligibility)
+            receivedTypes = types
+            val statement = Statement.RoleClaim(this, types.filterIsInstance<StatementType.RoleClaim>().first().role)
             return Claim(this, context, statement, claimableRoles, reportEligibility, "", UnimplementedActionMetadata)
         }
     }
@@ -188,7 +187,6 @@ class PlayerTest {
         player.discuss(context, SpeakingRight.Won(urge))
 
         assertEquals(setOf(StatementType.RoleClaim(Role.SEER), StatementType.DivinationReport), player.receivedTypes)
-        assertEquals(setOf(Role.SEER), player.receivedClaimableRoles)
     }
 
     @Test
