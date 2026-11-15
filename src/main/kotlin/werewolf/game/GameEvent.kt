@@ -232,14 +232,13 @@ sealed class GameEvent : Recallable() {
     }
 }
 
-// 一人の発言なら発言者つきで、同時発言なら全員の発言をひとまとまりで思い出す
 private fun List<Statement>.toRecallView(title: String): RecallView =
     singleOrNull()?.let { RecallView.AttributedObservation(title, it.claimant.name, it.text()) }
         ?: RecallView.SimultaneousRemarks(title, map { Remark(it.claimant.name, it.text()) })
 
 private fun List<Statement>.isSimultaneous(): Boolean = size > 1
 
-// 一人ずつの発言は各人のClaimで年代記に載るので、ここで載せるのは同時に発言したという事実のため
+// 一人の発言は各人のClaimでエピローグに載るので、ここで載せるのは同時に発言したという事実を残すため
 private fun List<Statement>.toChronicleView(title: String, recipients: Notifiable): ChronicleView {
     check(isSimultaneous()) { "A single statement is excluded from chronicles by GameRecap.isRedundantWithClaim" }
     return ChronicleView.Observation(recipients.recipientName, "${title}（同時発言）", body())

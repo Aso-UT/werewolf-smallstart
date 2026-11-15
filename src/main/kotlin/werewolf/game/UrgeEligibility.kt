@@ -3,7 +3,6 @@ package werewolf.game
 class UrgeEligibility(context: DiscussionContext, claimableRoles: Set<Role>, reportEligibility: ReportEligibility) {
     private val selectableTypes = context.selectableTypes(claimableRoles, reportEligibility)
 
-    // 直前のターンで名乗られた役職（結果報告を含む）のうち、自分もCOできるものすべてに対抗COできる
     val counterClaimRoles: Set<Role> =
         if (StatementType.ROLE_CLAIM in selectableTypes) {
             context.lastTurnStatements.mapNotNull { it.claimedRole }.filter { it in claimableRoles }.toSet()

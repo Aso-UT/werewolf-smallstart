@@ -3,7 +3,7 @@ package werewolf.phase
 import werewolf.game.Player
 import werewolf.game.Statement
 
-// 議論でこれまでに出た発言を、ターンごとに記録する。一つのターンでは、一人か複数人が同時に発言する
+// 一つのターンでは、一人か複数人が同時に発言する
 class SpeakingHistory {
     private val turns = mutableListOf<List<Statement>>()
 
