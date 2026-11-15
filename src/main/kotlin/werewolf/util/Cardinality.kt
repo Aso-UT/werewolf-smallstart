@@ -11,7 +11,7 @@ fun <T> Iterable<T>.cardinality(): Cardinality<T> {
     val values = toList()
     return when (values.size) {
         0 -> Cardinality.None
-        1 -> Cardinality.One(values.first())
+        1 -> Cardinality.One(values.single())
         else -> Cardinality.Many(values)
     }
 }
